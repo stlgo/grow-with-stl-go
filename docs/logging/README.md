@@ -1,6 +1,19 @@
+# Code Linting
+
+## What is code linting?
+
+Linting is the automated checking of your source code for programmatic and stylistic errors. This is done by using a lint tool (otherwise known as linter). A lint tool is a basic static code analyzer.  So let's face it, we all make mistakes.  Some mistakes are small whitespace or spelling errors that are the source of some minor embarrassment and some are large logic errors that cost millions or worse.  We have tools available to us to help us avoid **some** (not all obviously) errors.
+
+For go, and the examples in the project we use these (and maybe a few more):
+
+- [go-fmt](https://pkg.go.dev/fmt)
+- [golangci-lint](https://github.com/golangci/golangci-lint)
+- [go-critic](https://github.com/go-critic/go-critic)
+- [go-unit-tests](https://go.dev/doc/tutorial/add-a-test)
+
 ## pre-commit
 
-[pre-commit](https://pre-commit.com/) can be used as a git hook to test your code prior to committal.  Working with pre-commit is fairly easy but it does require python to be available on the system
+[pre-commit](https://pre-commit.com/) can be used as a git hook to test your code prior to committal.  This allows us to execute our linters, [cyclomatic complexity tests](https://en.wikipedia.org/wiki/Cyclomatic_complexity) style guides, automated test and whatever we can think of automatically prior to committing code to the repository.  Working with pre-commit is fairly easy but it does require python to be available on the system
 
 ### Installing pre-commit
 

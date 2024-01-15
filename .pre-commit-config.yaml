@@ -14,8 +14,8 @@ repos:
         args: [-over=13]
       - id: validate-toml
       - id: no-go-testing
-      - id: go-fmt
-      - id: go-imports
+      # - id: go-fmt
+      # - id: go-imports
       - id: golangci-lint
       - id: go-critic
       - id: go-unit-tests

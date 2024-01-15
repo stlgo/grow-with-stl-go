@@ -103,10 +103,10 @@ linters-settings:
     # To check which checks are enabled run `GL_DEBUG=gocritic golangci-lint run`
     # By default list of stable checks is used.
     enabled-checks:
-      - appendAssign
-      - appendCombine
+      - appendassign
+      - appendcombine
       - argorder
-      - assignOp
+      - assignop
       - badcall
       - badcond
       - badlock
@@ -114,43 +114,43 @@ linters-settings:
       - badsorting
       - boolexprsimplify
       - builtinshadow
-      - builtinshadowec1
-      - captLocal
-      - caseOrder
-      - commentedOutCode
-      - commentedOutImport
+      - builtinshadowdecl
+      - captlocal
+      - caseorder
+      - codegencomment
+      - commentedoutcode
+      - commentedoutimport
       - commentformatting
-      - defaultCaseOrder
+      - defaultcaseorder
       - deferinloop
       - deferunlambda
       - deprecatedcomment
       - docstub
-      - dupArg
-      - dupBranchBody
-      - dupCase
+      - duparg
+      - dupbranchbody
+      - dupcase
       - dupimport
-      - dupSubExpr
+      - dupsubexpr
       - dynamicfmtstring
       - elseif
       - emptydecl
       - emptyfallthrough
       - emptystringtest
-      - equalFold
+      - equalfold
       - evalorder
       - exitafterdefer
       - exposedsyncmutex
       - externalerrorreassign
       - filepathjoin
-      - flagDeref
+      - flagderef
       - flagname
       - hexliteral
-      # - httpnobody
-      - hugeparm
-      - ifElseChain
+      - httpnobody
+      - hugeparam
+      - ifelsechain
       - importshadow
       - indexalloc
       - initclause
-      # - ioutildeprecated
       - mapkey
       - methodexprcall
       - nestingreduce
@@ -159,7 +159,7 @@ linters-settings:
       - octalliteral
       - offby1
       - paramtypecombine
-      - perferdecoderune
+      - preferdecoderune
       - preferfilepathjoin
       - preferfprint
       - preferstringwriter
@@ -168,35 +168,40 @@ linters-settings:
       - rangeexprcopy
       - rangevalcopy
       - redundantsprint
-      - regexpMust
-      - regexpattern
-      - regexsimplify
-      # - returnafterhttperror
+      - regexpmust
+      - regexppattern
+      - regexpsimplify
+      - returnafterhttperror
       - ruleguard
-      - singleCaseSwitch
+      - singlecaseswitch
       - sliceclear
-      - sloppyLen
+      - sloppylen
       - sloppyreassign
+      - sloppytestfuncname
       - sloppytypeassert
       - sortslice
+      - sprintfquotedstring
+      - sqlquery
       - stringconcatsimplify
-      - stringcompare
+      - stringscompare
       - stringxbytes
-      - switchTrue
+      - switchtrue
       - syncmaploadanddelete
       - timecmpsimplify
       - timeexprsimplify
       - todocommentwithoutdetail
       - toomanyresultschecker
       - truncatecmp
-      - typeAssertChain
+      - typeassertchain
       - typedeffirst
-      - typeSwitchVar
+      - typeswitchvar
       - typeunparen
+      - uncheckedinlineerr
       - underef
       - unlabelstmt
       - unlambda
       - unnamedresult
+      - unnecessaryblock
       - unnecessarydefer
       - unslice
       - valswap
@@ -277,11 +282,11 @@ linters:
     - gocyclo              # Computes and checks the cyclomatic complexity of functions
     - gofmt                # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
     - goimports            # Goimports does everything that gofmt does. Additionally it checks unused imports
-    - golint               # Finds all coding style mistakes
+    #- golint               # Finds all coding style mistakes
     - gosec                # Inspects source code for security problems
     - govet                # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
     - ineffassign          # Detects when assignments to existing variables are not used
-    - interfacer           # Linter that suggests narrower interface types
+    #- interfacer           # Linter that suggests narrower interface types
     - lll                  # Reports long lines
     - misspell             # Finds commonly misspelled English words in comments
     - nakedret             # Finds naked returns in functions greater than a specified function length
@@ -289,7 +294,7 @@ linters:
     - unconvert            # Remove unnecessary type conversions
     - unparam              # Reports unused function parameters
     - unused               # Checks Go code for unused constants, variables, functions and types
-    - varcheck             # Finds unused global variables and constants
+    #- varcheck             # Finds unused global variables and constants
     - whitespace           # Tool for detection of leading and trailing whitespace NOTE(howell): This linter does _not_ check for trailing whitespace in multiline strings
     - revive               # Finds all coding style mistakes
     - asciicheck           # Simple linter to check that your code does not contain non-ASCII identifiers

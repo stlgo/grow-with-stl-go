@@ -1,0 +1,80 @@
+/*
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
+package main
+
+import (
+	"fmt"
+	"stl-go/go-learning-series/pkg/log"
+)
+
+func outputPrintln(someMessage string) {
+	fmt.Printf("Example output with message: %s\n", someMessage)
+}
+
+func outputLoggingTrace(someMessage string) {
+	log.Tracef("Example trace output with message: %s", someMessage)
+}
+
+func outputLoggingDebug(someMessage string) {
+	log.Debugf("Example debug output with message: %s", someMessage)
+}
+
+func outputLoggingInfo(someMessage string) {
+	log.Infof("Example info output with message: %s", someMessage)
+}
+
+func outputLoggingWarn(someMessage string) {
+	log.Warnf("Example warn output with message: %s", someMessage)
+}
+
+func outputLoggingError(someMessage string) {
+	log.Errorf("Example error output with message: %s", someMessage)
+}
+
+// func outpuLoggingFatal(someMessage string) {
+// 	log.Fatalf("Example fatal output with message: %s", someMessage)
+// }
+
+func main() {
+	defer log.FunctionTimer()() // this will display how long this took to run at the end of the execution
+
+	logLevels := map[int]string{
+		1: "fatal",
+		2: "error",
+		3: "warn",
+		4: "info",
+		5: "debug",
+		6: "trace",
+	}
+
+	// function map so we can just iterate over function calls since we're sending the same data to all
+	// outpuLoggingFatal will cause the program to exit
+	functions := []func(string){outputPrintln, outputLoggingTrace, outputLoggingDebug, outputLoggingInfo, outputLoggingWarn, outputLoggingError}
+
+	// maps are randomized by go so we need to iterate through a slice of keys
+	logLevelKeys := []int{6, 5, 4, 3, 2}
+
+	for _, logLevel := range logLevelKeys {
+		if levelName, ok := logLevels[logLevel]; ok && len(levelName) > 0 {
+			log.LogLevel = logLevel
+			for _, function := range functions {
+				function(fmt.Sprintf("Log attempt for level %s - log level %d", levelName, logLevel))
+			}
+		}
+	}
+
+	// set logging back to trace so we can see the output of the function timer
+	log.LogLevel = 6
+}
