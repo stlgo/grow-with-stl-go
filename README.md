@@ -6,7 +6,7 @@ Go, also known as Golang, is a statically typed compiled programming language de
 
 ## Learning Go
 
-Learning anything is a uniquely individual process.  There are some hypotheses that state somewhere between [4](https://vark-learn.com/introduction-to-vark/the-vark-modalities/) and [8](https://www.viewsonic.com/library/education/the-8-learning-styles/) different ways people learn.  Though it's often hard to understand how to best learn a new thing arming yourself with as many arrows in your quiver is the best way to get there.  Thankfully there is a wealth of online tools to help with that.  here are some:
+Learning anything is a uniquely individual process.  There are some hypotheses that state somewhere between [4](https://vark-learn.com/introduction-to-vark/the-vark-modalities/) and [8](https://www.viewsonic.com/library/education/the-8-learning-styles/) different ways people learn.  Though it's often hard to understand how to best learn a new thing arming yourself with as many arrows in your quiver is the best way to get there.  Thankfully there is a wealth of online tools to help with that.  Here are some:
 
 ### For the impatient
 
