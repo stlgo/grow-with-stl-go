@@ -59,6 +59,25 @@
    ```bash
    $ git add .
    $ git commit -am "pre-commit added to the project"
+    trim trailing whitespace.................................................Passed
+    fix end of files.........................................................Passed
+    check yaml...............................................................Passed
+    check for added large files..............................................Passed
+    go-cyclo.............................................(no files to check)Skipped
+    validate toml........................................(no files to check)Skipped
+    Check files aren't using go's testing package........(no files to check)Skipped
+    go fmt...............................................(no files to check)Skipped
+    go imports...........................................(no files to check)Skipped
+    golangci-lint........................................(no files to check)Skipped
+    go-critic............................................(no files to check)Skipped
+    go-unit-tests........................................(no files to check)Skipped
+    go-build.............................................(no files to check)Skipped
+    go-mod-tidy..........................................(no files to check)Skipped
+    [master 2eed9f1] pre-commit added to the project
+    5 files changed, 394 insertions(+), 2 deletions(-)
+    create mode 100755 .golangci.yaml
+    create mode 100755 .pre-commit-config.yaml
+    create mode 100755 examples/linting/README.md
    ```
 
    **NOTE:**
