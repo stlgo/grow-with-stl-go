@@ -1,97 +1,78 @@
-# Code Linting
+# Logging
 
-## What is code linting?
+Logging is really just a way to keep track of things that happen in the program.  Now, there are ways, and there are better ways to do this but some of that squabble is better left to philosophers and poets.  Instead this is a somewhat practical guide as to how to log effectively.
 
-Linting is the automated checking of your source code for programmatic and stylistic errors. This is done by using a lint tool (otherwise known as linter). A lint tool is a basic static code analyzer.  So let's face it, we all make mistakes.  Some mistakes are small whitespace or spelling errors that are the source of some minor embarrassment and some are large logic errors that cost millions or worse.  We have tools available to us to help us avoid **some** (not all obviously) errors.
+## Best to begin at the beginning
 
-For go, and the examples in the project we use these (and maybe a few more):
+Logging is just stuff you want a user to potentially know about.  Some of it is things we want to know out of curiosity, some of it is critical information needed for security audits.  How you handle it depends on the situation and the methods you're choosing to use.  Most of the logging that is done in these example programs will be to the [standard out](https://en.wikipedia.org/wiki/Standard_streams) of the console.  While possible to write them directly to file most of the time the practitioner of the program will redirect or tee the output to a file at runtime often because the programs are run in a [headless](https://en.wikipedia.org/wiki/Headless_software) fashion.
 
-- [go-fmt](https://pkg.go.dev/fmt)
-- [golangci-lint](https://github.com/golangci/golangci-lint)
-- [go-critic](https://github.com/go-critic/go-critic)
-- [go-unit-tests](https://go.dev/doc/tutorial/add-a-test)
+## Logging basics
 
-## pre-commit
+Let's take for example we have a webservice where a user "Charlie" successfully logs in.  We want to display this to our app owners.
 
-[pre-commit](https://pre-commit.com/) can be used as a git hook to test your code prior to committal.  This allows us to execute our linters, [cyclomatic complexity tests](https://en.wikipedia.org/wiki/Cyclomatic_complexity) style guides, automated test and whatever we can think of automatically prior to committing code to the repository.  Working with pre-commit is fairly easy but it does require python to be available on the system
+### A way, not a great way
 
-### Installing pre-commit
+We can simply print it to standard out:
 
-1. Issue the pip command to install: "pip install pre-commit"
+```go
+fmt.Printf("User %s has logged in\n", username)
+```
 
-   ```bash
-    $ pip install pre-commit
-    Successfully installed cfgv-3.4.0 distlib-0.3.8 filelock-3.13.1 identify-2.5.33 nodeenv-1.8.0 platformdirs-4.1.0 pre-commit-3.6.0 pyyaml-6.0.1 setuptools-69.0.3 virtualenv-20.25.0
-    ```
+Output:
 
-    **NOTE:**
-    Python will need do be on your path for this to work, if it isn't you may need to adjust your environment variables and restart your shell / IDE
+```bash
+User Charlie has logged in
+```
 
-2. Test that pre-commit is avaialble on the command line by issuing: "pre-commit --version"
+The problem with this output is we know the who and the what, we don't know the when or the where.
 
-   ```bash
-    $ pre-commit --version
-    pre-commit 3.6.0
-    ```
+### A slightly better, but still not great way to do it
 
-3. Create [(or use the example in this project)](../../.pre-commit-config.yaml) a .pre-commit-config.yaml file at the root of your project
-4. Test the pre-commit by issuing a "git add ." followed by "pre-commit"
+We can use Go's built in [logger](https://pkg.go.dev/log)
 
-   ```bash
-   $ git add .
-   $ pre-commit
-    trim trailing whitespace.................................................Passed
-    fix end of files.........................................................Passed
-    check yaml...............................................................Passed
-    check for added large files..............................................Passed
-    go-cyclo.............................................(no files to check)Skipped
-    validate toml........................................(no files to check)Skipped
-    Check files aren't using go's testing package........(no files to check)Skipped
-    go fmt...............................................(no files to check)Skipped
-    go imports...........................................(no files to check)Skipped
-    golangci-lint........................................(no files to check)Skipped
-    go-critic............................................(no files to check)Skipped
-    go-unit-tests........................................(no files to check)Skipped
-    go-build.............................................(no files to check)Skipped
-    go-mod-tidy..........................................(no files to check)Skipped
-    PS D:\documents\bandgeekphotos.org\stl-go\go-learning-series>
-   ```
+```go
+log.Printf("User %s has logged in\n", username)
+```
 
-    **NOTE:**
-    There may be some installations that occur on the first run
+Output:
 
-5. The pre-commit git hook will run the pre-commit for you prior to your commits.  This is very helpful in keeping the repo clean, and most good projects will run your code through a linter prior to committal anyway.  Install the git hook script by issuing: "pre-commit install"
+```bash
+2024/01/15 17:21:53 User Charlie has logged in
+```
 
-   ```bash
-   $ re-commit install
-   pre-commit installed at .git\hooks\pre-commit
-   ```
+The problem with this output is we know the who, the what and the when, we don't the where.
 
-6. Test your pre-commit hook by creating a git commit:
+### A pretty good way to do it
 
-   ```bash
-   $ git add .
-   $ git commit -am "pre-commit added to the project"
-    trim trailing whitespace.................................................Passed
-    fix end of files.........................................................Passed
-    check yaml...............................................................Passed
-    check for added large files..............................................Passed
-    go-cyclo.............................................(no files to check)Skipped
-    validate toml........................................(no files to check)Skipped
-    Check files aren't using go's testing package........(no files to check)Skipped
-    go fmt...............................................(no files to check)Skipped
-    go imports...........................................(no files to check)Skipped
-    golangci-lint........................................(no files to check)Skipped
-    go-critic............................................(no files to check)Skipped
-    go-unit-tests........................................(no files to check)Skipped
-    go-build.............................................(no files to check)Skipped
-    go-mod-tidy..........................................(no files to check)Skipped
-    [master 2eed9f1] pre-commit added to the project
-    5 files changed, 394 insertions(+), 2 deletions(-)
-    create mode 100755 .golangci.yaml
-    create mode 100755 .pre-commit-config.yaml
-    create mode 100755 examples/linting/README.md
-   ```
+We can use the [logging wrapper class present in this project](../../pkg/log/log.go)
 
-   **NOTE:**
-   You may need to adjust the .git\hooks\pre-commit file if there are any pathing or newline (unix -vs- windows line breaks) irregularities on windows
+```go
+log.Infof("User %s has logged in\n", username)
+```
+
+Output:
+
+```bash
+[stl-go] 2024/01/15 15:47:21 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] User Charlie has logged in
+```
+
+What you see in this example is what could be considered a complete log line.  It starts with the system generating the message, the timestamp of the message, the package and file that printed the message, the line number in that file that called the logger, what log level it was logged at and the message.  If you needed to find out why something got logged you can refer straight to the file and line and start walking the code tree based on that.
+
+## Log Levels
+
+Logging can be thought of as an increasing level of permission.  In our example we start with 1 (Fatal) and go to 6 (Trace), where messages that are sent at a level 1 will always be displayed, but messages at level 6 may not be.
+
+### The Levels
+
+1. Fatal - to be used when something happens and the program should no longer continue.  It will cause the program to exit with an os.Exit(-1).
+2. Error - to be used when something happens in a way that isn't considered correct and should be flagged as such
+3. Warn - to be used for when something isn't quite an error but it's more important than just an informational message
+4. Info - to be used to display pertinent information that our app owners may care about
+5. Debug - to be used for deeper level details needed when writing a program
+6. Trace - to be used in the fine grain details we may care about when writing a program
+
+### How Log Levels work
+
+If for example you set your log level = 3 (warn) at the start of, or dynamically while running your program, log.Warn, log.Error and log.Fatal would be displayed; log.Trace, log.Debug and log.Info would not.
+
+You can see this in action in our [logging_example.go](../../examples/logging/logging_example.go) example.
