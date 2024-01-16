@@ -75,4 +75,46 @@ Logging can be thought of as an increasing level of permission.  In our example 
 
 If for example you set your log level = 3 (warn) at the start of, or dynamically while running your program, log.Warn, log.Error and log.Fatal would be displayed; log.Trace, log.Debug and log.Info would not.
 
-You can see this in action in our [logging_example.go](../../examples/logging/logging_example.go) example.
+### Example
+
+You can see this live in action in our [logging_example.go](../../examples/logging/logging_example.go) example.  To run this example:
+
+```bash
+go run examples/logging/logging_example.go
+```
+
+Output
+
+```bash
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:118: [INFO] Sending all log attempts without fatal
+Example output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:57: [TRACE] Example trace output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:61: [DEBUG] Example debug output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level trace - log level 6
+Example output with message: Log attempt for level debug - log level 5
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:61: [DEBUG] Example debug output with message: Log attempt for level debug - log level 5
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level debug - log level 5
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level debug - log level 5
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level debug - log level 5
+Example output with message: Log attempt for level info - log level 4
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level info - log level 4
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level info - log level 4
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level info - log level 4
+Example output with message: Log attempt for level warn - log level 3
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level warn - log level 3
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level warn - log level 3
+Example output with message: Log attempt for level error - log level 2
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level error - log level 2
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:95: [TRACE] Function 'testWithoutFatal' completed in 3ms
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:122: [INFO] Sending all log attempts with fatal
+Example output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:57: [TRACE] Example trace output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:61: [DEBUG] Example debug output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level trace - log level 6
+[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:77: [FATAL] Example fatal output with message: Log attempt for level trace - log level 6
+exit status 0xffffffff
+```

@@ -73,3 +73,25 @@ Go can be downloaded and installed from here: <https://go.dev/dl/>
     ```
 
 Congratulations you've now run your first Go program!
+
+## Follow us further down the rabbit hole
+
+We have some examples and some documentation on how to go from "hello world" to a fully functional webservice that can handle both [REST](https://en.wikipedia.org/wiki/REST) and [WebSockets](https://en.wikipedia.org/wiki/WebSocket), we won't say in 45 minutes or less, but with some time and elbow grease it's doable.
+
+### The basics
+
+1. [Primitive Types](docs/primitives.md)
+2. Complex Types
+3. [Logging](docs/logging.md)
+4. Files
+
+### The slightly less basic
+
+1. Application configurations
+2. Web hosting
+3. REST
+4. WebSockets
+
+### Making sure we put some shine on our projects
+
+1. [Linting](docs/linting.md)
