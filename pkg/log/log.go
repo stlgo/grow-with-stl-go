@@ -136,6 +136,7 @@ func Logger() *log.Logger {
 	return stlGoLog
 }
 
+// writeLog outputs the line to the configured output
 func writeLog(level int, v ...interface{}) {
 	// determine if we need to display the logs
 	if level <= LogLevel {
