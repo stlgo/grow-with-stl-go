@@ -4,7 +4,7 @@
 
 Linting is the automated checking of your source code for programmatic and stylistic errors. This is done by using a lint tool (otherwise known as linter). A lint tool is a basic static code analyzer.  So let's face it, we all make mistakes.  Some mistakes are small whitespace or spelling errors that are the source of some minor embarrassment and some are large logic errors that cost millions or worse.  We have tools available to us to help us avoid **some** (not all obviously) errors.
 
-For go, and the examples in the project we use these (and maybe a few more):
+For go, and the examples in the project, we use these (and maybe a few more):
 
 - [golangci-lint](https://github.com/golangci/golangci-lint)
 - [go-critic](https://github.com/go-critic/go-critic)
