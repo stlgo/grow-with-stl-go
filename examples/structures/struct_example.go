@@ -116,11 +116,19 @@ func main() {
 		hybrid:     true,
 	}
 
+	d := dog{
+		genus:   genus{"Canis"},
+		species: species{"familiaris"},
+		breed:   "English Pointer",
+		name:    "Charlie",
+		age:     13,
+	}
+
 	// output the info for the plant created above
 	fmt.Println(p.info())
 
 	// create a slice of item interface, assign it the plant and invoke the method signature defined by the interface
-	itfs := []item{p}
+	itfs := []item{p, d}
 	for _, value := range itfs {
 		fmt.Println(value.info())
 	}

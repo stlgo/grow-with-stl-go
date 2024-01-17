@@ -84,7 +84,16 @@ p := plant{
     hybrid:     true,
 }
 
-itfs := []item{p}
+d := dog{
+    genus:   genus{"Canis"},
+    species: species{"familiaris"},
+    breed:   "English Pointer",
+    name:    "Charlie",
+    age:     13,
+}
+
+
+itfs := []item{p, d}
 for _, value := range itfs {
     fmt.Println(value.info())
 }
@@ -94,4 +103,6 @@ Output
 
 ```bash
 Genus Solanum, Species lycopersicum, Cultivar Cherokee Purple, Common name: tomato, is hybrid true
+
+Genus Canis, Species familiaris, breed English Pointer, name: Charlie, age 13
 ```
