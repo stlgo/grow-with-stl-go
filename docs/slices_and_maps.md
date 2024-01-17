@@ -56,6 +56,10 @@ slice s1 of type []int has 2 at index 3
 
 <https://go.dev/tour/moretypes/19>
 
+Maps are an associative data type (sometimes called hashes or dicts in other languages)
+
+Example from our [maps_and_slices.go](../examples/maps_and_slices/maps_and_slices.go) file:
+
 ### Create a map
 
 ```go
@@ -110,5 +114,31 @@ if value, ok := m2["one"]; ok {
 Output
 
 ```bash
+Value 1 was found for key 'one' in the m2 map
+```
+
+## Example
+
+You can see this live in action in our [maps_and_slices.go](../examples/maps_and_slices/maps_and_slices.go) example.  To run this example:
+
+```bash
+go run examples/maps_and_slices/maps_and_slices.go
+```
+
+Output
+
+```bash
+thing at index 1 in slice s1 is 2
+thing at index 1 in slice s2 is 4
+slice s1 of type []int has 0 at index 1
+slice s1 of type []int has 1 at index 2
+slice s1 of type []int has 2 at index 3
+slice s2 of type []int has 0 at index 5
+slice s2 of type []int has 1 at index 4
+slice s2 of type []int has 2 at index 3
+slice s2 of type []int has 3 at index 2
+Key one has a value of  1
+Key two has a value of  2
+Key three has a value of  3
 Value 1 was found for key 'one' in the m2 map
 ```

@@ -106,3 +106,37 @@ Genus Solanum, Species lycopersicum, Cultivar Cherokee Purple, Common name: toma
 
 Genus Canis, Species familiaris, breed English Pointer, name: Charlie, age 13
 ```
+
+## Example
+
+You can see all of this, and more, live in our [struct_example.go](../examples/structures/struct_example.go) example.  To run this example:
+
+```bash
+go run examples/structures/struct_example.go
+```
+
+Output
+
+```bash
+Genus Solanum, Species lycopersicum, Cultivar Cherokee Purple, Common name: tomato, is hybrid true
+
+Genus Solanum, Species lycopersicum, Cultivar Cherokee Purple, Common name: tomato, is hybrid true
+
+Genus Canis, Species familiaris, breed English Pointer, name: Charlie, age 13
+
+Printing plants
+Red of Florence is the key in plants with a value of: Genus Allium, Species cepa, Cultivar Red of Florence, Common name: Red Onion, is hybrid false
+Zapotec Jalapeno is the key in plants with a value of: Genus Capsicum, Species annum, Cultivar Zapotec Jalapeno, Common name: jalapeno, is hybrid false
+Plum Regal is the key in plants with a value of: Genus Solanum, Species lycopersicum, Cultivar Plum Regal, Common name: tomato, is hybrid true
+
+Printing dogs
+Chief is the key in dogs with a value of: Genus Canis, Species familiaris, breed Golden Retriever, name: Chief, age 1
+Charlie is the key in dogs with a value of: Genus Canis, Species familiaris, breed English Pointer, name: Charlie, age 13
+
+Printing the interface
+Red of Florence is the key in interfaceItems with a value of: Genus Allium, Species cepa, Cultivar Red of Florence, Common name: Red Onion, is hybrid false
+Zapotec Jalapeno is the key in interfaceItems with a value of: Genus Capsicum, Species annum, Cultivar Zapotec Jalapeno, Common name: jalapeno, is hybrid false
+Plum Regal is the key in interfaceItems with a value of: Genus Solanum, Species lycopersicum, Cultivar Plum Regal, Common name: tomato, is hybrid true
+Chief is the key in interfaceItems with a value of: Genus Canis, Species familiaris, breed Golden Retriever, name: Chief, age 1
+Charlie is the key in interfaceItems with a value of: Genus Canis, Species familiaris, breed English Pointer, name: Charlie, age 13
+```
