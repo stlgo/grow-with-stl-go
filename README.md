@@ -6,7 +6,7 @@ Go, also known as Golang, is a statically typed compiled programming language de
 
 ## Learning Go
 
-Learning anything is a uniquely individual process.  There are some hypotheses that state somewhere between [4](https://vark-learn.com/introduction-to-vark/the-vark-modalities/) and [8](https://www.viewsonic.com/library/education/the-8-learning-styles/) different ways people learn.  Though it's often hard to understand how to best learn a new thing arming yourself with as many arrows in your quiver is the best way to get there.  Thankfully there is a wealth of online tools to help with that.  Here are some:
+Learning anything is a uniquely individual process.  There are some hypotheses that state there are somewhere between [4](https://vark-learn.com/introduction-to-vark/the-vark-modalities/) and [8](https://www.viewsonic.com/library/education/the-8-learning-styles/) different ways people learn.  Though it's often hard to understand how to best learn a new thing arming yourself with as many arrows in your quiver is the best way to get there.  Thankfully there is a wealth of online tools to help with that.  Here are some:
 
 ### For the impatient
 
@@ -72,6 +72,19 @@ Go can be downloaded and installed from here: <https://go.dev/dl/>
     Hello world from the St. Louis Go learning Series
     ```
 
+4. You could, if you so chose, to create an executable of your hello world program by executing "go build main.go" this will create a main (or main.exe if you're on windows) binary
+
+    ```bash
+    go build main.go
+    ```
+
+5. You can now run your executable without the need to invoke go commands
+
+    ```bash
+    $ main
+    Hello world from the St. Louis Go learning Series
+    ```
+
 Congratulations you've now run your first Go program!
 
 ## Follow us further down the rabbit hole
@@ -82,8 +95,9 @@ We have some examples and some documentation on how to go from "hello world" to 
 
 1. [Primitive Types](docs/primitives.md)
 2. [Structures](docs/structures.md)
-3. [Logging](docs/logging.md)
-4. Files
+3. [Slices and Maps](docs/slices_and_maps.md)
+4. [Logging](docs/logging.md)
+5. Files
 
 ### Putting it all together
 
