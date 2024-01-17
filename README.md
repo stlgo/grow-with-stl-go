@@ -81,7 +81,7 @@ We have some examples and some documentation on how to go from "hello world" to 
 ### The basics
 
 1. [Primitive Types](docs/primitives.md)
-2. Structures
+2. [Structures](docs/structures.md)
 3. [Logging](docs/logging.md)
 4. Files
 

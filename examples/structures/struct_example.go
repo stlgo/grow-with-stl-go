@@ -16,14 +16,17 @@ package main
 
 import "fmt"
 
+// genus struct definition
 type genus struct {
 	name string
 }
 
+// species struct definition
 type species struct {
 	name string
 }
 
+// plant struct definition
 type plant struct {
 	genus
 	species
@@ -33,11 +36,12 @@ type plant struct {
 	hybrid     bool
 }
 
-// receiver function
+// receiver function for plant type
 func (p plant) info() string {
 	return fmt.Sprintf("Genus %s, Species %s, Cultivar %s, Common name: %s, is hybrid %t\n", p.genus.name, p.species.name, p.cultivar, p.commonName, p.hybrid)
 }
 
+// dog struct definition
 type dog struct {
 	genus
 	species
@@ -47,16 +51,18 @@ type dog struct {
 	age   int
 }
 
-// receiver function
+// receiver function for dog type
 func (d dog) info() string {
 	return fmt.Sprintf("Genus %s, Species %s, breed %s, name: %s, age %d\n", d.genus.name, d.species.name, d.breed, d.name, d.age)
 }
 
+// item interface definition
 type item interface {
 	info() string
 }
 
 var (
+	// create and populate a map of plant structs
 	plants = map[string]plant{
 		"Red of Florence": {
 			genus:      genus{"Allium"},
@@ -81,6 +87,7 @@ var (
 		},
 	}
 
+	// create and populate a map of dog structs
 	dogs = map[string]dog{
 		"Charlie": {
 			genus:   genus{"Canis"},
@@ -100,22 +107,44 @@ var (
 )
 
 func main() {
-	intefaceItems := make(map[string]item)
+	// define a single plant
+	p := plant{
+		genus:      genus{"Solanum"},
+		species:    species{"lycopersicum"},
+		cultivar:   "Cherokee Purple",
+		commonName: "tomato",
+		hybrid:     true,
+	}
 
+	// output the info for the plant created above
+	fmt.Println(p.info())
+
+	// create a slice of item interface, assign it the plant and invoke the method signature defined by the interface
+	itfs := []item{p}
+	for _, value := range itfs {
+		fmt.Println(value.info())
+	}
+
+	// create a map of items that we'll use to invoke info on later
+	interfaceItems := make(map[string]item)
+
+	// iterate through the map of plants and output their values
 	fmt.Println("Printing plants")
 	for key, value := range plants {
 		fmt.Printf("%s is the key in plants with a value of: %s", key, value.info())
-		intefaceItems[key] = value
+		interfaceItems[key] = value
 	}
 
+	// iterate through the map of dogs and output their values
 	fmt.Println("\nPrinting dogs")
 	for key, value := range dogs {
 		fmt.Printf("%s is the key in dogs with a value of: %s", key, value.info())
-		intefaceItems[key] = value
+		interfaceItems[key] = value
 	}
 
+	// iterate through the map of items and output their values
 	fmt.Println("\nPrinting the interface")
-	for key, value := range intefaceItems {
-		fmt.Printf("%s is the key in intefaceItems with a value of: %s", key, value.info())
+	for key, value := range interfaceItems {
+		fmt.Printf("%s is the key in interfaceItems with a value of: %s", key, value.info())
 	}
 }
