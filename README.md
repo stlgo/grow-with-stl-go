@@ -98,8 +98,12 @@ We have some examples and some documentation on how to go from "hello world" to 
 3. [Slices and Maps](docs/slices_and_maps.md)
 4. [Logging](docs/logging.md)
 5. Files
+6. Goroutines
+7. Channels
 
-### Putting it all together
+### Higher order concepts
+
+These are what could be considered more fundamental aspects of creating a successful project that builds on the basics of programming.
 
 1. Application configurations
 2. Web hosting

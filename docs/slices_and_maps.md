@@ -6,7 +6,7 @@
 
 A slice in go is a dynamically-sized, flexible view into the elements of an array
 
-Example from our [maps_and_slices.go](../examples/maps_and_slices/maps_and_slices.go) file:
+Example from our [maps_and_slices_example.go](../examples/maps_and_slices/maps_and_slices_example.go) file:
 
 ### Create a slice
 
@@ -58,7 +58,7 @@ slice s1 of type []int has 2 at index 3
 
 Maps are an associative data type (sometimes called hashes or dicts in other languages)
 
-Example from our [maps_and_slices.go](../examples/maps_and_slices/maps_and_slices.go) file:
+Example from our [maps_and_slices_example.go](../examples/maps_and_slices/maps_and_slices_example.go) file:
 
 ### Create a map
 
@@ -119,10 +119,10 @@ Value 1 was found for key 'one' in the m2 map
 
 ## Example
 
-You can see this live in action in our [maps_and_slices.go](../examples/maps_and_slices/maps_and_slices.go) example.  To run this example:
+You can see this live in action in our [maps_and_slices_example.go](../examples/maps_and_slices/maps_and_slices_example.go) example.  To run this example:
 
 ```bash
-go run examples/maps_and_slices/maps_and_slices.go
+go run examples/maps_and_slices/maps_and_slices_example.go
 ```
 
 Output

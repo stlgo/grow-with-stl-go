@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"strings"
 )
 
 // booleanTypes is a function that flexes basic boolean operations
@@ -124,6 +125,31 @@ func stringTypes() {
 	}
 }
 
+func stringComparisons() {
+	s := "This is a string" // string
+	sp := &s                // pointer to a string
+
+	// string comparison case sensitive
+	if s == "This is a string" {
+		fmt.Printf("found case sensitive %s\n", s)
+	}
+
+	// string comparison case insensitive
+	if sp != nil && strings.EqualFold(*sp, "this is a string") {
+		fmt.Printf("found case insensitive %s\n", *sp)
+	}
+
+	// string has a prefix
+	if strings.HasPrefix(s, "This") {
+		fmt.Printf("found This as a prefix to %s\n", s)
+	}
+
+	// string has a suffix
+	if sp != nil && strings.HasSuffix(*sp, "ing") {
+		fmt.Printf("found ing as a suffix to %s\n", *sp)
+	}
+}
+
 // errorTypes is a function that flexes basic error operations
 func errorTypes() {
 	err := fmt.Errorf("this is an error message")
@@ -150,10 +176,11 @@ func main() {
 	booleanTypes()
 	numericTypes()
 	stringTypes()
+	stringComparisons()
 	errorTypes()
 
 	// or you can have a bit of fun and let the program do it for us with a slice of functions
-	functions := []func(){booleanTypes, numericTypes, stringTypes, errorTypes}
+	functions := []func(){booleanTypes, numericTypes, stringTypes, stringComparisons, errorTypes}
 	for _, function := range functions {
 		// using reflection to get the name of the function it's calling
 		// the name in the slice isn't a string it's a function reference
