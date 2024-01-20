@@ -6,7 +6,7 @@ There are 4 types of primitives in Go: string, numeric type, bool, and (possibly
 
 <https://go.dev/ref/spec#String_types>
 
-Example from [primitives_example.go](../examples/primitives/primitives_example.go)
+Example from [primitives_example.go](primitives_example.go)
 
 ```go
 s := "This is a string" // string
@@ -84,7 +84,7 @@ found ing as a suffix to This is a string
 
 <https://go.dev/ref/spec#Numeric_types>
 
-Example from [primitives_example.go](../examples/primitives/primitives_example.go)
+Example from [primitives_example.go](primitives_example.go)
 
 ```go
 i := 12345 // integer
@@ -104,7 +104,7 @@ int variable i's value of 12345
 
 <https://go.dev/ref/spec#Boolean_types>
 
-Example from [primitives_example.go](../examples/primitives/primitives_example.go)
+Example from [primitives_example.go](primitives_example.go)
 
 ```go
 t := true // true boolean
@@ -124,7 +124,7 @@ bool variable t's value true
 
 <https://pkg.go.dev/builtin#error>
 
-Example from [primitives_example.go](../examples/primitives/primitives_example.go)
+Example from [primitives_example.go](primitives_example.go)
 
 ```go
 err := fmt.Errorf("this is an error message")
@@ -142,7 +142,7 @@ Output
 
 ## Example
 
-You can see all of this, and more, live in our [primitives_example.go](../examples/primitives/primitives_example.go) example.  To run this example:
+You can see all of this, and more, live in our [primitives_example.go](primitives_example.go) example.  To run this example:
 
 ```bash
 go run examples/primitives/primitives_example.go

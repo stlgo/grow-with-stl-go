@@ -93,11 +93,11 @@ We have some examples and some documentation on how to go from "hello world" to 
 
 ### The basics
 
-1. [Primitive Types](docs/primitives.md)
-2. [Structures](docs/structures.md)
-3. [Slices and Maps](docs/slices_and_maps.md)
-4. [Logging](docs/logging.md)
-5. Files
+1. [Primitive Types](examples/primitives/README.md)
+2. [Structures](examples/structures/README.md)
+3. [Maps and Slices](examples/maps_and_slices/README.md)
+4. [Logging](examples/logging/README.md)
+5. [Files](examples/files/README.md)
 6. Goroutines
 7. Channels
 
@@ -105,10 +105,11 @@ We have some examples and some documentation on how to go from "hello world" to 
 
 These are what could be considered more fundamental aspects of creating a successful project that builds on the basics of programming.
 
-1. Application configurations
-2. Web hosting
-3. REST
-4. WebSockets
+1. [Logging](examples/logging/README.md)
+2. Application configurations
+3. HTTP Client
+4. HTTP Server / WebService
+5. WebSockets
 
 ### Making sure we put some shine on our projects
 

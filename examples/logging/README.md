@@ -77,7 +77,7 @@ If for example you set your log level = 3 (warn) at the start of, or dynamically
 
 ### Example
 
-You can see this live in action in our [logging_example.go](../../examples/logging/logging_example.go) example.  To run this example:
+You can see this live in action in our [logging_example.go](logging_example.go) example.  To run this example:
 
 ```bash
 go run examples/logging/logging_example.go

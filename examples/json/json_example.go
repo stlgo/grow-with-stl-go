@@ -22,6 +22,39 @@ import (
 	"time"
 )
 
+// StructJSON is a basic struct so we can marshall data -> JSON / unmarshall JSON -> data in the program
+type StructJSON struct {
+	FileDate        *int64          `json:"fileDate,omitempty"`
+	FileDateISO8601 *string         `json:"fileDateISO8601,omitempty"`
+	FileText        *string         `json:"fileText,omitempty"`
+	SomeArray       *[]int          `json:"someArray,omitempty"`
+	NestedMap       *map[string]any `json:"nestedMap,omitempty"`
+}
+
+// write the struct based JSON struct to disk
+func (jo StructJSON) persist() (*string, error) {
+	// create the temp dir
+	tmpDir, err := makeTempDir()
+	if err != nil {
+		return nil, err
+	}
+
+	// marshall the StructJSON object to a byte array
+	jsonBytes, err := json.MarshalIndent(jo, "", "\t")
+	if err != nil {
+		return nil, err
+	}
+
+	// write the byte array to the file
+	fileName := filepath.Join(*tmpDir, "structBased.json")
+	err = os.WriteFile(fileName, jsonBytes, 0o600)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Temp JSON file %s was created and successfully written to\n", fileName)
+	return &fileName, nil
+}
+
 // Generic JSON with string as a Key and a generic interface as the value
 func createSimpleJSON() (*string, error) {
 	// create the date object because we'll it several times
@@ -104,39 +137,16 @@ func runSimpleJSONFunctions() {
 	for key, value := range simpleJSON {
 		fmt.Printf("Simple JSON key %s has a value of %v\n", key, value)
 	}
-}
 
-// StructJSON is a basic struct so we can marshall data -> JSON / unmarshall JSON -> data in the program
-type StructJSON struct {
-	FileDate        *int64          `json:"fileDate,omitempty"`
-	FileDateISO8601 *string         `json:"fileDateISO8601,omitempty"`
-	FileText        *string         `json:"fileText,omitempty"`
-	SomeArray       *[]int          `json:"someArray,omitempty"`
-	NestedMap       *map[string]any `json:"nestedMap,omitempty"`
-}
-
-// write the struct based JSON struct to disk
-func (jo StructJSON) persist() (*string, error) {
-	// create the temp dir
-	tmpDir, err := makeTempDir()
-	if err != nil {
-		return nil, err
+	// you can also interact with specific keys in the map
+	if value, ok := simpleJSON["fileDateISO8601"]; ok {
+		fmt.Printf("Simple JSON value of key \"fileDateISO8601\" %s\n", value)
 	}
 
-	// marshall the StructJSON object to a byte array
-	jsonBytes, err := json.MarshalIndent(jo, "", "\t")
-	if err != nil {
-		return nil, err
+	// nothing will happen here because the key "keyDoesNotExist" doesn't exist
+	if value, ok := simpleJSON["keyDoesNotExist"]; ok {
+		fmt.Printf("value of keyDoesNotExist %s\n", value)
 	}
-
-	// write the byte array to the file
-	fileName := filepath.Join(*tmpDir, "structBased.json")
-	err = os.WriteFile(fileName, jsonBytes, 0o600)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("Temp JSON file %s was created and successfully written to\n", fileName)
-	return &fileName, nil
 }
 
 // create a tmp runtime directory to write and get files to

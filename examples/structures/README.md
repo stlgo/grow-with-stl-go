@@ -4,7 +4,7 @@
 
 In golang a structure (struct) is a collection of things you want to store off and use.  It would be considered, in object oriented terms, a class.
 
-Example from our [struct_example.go](../examples/structures/struct_example.go) file:
+Example from our [struct_example.go](struct_example.go) file:
 
 ## This is a basic struct with a single string field
 
@@ -63,7 +63,7 @@ Genus Solanum, Species lycopersicum, Cultivar Cherokee Purple, Common name: toma
 
 An [interface](https://go.dev/tour/methods/9) is a defined set of method signatures.  So long as your type complies it can be used as the interface type.
 
-Example from our [struct_example.go](../examples/structures/struct_example.go) file:
+Example from our [struct_example.go](struct_example.go) file:
 
 ### This is a simple interface
 
@@ -109,7 +109,7 @@ Genus Canis, Species familiaris, breed English Pointer, name: Charlie, age 13
 
 ## Example
 
-You can see all of this, and more, live in our [struct_example.go](../examples/structures/struct_example.go) example.  To run this example:
+You can see all of this, and more, live in our [struct_example.go](struct_example.go) example.  To run this example:
 
 ```bash
 go run examples/structures/struct_example.go
