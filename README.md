@@ -98,8 +98,9 @@ We have some examples and some documentation on how to go from "hello world" to 
 3. [Maps and Slices](examples/maps_and_slices/README.md)
 4. [Logging](examples/logging/README.md)
 5. [Files](examples/files/README.md)
-6. Goroutines
-7. Channels
+6. [JSON](examples/json/README.md)
+7. Goroutines
+8. Channels
 
 ### Higher order concepts
 

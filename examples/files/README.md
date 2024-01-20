@@ -2,7 +2,7 @@
 
 Files reads and writes are one of the fundamental things we do in programming.  Go makes this SUPER easy.
 
-Example from our [files.go](filess_example.go) file:
+Examples from our [files.go](files_example.go) file:
 
 ## Temp Dir
 

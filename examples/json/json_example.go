@@ -57,19 +57,18 @@ func (jo StructJSON) persist() (*string, error) {
 
 // Generic JSON with string as a Key and a generic interface as the value
 func createSimpleJSON() (*string, error) {
-	// create the date object because we'll it several times
-	now := time.Now()
-
 	jo := map[string]any{
 		"fileText":        "This text was be written to the file by this example program for simple JSON",
-		"fileDate":        now.UnixMilli(),
-		"fileDateISO8601": now.UTC().Format("2006-01-02T15:04:05-0700"),
+		"fileDate":        time.Now().UnixMilli(),
+		"fileDateISO8601": time.Now().UTC().Format("2006-01-02T15:04:05-0700"),
 		"someArray":       []int{1, 2, 3, 4},
 		"nestedMap": map[string]any{
 			"foo":       "bar",
 			"someArray": []float32{1.2, 2.4, 3.6, 4.8},
 		},
 	}
+
+	fmt.Printf("Simple JSON created: %v\n", jo)
 
 	// create the temp dir
 	tmpDir, err := makeTempDir()
@@ -199,18 +198,8 @@ func readStructJSONFile(fileName *string) (*StructJSON, error) {
 			return nil, err
 		}
 
-		// unmarshal the file into a basic JSON Object
-		var jo map[string]interface{}
-		if err1 := json.Unmarshal(jsonBytes, &jo); err1 != nil {
-			return nil, err1
-		}
-
-		// print it back out as a generic JSON
-		jsonOutBytes, err := json.MarshalIndent(jo, "", "\t")
-		if err != nil {
-			return nil, err
-		}
-		fmt.Println(string(jsonOutBytes))
+		// output the string we read in from the file
+		fmt.Printf("Data read from %s is:\n%s\n", *fileName, string(jsonBytes))
 
 		// unmarshal the json as the struct
 		var structJSON StructJSON
