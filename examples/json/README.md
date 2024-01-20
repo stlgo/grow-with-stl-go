@@ -1,6 +1,6 @@
 # JSON
 
-[JSON](https://www.json.org/json-en.html) (JavaScript Object Notation) is a lightweight data-interchange format.  JSON is ubiquitous.  It's used for interprocess communication, application configurations, data storage in database and on disk.  It has largely supplanted the use of XML in web services and some might say it's a thing we as an industry what passes for correct.
+[JSON](https://www.json.org/json-en.html) (JavaScript Object Notation) is a lightweight data-interchange format.  JSON is ubiquitous.  It's used for interprocess communication, application configurations, data storage in database and on disk.  It has largely supplanted the use of XML in web services and it sits in the center of our computing universe.
 
 JSON at its core is key value pairs ([tuples](https://en.wikipedia.org/wiki/Tuple)).  The keys are generally strings or integers and values can be primitives or complex styles.  You can also have arrays of JSON Objects and arrays of primitives.
 
@@ -389,7 +389,7 @@ Simple JSON key fileText has a value of This text was be written to the file by 
 Simple JSON key nestedMap has a value of map[foo:bar someArray:[1.2 2.4 3.6 4.8]]
 Simple JSON key someArray has a value of [1 2 3 4]
 Simple JSON value of key "fileDateISO8601" 2024-01-20T21:22:21+0000
-Temp dir C:\Users\root\AppData\Local\Temp\stl-go3920536142 was created
+Temp dir /tmp/stl-go3920536142/ was created
 Temp JSON file /tmp/stl-go3920536142/structBased.json was created and successfully written to
 Data read from /tmp/stl-go3920536142/structBased.json is:
 {
