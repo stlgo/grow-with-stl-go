@@ -99,7 +99,7 @@ We have some examples and some documentation on how to go from "hello world" to 
 4. [Logging](examples/logging/README.md)
 5. [Files](examples/files/README.md)
 6. [JSON](examples/json/README.md)
-7. Goroutines
+7. [Goroutines](examples/goroutines/README.md)
 8. Channels
 
 ### Higher order concepts
