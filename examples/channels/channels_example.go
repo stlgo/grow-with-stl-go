@@ -28,7 +28,7 @@ func longRunningThing() {
 	fmt.Println("Starting long running thing")
 	for {
 		if continueProgram {
-			time.Sleep(2)
+			time.Sleep(time.Duration(1) * time.Second)
 			if time.Now().Second()%5 == 0 {
 				fmt.Println(time.Now())
 			}
@@ -48,7 +48,7 @@ func launch() {
 		<-c
 		fmt.Println("Cleaning up processes prior to exit")
 		continueProgram = false
-		time.Sleep(2)
+		time.Sleep(time.Duration(2) * time.Second)
 		os.Exit(0)
 	}()
 
