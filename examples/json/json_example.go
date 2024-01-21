@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -75,6 +76,16 @@ func (jo StructJSON) persist() (*string, error) {
 		return &fileName, nil
 	}
 	return nil, fmt.Errorf("the tmp directory is nil, cannot continue")
+}
+
+// create a tmp runtime directory to write and get files to
+func makeTempDir() (*string, error) {
+	tmpDir, err := os.MkdirTemp("", "stl-go")
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Temp dir %s was created\n", tmpDir)
+	return &tmpDir, nil
 }
 
 // Generic JSON with string as a Key and a generic interface as the value
@@ -140,6 +151,44 @@ func readSimpleJSONFile(fileName *string) (map[string]any, error) {
 	return nil, fmt.Errorf("file name is nil, cannot continue")
 }
 
+// scan a generic JSON object for specific keys
+func scanJSON(jo any) error {
+	for key, value := range jo.(map[string]interface{}) {
+		switch value.(type) {
+		case map[string]interface{}:
+			if err := scanJSON(value); err != nil {
+				return err
+			}
+		case []interface{}:
+			if err := scanJSONArray(value); err != nil {
+				return err
+			}
+		default:
+			if strings.EqualFold(key, "foo") {
+				fmt.Printf("key %s found with value %v\n", key, value)
+			}
+		}
+	}
+	return nil
+}
+
+// scan a generic JSON array for specific keys (utilized by scanJSON)
+func scanJSONArray(anArray any) error {
+	for _, value := range anArray.([]interface{}) {
+		switch value.(type) {
+		case map[string]interface{}:
+			if err := scanJSON(value); err != nil {
+				return err
+			}
+		case []interface{}:
+			if err := scanJSONArray(value); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // a helper method to run the functions to create & use a simple JSON file
 func runSimpleJSONFunctions() {
 	fileName, err := createSimpleJSON()
@@ -168,16 +217,12 @@ func runSimpleJSONFunctions() {
 	if value, ok := simpleJSON["keyDoesNotExist"]; ok {
 		fmt.Printf("value of keyDoesNotExist %s\n", value)
 	}
-}
 
-// create a tmp runtime directory to write and get files to
-func makeTempDir() (*string, error) {
-	tmpDir, err := os.MkdirTemp("", "stl-go")
+	// scan the JSON
+	err = scanJSON(simpleJSON)
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
 	}
-	fmt.Printf("Temp dir %s was created\n", tmpDir)
-	return &tmpDir, nil
 }
 
 // create a struct based JSON object
