@@ -125,8 +125,12 @@ go run examples/files/files_example.go
 Output
 
 ```bash
-Temp dir /tmp/stl-go2895443955 was created
-Temp file /tmp/stl-go2895443955/simpleFile.txt was created and successfully written to
-Text from /tmp/stl-go2895443955/simpleFile.txt is as follows:
-This text was be written to the file '/tmp/stl-go2895443955/simpleFile.txt' by this example program on Sat Jan 20 13:40:08 CST 2024
+Temp dir /tmp/stl-go3154821507 was created
+Temp file /tmp/stl-go3154821507/simpleFile.txt was created and successfully written to
+Text from /tmp/stl-go3154821507/simpleFile.txt is as follows:
+This text was be written to the file '/tmp/stl-go3154821507/simpleFile.txt' by this example program on Sat Jan 20 19:43:00 CST 2024
+Temp dir /tmp/stl-go2788945162 was created
+160 bytes were written to /tmp/stl-go2788945162/gzipFile.txt.gz
+Text from /tmp/stl-go2788945162/gzipFile.txt.gz is as follows:
+This text was be written to the file '/tmp/stl-go2788945162/gzipFile.txt.gz' by this example program on Sat Jan 20 19:43:00 CST 2024
 ```

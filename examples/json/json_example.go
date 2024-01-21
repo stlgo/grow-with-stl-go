@@ -15,8 +15,11 @@
 package main
 
 import (
+	"bufio"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -39,20 +42,39 @@ func (jo StructJSON) persist() (*string, error) {
 		return nil, err
 	}
 
-	// marshall the StructJSON object to a byte array
-	jsonBytes, err := json.MarshalIndent(jo, "", "\t")
-	if err != nil {
-		return nil, err
-	}
+	if tmpDir != nil {
+		fileName := filepath.Join(*tmpDir, "structBased.json.gz")
 
-	// write the byte array to the file
-	fileName := filepath.Join(*tmpDir, "structBased.json")
-	err = os.WriteFile(fileName, jsonBytes, 0o600)
-	if err != nil {
-		return nil, err
+		// create the gzip file
+		fi, err := os.Create(fileName)
+		if err != nil {
+			return nil, err
+		}
+		defer fi.Close()
+
+		// create the gzip file writer
+		gzw := gzip.NewWriter(fi)
+		defer gzw.Close()
+
+		// create the buffered writer
+		bfw := bufio.NewWriter(gzw)
+		defer bfw.Flush()
+
+		// marshall the StructJSON object to a byte array
+		jsonBytes, err := json.Marshal(jo)
+		if err != nil {
+			return nil, err
+		}
+
+		numBytes, err := bfw.Write(jsonBytes)
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Printf("%d bytes were successfully written to %s\n", numBytes, fileName)
+		return &fileName, nil
 	}
-	fmt.Printf("Temp JSON file %s was created and successfully written to\n", fileName)
-	return &fileName, nil
+	return nil, fmt.Errorf("the tmp directory is nil, cannot continue")
 }
 
 // Generic JSON with string as a Key and a generic interface as the value
@@ -193,7 +215,21 @@ func createStructJSON() (*string, error) {
 // read a struct based JSON file
 func readStructJSONFile(fileName *string) (*StructJSON, error) {
 	if fileName != nil {
-		jsonBytes, err := os.ReadFile(*fileName)
+		// crack open the file
+		f, err := os.Open(*fileName)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		// create a gzip file reader on the open file handler
+		gzr, err := gzip.NewReader(f)
+		if err != nil {
+			return nil, err
+		}
+		defer gzr.Close()
+
+		jsonBytes, err := io.ReadAll(gzr)
 		if err != nil {
 			return nil, err
 		}
