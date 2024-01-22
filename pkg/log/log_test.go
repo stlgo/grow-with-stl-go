@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"stl-go/go-learning-series/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/log"
 )
 
 var logFormatRegex = regexp.MustCompile(`^\[stl-go\] .*`)

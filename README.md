@@ -100,13 +100,14 @@ We have some examples and some documentation on how to go from "hello world" to 
 5. [Files](examples/files/README.md)
 6. [JSON](examples/json/README.md)
 7. [Goroutines](examples/goroutines/README.md)
-8. Channels
+8. [Channels](exmaples/channels/README.go)
 
-### Higher order concepts
+### Whelp, you came this far, may as well go a bit further
 
-These are what could be considered more fundamental aspects of creating a successful project that builds on the basics of programming.
+Sometimes seeing things in context helps.  The next set of examples is included in the "Grow with stl-go" application example.  It is a fully functioning webservice with a UI and REST / WebSocket apis
 
 1. [Logging](examples/logging/README.md)
+2. [Cobra](doc/cobra.md)
 2. Application configurations
 3. HTTP Client
 4. HTTP Server / WebService
@@ -115,3 +116,6 @@ These are what could be considered more fundamental aspects of creating a succes
 ### Making sure we put some shine on our projects
 
 1. [Linting](docs/linting.md)
+2. Makefile
+
+## The "Grow with stl-go" example application

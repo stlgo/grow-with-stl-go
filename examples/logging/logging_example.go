@@ -16,7 +16,7 @@ package main
 
 import (
 	"fmt"
-	"stl-go/go-learning-series/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/log"
 )
 
 var (

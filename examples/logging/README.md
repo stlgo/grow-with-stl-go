@@ -44,7 +44,7 @@ The problem with this output is we know the who, the what and the when, we don't
 
 ### A pretty good way to do it
 
-We can use the [logging wrapper class present in this project](../../pkg/log/log.go)
+We can use the [logging wrapper class present in the "Grow with stl-go" project](../../pkg/log/log.go)
 
 ```go
 log.Infof("User %s has logged in\n", username)
