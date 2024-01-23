@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 )
 
@@ -37,13 +38,13 @@ func init() {
 	rootCmd.AddCommand(versionCmd())
 
 	// Add the config file Flag
-	// rootCmd.Flags().StringVarP(
-	// 	&configs.UIConfigFile,
-	// 	"conf",
-	// 	"c",
-	// 	"etc/airshipui.json",
-	// 	"This will set the location of the conf file needed to start the UI",
-	// )
+	rootCmd.Flags().StringVarP(
+		&configs.ConfigFile,
+		"conf",
+		"c",
+		"etc/grow-with-stlgo.json",
+		"This will set the location of the conf file needed to start the UI",
+	)
 
 	// Add the logging level flag
 	rootCmd.Flags().IntVar(

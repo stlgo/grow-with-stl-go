@@ -16,7 +16,6 @@ package configs
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -30,7 +29,7 @@ var (
 	// GrowSTLGo is the main config for the application
 	GrowSTLGo Config
 	// ConfigFile is the physical file that contains the config for the application
-	ConfigFile     *string
+	ConfigFile     string
 	rewriteConfig  bool
 	configReadTime int64
 	watchSetup     bool
@@ -84,52 +83,49 @@ type WsMessage struct {
 
 // SetGrowSTLGoConfig sets the config for the application
 func SetGrowSTLGoConfig() error {
-	if ConfigFile != nil {
-		// read the config file if it exists
-		jsonBytes, err := os.ReadFile(*ConfigFile)
-		if err != nil {
-			log.Error(err)
-			log.Info("No configuration found building a default configuration")
-		}
-
-		// unmarshall the config file to a hash map if it exists
-		var jo map[string]interface{}
-		err = json.Unmarshal(jsonBytes, &jo)
-		if err != nil {
-			log.Error(err)
-		}
-
-		// get the secret out of the file, if there isn't one generate it
-		err = getSecret(jo)
-		if err != nil {
-			return err
-		}
-
-		// scan the json for keys we want to encrypt that are currently clear text
-		err = scanJSON(jo)
-		if err != nil {
-			log.Error(err)
-		}
-
-		// map the json to the struct
-		jsonBytes, err = json.Marshal(jo)
-		if err != nil {
-			return err
-		}
-
-		err = json.Unmarshal(jsonBytes, &GrowSTLGo)
-		if err != nil {
-			return err
-		}
-
-		if !watchSetup {
-			watchSetup = true
-			go configRecheckTimer()
-		}
-
-		return checkConfigs()
+	// read the config file if it exists
+	jsonBytes, err := os.ReadFile(ConfigFile)
+	if err != nil {
+		log.Error(err)
+		log.Info("No configuration found building a default configuration")
 	}
-	return errors.New("config file is nil")
+
+	// unmarshall the config file to a hash map if it exists
+	var jo map[string]interface{}
+	err = json.Unmarshal(jsonBytes, &jo)
+	if err != nil {
+		log.Error(err)
+	}
+
+	// get the secret out of the file, if there isn't one generate it
+	err = getSecret(jo)
+	if err != nil {
+		return err
+	}
+
+	// scan the json for keys we want to encrypt that are currently clear text
+	err = scanJSON(jo)
+	if err != nil {
+		log.Error(err)
+	}
+
+	// map the json to the struct
+	jsonBytes, err = json.Marshal(jo)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonBytes, &GrowSTLGo)
+	if err != nil {
+		return err
+	}
+
+	if !watchSetup {
+		watchSetup = true
+		go configRecheckTimer()
+	}
+
+	return checkConfigs()
 }
 
 // get the secret from the config
@@ -214,10 +210,10 @@ func configRecheckTimer() {
 	time.Sleep(time.Duration(60-time.Now().Local().Second()) * time.Second)
 	// execute once per minute
 	for range time.NewTicker(1 * time.Minute).C {
-		info, err := os.Stat(*ConfigFile)
+		info, err := os.Stat(ConfigFile)
 		if err == nil {
 			if !rewriteConfig && info.ModTime().UnixNano()/1000000 > configReadTime {
-				log.Debugf("Update detected in %s, rechecking file", *ConfigFile)
+				log.Debugf("Update detected in %s, rechecking file", ConfigFile)
 				if err := SetGrowSTLGoConfig(); err != nil {
 					log.Error(err)
 				}
