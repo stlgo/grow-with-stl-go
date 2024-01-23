@@ -16,6 +16,7 @@ package configs
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -25,6 +26,7 @@ import (
 	"stl-go/grow-with-stl-go/pkg/cryptography"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -32,11 +34,12 @@ var (
 	// GrowSTLGo is the main config for the application
 	GrowSTLGo Config
 	// ConfigFile is the physical file that contains the config for the application
-	ConfigFile     string
+	ConfigFile     *string
 	etcDir         *string
 	rewriteConfig  bool
 	configReadTime int64
 	watchSetup     bool
+	writeMutex     sync.Mutex
 	keysToEncrypt  = regexp.MustCompile("([a-zA-Z]+sswd|[a-zA-Z]+pswd|[a-zA-Z]+assword)")
 )
 
@@ -79,46 +82,43 @@ type WsMessage struct {
 
 // SetGrowSTLGoConfig sets the config for the application
 func SetGrowSTLGoConfig() error {
-	// read the config file if it exists
-	jsonBytes, err := os.ReadFile(ConfigFile)
-	if err != nil {
-		log.Error(err)
-		log.Info("No configuration found building a default configuration")
-	}
+	if ConfigFile != nil {
+		// read the config file if it exists
+		jsonBytes, err := os.ReadFile(*ConfigFile)
+		if err != nil {
+			log.Error(err)
+			log.Info("No configuration found building a default configuration")
+		}
 
-	// unmarshall the config file to a hash map if it exists
-	var jo map[string]interface{}
-	err = json.Unmarshal(jsonBytes, &jo)
-	if err != nil {
-		log.Error(err)
-	}
+		// unmarshall the config file to a hash map if it exists
+		var jo map[string]interface{}
+		err = json.Unmarshal(jsonBytes, &jo)
+		if err != nil {
+			log.Error(err)
+		}
 
-	// get the secret out of the file, if there isn't one generate it
-	err = getSecret(jo)
-	if err != nil {
-		return err
-	}
+		// get the secret out of the file, if there isn't one generate it
+		err = getSecret(jo)
+		if err != nil {
+			return err
+		}
 
-	// scan the json for keys we want to encrypt that are currently clear text
-	err = scanJSON(jo)
-	if err != nil {
-		log.Error(err)
-	}
+		// scan the json for keys we want to encrypt that are currently clear text
+		err = scanJSON(jo)
+		if err != nil {
+			log.Error(err)
+		}
 
-	// map the json to the struct
-	jsonBytes, err = json.Marshal(jo)
-	if err != nil {
-		return err
-	}
+		// map the json to the struct
+		jsonBytes, err = json.Marshal(jo)
+		if err != nil {
+			return err
+		}
 
-	err = json.Unmarshal(jsonBytes, &GrowSTLGo)
-	if err != nil {
-		return err
-	}
-
-	if !watchSetup {
-		watchSetup = true
-		go configRecheckTimer()
+		err = json.Unmarshal(jsonBytes, &GrowSTLGo)
+		if err != nil {
+			return err
+		}
 	}
 
 	return checkConfigs()
@@ -201,8 +201,82 @@ func checkConfigs() error {
 		return err
 	}
 
+	if rewriteConfig {
+		if err := GrowSTLGo.persist(); err != nil {
+			return err
+		}
+	}
+
+	if !watchSetup {
+		watchSetup = true
+		go configRecheckTimer()
+	}
+
 	configReadTime = time.Now().UnixMilli()
 	return nil
+}
+
+func (c *Config) persist() error {
+	// lets's make sure we can kick the JSON out of the config
+	bytes, err := json.Marshal(GrowSTLGo)
+	if err != nil {
+		return err
+	}
+
+	// we do this so we can rescan for cleartext passwords
+	var jo map[string]interface{}
+	err = json.Unmarshal(bytes, &jo)
+	if err != nil {
+		return err
+	}
+
+	// scan for cleartext passwords
+	err = scanJSON(jo)
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(jo)
+}
+
+func writeJSON(jo map[string]interface{}) error {
+	if ConfigFile != nil {
+		// if the data has mutated then we want to write it out to disk
+		writeMutex.Lock()
+		defer writeMutex.Unlock()
+		log.Debugf("Rewriting %s to ensure data is enciphered on disk", *ConfigFile)
+		jsonBytes, err := json.MarshalIndent(jo, "", "\t")
+		if err != nil {
+			return err
+		}
+
+		// write to a new file
+		dir := path.Dir(*ConfigFile)
+		newFile := filepath.Join(dir, ".new_config.json")
+		err = os.WriteFile(newFile, jsonBytes, 0o600)
+		if err != nil {
+			return err
+		}
+
+		// move the original off
+		_, err = os.Stat(*ConfigFile)
+		if err == nil {
+			oldFile := filepath.Join(dir, ".old_config.json")
+			err = os.Rename(*ConfigFile, oldFile)
+			if err != nil {
+				return err
+			}
+		}
+
+		// move the new file into the proper place
+		err = os.Rename(newFile, *ConfigFile)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+	return errors.New("config file is nil")
 }
 
 func configRecheckTimer() {
@@ -210,16 +284,18 @@ func configRecheckTimer() {
 	time.Sleep(time.Duration(60-time.Now().Local().Second()) * time.Second)
 	// execute once per minute
 	for range time.NewTicker(1 * time.Minute).C {
-		info, err := os.Stat(ConfigFile)
-		if err == nil {
-			if !rewriteConfig && info.ModTime().UnixNano()/1000000 > configReadTime {
-				log.Debugf("Update detected in %s, rechecking file", ConfigFile)
-				if err := SetGrowSTLGoConfig(); err != nil {
-					log.Error(err)
+		if ConfigFile != nil {
+			info, err := os.Stat(*ConfigFile)
+			if err == nil {
+				if !rewriteConfig && info.ModTime().UnixNano()/1000000 > configReadTime {
+					log.Debugf("Update detected in %s, rechecking file", *ConfigFile)
+					if err := SetGrowSTLGoConfig(); err != nil {
+						log.Error(err)
+					}
 				}
 			}
+			rewriteConfig = false
 		}
-		rewriteConfig = false
 	}
 }
 

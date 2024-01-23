@@ -38,8 +38,10 @@ func init() {
 	rootCmd.AddCommand(versionCmd())
 
 	// Add the config file Flag
+	configFile := "../../etc/grow-with-stlgo.json"
+	configs.ConfigFile = &configFile
 	rootCmd.Flags().StringVarP(
-		&configs.ConfigFile,
+		configs.ConfigFile,
 		"conf",
 		"c",
 		"etc/grow-with-stlgo.json",
@@ -64,7 +66,7 @@ func init() {
 func launch(_ *cobra.Command, _ []string) {
 	// read the config file
 	if err := configs.SetGrowSTLGoConfig(); err != nil {
-		log.Fatalf("error in config %s: %s", configs.ConfigFile, err)
+		log.Fatalf("error in config %s: %s", *configs.ConfigFile, err)
 	}
 
 	// start webservice and listen for the the ctl + c to exit

@@ -56,6 +56,10 @@ func GenerateSecret() (*string, error) {
 func HashPassword(password *string) (*string, error) {
 	if password != nil {
 		hashBytes, err := bcrypt.GenerateFromPassword([]byte(*password), 4)
+		if err != nil {
+			return nil, err
+		}
+
 		hash := string(hashBytes)
 		return &hash, err
 	}

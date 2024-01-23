@@ -20,27 +20,49 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGeneratePrivateKey(t *testing.T) {
-	pem, key, err := generatePrivateKey()
-	require.NoError(t, err)
-	require.NotNil(t, key)
-	require.NotNil(t, pem)
-}
+func TestCryptographyFunctions(t *testing.T) {
+	t.Run("Test generating a secret", func(t *testing.T) {
+		secret, err := GenerateSecret()
+		require.NoError(t, err)
+		require.NotNil(t, secret)
+		t.Logf("%s\n", *secret)
+	})
 
-func TestGeneratePublicKey(t *testing.T) {
-	_, privateKey, err := generatePrivateKey()
-	require.NoError(t, err)
+	t.Run("Test encryption", func(t *testing.T) {
+		key := "the-key-has-to-be-32-bytes-long!"
+		plaintext := "passphrase"
 
-	cert, err := generatePublicKey(privateKey)
-	require.NoError(t, err)
-	require.NotNil(t, cert)
-}
+		ciphertext, err := Encrypt(&plaintext, &key)
+		require.NoError(t, err)
+		require.NotNil(t, ciphertext)
+		t.Logf("%s => %s\n", plaintext, *ciphertext)
+	})
 
-func TestTestCertValidity(t *testing.T) {
-	_, privateKey, err := generatePrivateKey()
-	require.NoError(t, err)
+	t.Run("Test decryption", func(t *testing.T) {
+		key := "the-key-has-to-be-32-bytes-long!"
+		ciphertext := "obf::nxQ1cfkfsmXWxXeehy1wJuHiGKUZxmZpiBI7FFHciIrwzFHmenk="
 
-	cert, err := generatePublicKey(privateKey)
-	require.NoError(t, err)
-	require.NotNil(t, cert)
+		plaintext, err := Decrypt(&ciphertext, &key)
+		require.NoError(t, err)
+		require.NotNil(t, ciphertext)
+		t.Logf("%s => %s\n", ciphertext, *plaintext)
+	})
+
+	t.Run("Test password hashing", func(t *testing.T) {
+		input := "some user provided password"
+		hash, err := HashPassword(&input)
+
+		require.NoError(t, err)
+		require.NotNil(t, hash)
+		t.Logf("%s => %s\n", input, *hash)
+	})
+
+	t.Run("Test hash compare", func(t *testing.T) {
+		input := "some user provided password"
+		hash := "$2a$04$mXwoCJ5w9o31XA8YHypueuZfuvCMC7Dz2T79oof7WKjLS4zK85klu"
+
+		err := HashCompare(&hash, &input)
+		require.NoError(t, err)
+		t.Logf("%s compared true to %s\n", input, hash)
+	})
 }
