@@ -62,6 +62,11 @@ func init() {
 }
 
 func launch(_ *cobra.Command, _ []string) {
+	// read the config file
+	if err := configs.SetGrowSTLGoConfig(); err != nil {
+		log.Fatalf("error in config %s: %s", configs.ConfigFile, err)
+	}
+
 	// start webservice and listen for the the ctl + c to exit
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

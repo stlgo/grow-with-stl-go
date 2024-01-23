@@ -17,7 +17,10 @@ package configs
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
+	"path"
+	"path/filepath"
 	"regexp"
 	"stl-go/grow-with-stl-go/pkg/cryptography"
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -30,6 +33,7 @@ var (
 	GrowSTLGo Config
 	// ConfigFile is the physical file that contains the config for the application
 	ConfigFile     string
+	etcDir         *string
 	rewriteConfig  bool
 	configReadTime int64
 	watchSetup     bool
@@ -45,23 +49,15 @@ const (
 
 // Config contains the basis of the web service
 type Config struct {
-	Proxy  *Proxy  `json:"proxy,omitempty"`
-	Secret *string `json:"secret,omitempty"`
+	Proxy      *Proxy      `json:"proxy,omitempty"`
+	Secret     *string     `json:"secret,omitempty"`
+	WebService *WebService `json:"webService,omitempty"`
 }
 
 // Proxy is in case we need to use a proxy for http connections this is where it goes
 type Proxy struct {
 	URL          *string `json:"url,omitempty"`
 	ExtraCACerts *string `json:"extraCACerts,omitempty"`
-}
-
-// WebService is the definition for the webservice
-type WebService struct {
-	Host         *string `json:"host,omitempty"`
-	Port         *int    `json:"port,omitempty"`
-	PublicKey    *string `json:"publicKey,omitempty"`
-	PrivateKey   *string `json:"privateKey,omitempty"`
-	StaticWebDir *string `json:"staticWebDir,omitempty"`
 }
 
 // WsMessage is a request / return structure used for websockets
@@ -201,6 +197,10 @@ func scanJSONHelper(jo any, value interface{}, key string) error {
 }
 
 func checkConfigs() error {
+	if err := checkWebService(); err != nil {
+		return err
+	}
+
 	configReadTime = time.Now().UnixMilli()
 	return nil
 }
@@ -221,4 +221,29 @@ func configRecheckTimer() {
 		}
 		rewriteConfig = false
 	}
+}
+
+func setEtcDir() (*string, error) {
+	if etcDir == nil {
+		// get the runtime directory
+		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			return nil, err
+		}
+
+		// create an etc dir under the root of the runtime directory
+		dir, err = filepath.Abs(filepath.Join(path.Dir(dir), "etc"))
+		if err != nil {
+			return nil, err
+		}
+
+		// make sure the dir is there
+		err = os.MkdirAll(dir, fs.ModeAppend)
+		if err != nil {
+			return nil, err
+		}
+
+		etcDir = &dir
+	}
+	return etcDir, nil
 }

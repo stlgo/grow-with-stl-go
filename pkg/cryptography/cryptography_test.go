@@ -21,26 +21,26 @@ import (
 )
 
 func TestGeneratePrivateKey(t *testing.T) {
-	pem, key, err := GeneratePrivateKey()
+	pem, key, err := generatePrivateKey()
 	require.NoError(t, err)
 	require.NotNil(t, key)
 	require.NotNil(t, pem)
 }
 
 func TestGeneratePublicKey(t *testing.T) {
-	_, privateKey, err := GeneratePrivateKey()
+	_, privateKey, err := generatePrivateKey()
 	require.NoError(t, err)
 
-	cert, err := GeneratePublicKey(privateKey)
+	cert, err := generatePublicKey(privateKey)
 	require.NoError(t, err)
 	require.NotNil(t, cert)
 }
 
 func TestTestCertValidity(t *testing.T) {
-	_, privateKey, err := GeneratePrivateKey()
+	_, privateKey, err := generatePrivateKey()
 	require.NoError(t, err)
 
-	cert, err := GeneratePublicKey(privateKey)
+	cert, err := generatePublicKey(privateKey)
 	require.NoError(t, err)
 	require.NotNil(t, cert)
 }

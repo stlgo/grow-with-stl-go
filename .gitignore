@@ -2,6 +2,8 @@
 *.out
 tools/bin
 tools/*node*
+**node_modules
+/node_modules
 
 # Generated binaries
 bin
@@ -14,8 +16,11 @@ dist
 # local conf files
 etc/*.pem
 etc/*.json
+etc/
+web/package-lock.json
 
 # sqlite database files
+sqlite
 sqlite/*.db
 
 # Only exists if Bazel was run
