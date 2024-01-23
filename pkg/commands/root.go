@@ -38,13 +38,13 @@ func init() {
 	rootCmd.AddCommand(versionCmd())
 
 	// Add the config file Flag
-	configFile := "../../etc/grow-with-stlgo.json"
+	configFile := "../../etc/grow-with-stl-go.json"
 	configs.ConfigFile = &configFile
 	rootCmd.Flags().StringVarP(
 		configs.ConfigFile,
 		"conf",
 		"c",
-		"etc/grow-with-stlgo.json",
+		"etc/grow-with-stl-go.json",
 		"This will set the location of the conf file needed to start the UI",
 	)
 
