@@ -45,9 +45,25 @@ var (
 
 // constant keys used by the websocket communications
 const (
-	Auth         string = "auth"
-	AuthComplete string = "authcomplete"
-	Keepalive    string = "keepalive"
+	// UI Components
+	Auth            string = "auth"
+	AuthComplete    string = "authcomplete"
+	Initialize      string = "initialize"
+	Keepalive       string = "keepalive"
+	UI              string = "ui"
+	WebsocketClient string = "websocketclient"
+
+	// auth subcomponents
+	Approved     string = "approved"
+	Authenticate string = "authenticate"
+	Denied       string = "denied"
+	Refresh      string = "refresh"
+	Validate     string = "validate"
+
+	// http error message "json" to return on errors as a const
+	BadRequestError     = `{"error": "Bad Request", "status": 400}`
+	IntenralServerError = `{"error": "Internal Server Error", "status": 500}`
+	UnauthorizedError   = `{"error": "Unauthorized", "status": 400}`
 )
 
 // Config contains the basis of the web service
@@ -78,6 +94,8 @@ type WsMessage struct {
 
 	// used for auth
 	Authentication *Authentication `json:"authentication,omitempty"`
+	Token          *string         `json:"token,omitempty"`
+	RefreshToken   *string         `json:"refreshToken,omitempty"`
 }
 
 // SetGrowSTLGoConfig sets the config for the application

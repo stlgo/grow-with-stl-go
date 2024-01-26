@@ -23,12 +23,13 @@ import (
 
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/webservice"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:     "grow-with-stl-go",
-	Short:   "grow-with-stl-go is a sample go application developed by stl-go",
+	Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes",
 	Run:     launch,
 	Version: Version(),
 }
@@ -74,9 +75,13 @@ func launch(_ *cobra.Command, _ []string) {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
+		log.Info("Closing all active sessions")
+		webservice.Shutdown()
 		log.Info("Exiting the webservice")
 		os.Exit(0)
 	}()
+
+	webservice.WebServer()
 }
 
 // Execute is called from the main program and kicks this whole shindig off
