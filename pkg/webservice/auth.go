@@ -15,9 +15,9 @@
 package webservice
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -36,35 +36,30 @@ const (
 	expiration = "exp"
 )
 
-// The UI will either request authentication or validation, handle those situations here
-func handleWebSocketAuth(request, response *configs.WsMessage) error {
-	defer log.FunctionTimer()()
-
-	err := errors.New("not authenticated").Error()
-	response.Error = &err
-	denied := configs.Denied
-	response.SubComponent = &denied
-
-	if request.SubComponent != nil && strings.EqualFold(*request.SubComponent, configs.Authenticate) && request.Authentication != nil {
-		if request.SessionID != nil {
-			token, err := createJWTToken(request.Authentication.ID, request.SessionID)
-			if err != nil || token == nil {
-				return err
-			}
-
-			if session, ok := sessions[*request.SessionID]; ok {
-				session.jwt = token
-			}
-
-			approved := configs.Approved
-			response.SubComponent = &approved
-			response.Token = token
-			response.Error = nil
-
-			return nil
-		}
+func validateAPIUser(body []byte) (*string, error) {
+	var authRequest configs.Authentication
+	if err := json.Unmarshal(body, &authRequest); err != nil {
+		log.Errorf("bad request body: %s", body)
+		return authRequest.ID, err
 	}
-	return errors.New("unable to process authentication request")
+
+	if authRequest.ID == nil || authRequest.Password == nil {
+		log.Errorf("bad request body: %s", body)
+		return authRequest.ID, errors.New("bad request body")
+	}
+
+	apiUser, ok := configs.GrowSTLGo.APIUsers[*authRequest.ID]
+	if !ok || apiUser == nil || apiUser.Active == nil || !*apiUser.Active {
+		log.Errorf("User %s not found or is inactive", *authRequest.ID)
+		return nil, errors.New("Unauthorized")
+	}
+
+	if err := apiUser.Authentication.ValidateAuthentication(authRequest.Password); err != nil {
+		log.Errorf("Passwords did not match for request by %s", *authRequest.ID)
+		return nil, errors.New("Unauthorized")
+	}
+
+	return authRequest.ID, nil
 }
 
 // validate JWT claim

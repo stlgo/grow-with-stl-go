@@ -215,6 +215,37 @@ func (session *session) validateWSToken(request *configs.WsMessage) error {
 	return errors.New("invalid token")
 }
 
+// The UI will either request authentication or validation, handle those situations here
+func handleWebSocketAuth(request, response *configs.WsMessage) error {
+	defer log.FunctionTimer()()
+
+	err := errors.New("not authenticated").Error()
+	response.Error = &err
+	denied := configs.Denied
+	response.SubComponent = &denied
+
+	if request.SubComponent != nil && strings.EqualFold(*request.SubComponent, configs.Authenticate) && request.Authentication != nil {
+		if request.SessionID != nil {
+			token, err := createJWTToken(request.Authentication.ID, request.SessionID)
+			if err != nil || token == nil {
+				return err
+			}
+
+			if session, ok := sessions[*request.SessionID]; ok {
+				session.jwt = token
+			}
+
+			approved := configs.Approved
+			response.SubComponent = &approved
+			response.Token = token
+			response.Error = nil
+
+			return nil
+		}
+	}
+	return errors.New("unable to process authentication request")
+}
+
 func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
 	response := configs.WsMessage{
 		Type:         request.Type,

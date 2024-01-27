@@ -67,8 +67,11 @@ func WebServer() {
 
 	webServerMux := http.NewServeMux()
 
-	// hand off the websocket upgrade over http
+	// handle WebSocket endpoints
 	webServerMux.HandleFunc("/ws/v1.0.0", onOpen)
+
+	// handle REST endpoints
+	webServerMux.HandleFunc("/api/v1.0.0", handleRESTRequest)
 
 	// establish routing to static web dir if defined in the config
 	if configs.GrowSTLGo.WebService.StaticWebDir != nil {

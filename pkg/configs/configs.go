@@ -68,9 +68,10 @@ const (
 
 // Config contains the basis of the web service
 type Config struct {
-	Proxy      *Proxy      `json:"proxy,omitempty"`
-	Secret     *string     `json:"secret,omitempty"`
-	WebService *WebService `json:"webService,omitempty"`
+	APIUsers   map[string]*APIUser `json:"apiUsers,omitempty"`
+	Proxy      *Proxy              `json:"proxy,omitempty"`
+	Secret     *string             `json:"secret,omitempty"`
+	WebService *WebService         `json:"webService,omitempty"`
 }
 
 // Proxy is in case we need to use a proxy for http connections this is where it goes
@@ -92,7 +93,7 @@ type WsMessage struct {
 	Data  interface{} `json:"data,omitempty"`
 	Error *string     `json:"error,omitempty"`
 
-	// used for auth
+	// used for authentication
 	Authentication *Authentication `json:"authentication,omitempty"`
 	Token          *string         `json:"token,omitempty"`
 	RefreshToken   *string         `json:"refreshToken,omitempty"`
@@ -215,6 +216,10 @@ func scanJSONHelper(jo any, value interface{}, key string) error {
 }
 
 func checkConfigs() error {
+	if GrowSTLGo.APIUsers == nil {
+		populateDefaultAPIUsers()
+	}
+
 	if err := checkWebService(); err != nil {
 		return err
 	}
