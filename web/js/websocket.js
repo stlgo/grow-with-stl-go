@@ -12,7 +12,7 @@
 # limitations under the License.
 */
 
-import { Log } from './Log.js';
+import { Log } from './log.js';
 
 export class WebSocketClient {
     constructor() {
@@ -155,27 +155,22 @@ export class WebSocketClient {
             Log.info('Web Socket Closed: The connection was closed abnormally: ', code);
             break;
         case 1007:
-            Log.info('Web Socket Closed: terminating the connection because it has received data within a message that was not ' +
-            'consistent with the type of the message: ', code);
+            Log.info('Web Socket Closed: terminating the connection because it has received data within a message that was not consistent with the type of the message: ', code);
             break;
         case 1008:
             Log.info('Web Socket Closed: terminating the connection because it has received a message that "violates its policy": ', code);
             break;
         case 1009:
-            Log.info('Web Socket Closed: terminating the connection because it has received a message that is too big for it to ' +
-            'process: ', code);
+            Log.info('Web Socket Closed: terminating the connection because it has received a message that is too big for it to process: ', code);
             break;
         case 1010:
-            Log.info('Web Socket Closed: client is terminating the connection because it has expected the server to negotiate ' +
-            'one or more extension, but the server didn\'t return them in the response message of the WebSocket handshake: ', code);
+            Log.info('Web Socket Closed: client is terminating the connection because it has expected the server to negotiate one or more extension, but the server didn\'t return them in the response message of the WebSocket handshake: ', code);
             break;
         case 1011:
-            Log.info('Web Socket Closed: server is terminating the connection because it encountered an unexpected condition that' +
-            ' prevented it from fulfilling the request: ', code);
+            Log.info('Web Socket Closed: server is terminating the connection because it encountered an unexpected condition that prevented it from fulfilling the request: ', code);
             break;
         case 1015:
-            Log.info('Web Socket Closed: closed due to a failure to perform a TLS handshake (e.g., the server certificate can\'t be' +
-            ' verified): ', code);
+            Log.info('Web Socket Closed: closed due to a failure to perform a TLS handshake (e.g., the server certificate can\'t be verified): ', code);
             break;
         default:
             Log.info('Web Socket Closed: unknown error code: ', code);
