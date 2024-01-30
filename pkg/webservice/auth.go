@@ -28,7 +28,7 @@ import (
 
 // Create the JWT key used to create the signature
 // TODO: use a private key for this instead of a phrase
-var jwtKey = []byte("airshipUI_JWT_key")
+var jwtKey = []byte("grow-with-stl-go!")
 
 const (
 	username   = "username"

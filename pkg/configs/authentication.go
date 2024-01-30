@@ -19,8 +19,9 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"stl-go/grow-with-stl-go/pkg/cryptography"
 	"time"
+
+	"stl-go/grow-with-stl-go/pkg/cryptography"
 )
 
 // Authentication structure to hold authentication parameters

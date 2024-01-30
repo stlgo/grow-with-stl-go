@@ -25,8 +25,9 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
-	"stl-go/grow-with-stl-go/pkg/log"
 	"time"
+
+	"stl-go/grow-with-stl-go/pkg/log"
 )
 
 // GenerateDevSSL generates self signed SSL keypair and writes it to file

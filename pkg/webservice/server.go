@@ -19,10 +19,11 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"stl-go/grow-with-stl-go/pkg/configs"
-	"stl-go/grow-with-stl-go/pkg/log"
 	"strconv"
 	"time"
+
+	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/log"
 )
 
 // getCertificates returns the cert chain in a way that the net/http server struct expects
