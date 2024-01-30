@@ -20,6 +20,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -29,9 +32,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// this is a way to allow for arbitrary messages to be processed by the backend
-// the message of a specifc component is shunted to that subsystem for further processing
-var webServiceFunctionMap = map[string]func(w http.ResponseWriter, r *http.Request){}
+var (
+	staticWebURIPrefixes = regexp.MustCompile(`^(/index.html|/home|/users|/_.*/|/\?.*|/js/|/styles/|/node_modules/|/favicon.ico)`)
+
+	// this is a way to allow for arbitrary messages to be processed by the backend
+	// the message of a specific component is shunted to that subsystem for further processing
+	webServiceFunctionMap = map[string]func(w http.ResponseWriter, r *http.Request){}
+)
 
 // AppendToWebServiceFunctionMap allows us to break up the circular reference from the other packages
 // It does however require them to implement an init function to append them
@@ -42,14 +49,15 @@ func AppendToWebServiceFunctionMap(requestType string, function func(w http.Resp
 }
 
 func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
+	log.Info("here")
 	uri := r.RequestURI
 
-	if strings.EqualFold(uri, "/api/v1.0.0/token") && strings.EqualFold(r.Method, http.MethodPost) {
+	if strings.EqualFold(uri, "/REST/v1.0.0/token") && strings.EqualFold(r.Method, http.MethodPost) {
 		handelRESTAuthRequest(w, r)
 		return
 	}
 
-	restURI := strings.TrimPrefix(uri, "/api/v1.0.0/")
+	restURI := strings.TrimPrefix(uri, "/REST/v1.0.0/")
 	if restFunction, ok := webServiceFunctionMap[restURI]; ok {
 		id, err := handleRESTAuth(r)
 		if err != nil {
@@ -61,6 +69,31 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 		restFunction(w, r)
 		return
 	}
+
+	if strings.TrimPrefix(uri, "/") == "" || staticWebURIPrefixes.MatchString(uri) {
+		serveFile(w, r)
+		return
+	}
+
+	log.Errorf("Rejecting %s attempt for %s from %s", r.Method, uri, r.RemoteAddr)
+	http.Error(w, configs.UnauthorizedError, http.StatusUnauthorized)
+}
+
+// serveFile test if path and file exists, if it does send a page, else 404 or redirect
+func serveFile(w http.ResponseWriter, r *http.Request) {
+	path := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, r.URL.Path)
+	_, err := os.Stat(path)
+	if err == nil {
+		http.ServeFile(w, r, path)
+		return
+	}
+
+	if os.IsExist(err) {
+		http.Redirect(w, r, "/index.html", http.StatusFound)
+		return
+	}
+	log.Error(err)
+	http.Error(w, "file not found", http.StatusNotFound)
 }
 
 func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {

@@ -24,23 +24,32 @@ type APIUser struct {
 	Active         *bool           `json:"active,omitempty"`
 	Authentication *Authentication `json:"authentication,omitempty"`
 	LastLogin      *int64          `json:"lastLogin,omitempty"`
+	Admin          *bool           `json:"admin,omitempty"`
 }
 
 func populateDefaultAPIUsers() {
-	id := "admin"
-	admin := APIUser{
-		Active: utils.BoolPointer(true),
-		Authentication: &Authentication{
-			ID: &id,
-		},
+	ids := map[string]bool{
+		"admin": true,
+		"user":  false,
 	}
 
-	if password, err := admin.Authentication.GeneratePassword(true); err == nil && password != nil {
-		log.Warnf("Generated admin password %s.  DO NOT USE THIS FOR PRODUCTION", *password)
+	GrowSTLGo.APIUsers = map[string]*APIUser{}
 
-		GrowSTLGo.APIUsers = map[string]*APIUser{
-			id: &admin,
+	for id, isAdmin := range ids {
+		localID := id
+		user := APIUser{
+			Active: utils.BoolPointer(isAdmin),
+
+			Authentication: &Authentication{
+				ID: &localID,
+			},
 		}
-		rewriteConfig = true
+
+		if password, err := user.Authentication.GeneratePassword(true); err == nil && password != nil {
+			log.Warnf("Password generated for user %s, password %s.  DO NOT USE THIS FOR PRODUCTION", localID, *password)
+
+			GrowSTLGo.APIUsers[localID] = &user
+		}
 	}
+	rewriteConfig = true
 }

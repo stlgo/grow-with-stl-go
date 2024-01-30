@@ -19,30 +19,11 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"strconv"
 	"time"
 )
-
-// serveFile test if path and file exists, if it does send a page, else 404 or redirect
-func serveFile(w http.ResponseWriter, r *http.Request) {
-	path := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, r.URL.Path)
-	_, err := os.Stat(path)
-	if err == nil {
-		http.ServeFile(w, r, path)
-		return
-	}
-
-	if os.IsExist(err) {
-		http.Redirect(w, r, "/index.html", http.StatusFound)
-		return
-	}
-	log.Error(err)
-	http.Error(w, "file not found", http.StatusNotFound)
-}
 
 // getCertificates returns the cert chain in a way that the net/http server struct expects
 func getCertificates() (*[]tls.Certificate, error) {
@@ -70,13 +51,10 @@ func WebServer() {
 	// handle WebSocket endpoints
 	webServerMux.HandleFunc("/ws/v1.0.0", onOpen)
 
-	// handle REST endpoints
-	webServerMux.HandleFunc("/api/v1.0.0", handleRESTRequest)
-
-	// establish routing to static web dir if defined in the config
+	// establish routing to static web dir if defined in the config and handle REST endpoints
 	if configs.GrowSTLGo.WebService.StaticWebDir != nil {
 		log.Debug("Attempting to serve static content from ", *configs.GrowSTLGo.WebService.StaticWebDir)
-		webServerMux.HandleFunc("/", serveFile)
+		webServerMux.HandleFunc("/", handleRESTRequest)
 	}
 
 	// Calculate the address and start on the host and port specified in the config
@@ -95,7 +73,7 @@ func WebServer() {
 			InsecureSkipVerify: false,
 			ServerName:         *configs.GrowSTLGo.WebService.Host,
 			Certificates:       *certs,
-			MinVersion:         tls.VersionTLS13,
+			MinVersion:         tls.VersionTLS12,
 		},
 		Handler:      webServerMux,
 		ErrorLog:     log.Logger(),
