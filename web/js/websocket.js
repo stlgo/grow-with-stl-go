@@ -193,7 +193,7 @@ export class WebSocketClient {
 
     keepAlive() {
         if (this.ws !== null) {
-            if (this.ws.readyState !== WebSocket.CLOSED && this.ws.readyState !== WebSocket.CONNECTING && this.token != null) {
+            if (this.ws.readyState !== WebSocket.CLOSED && this.ws.readyState !== WebSocket.CONNECTING && this.token !== null) {
                 // clear previous timeout
                 window.clearTimeout(this.timeout);
                 window.clearInterval(this.timeout);
