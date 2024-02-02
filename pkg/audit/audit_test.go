@@ -13,3 +13,59 @@
 */
 
 package audit
+
+import (
+	"log"
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/utils"
+)
+
+func initConfigTest() {
+	configFile := "../../etc/grow-with-stl-go.json"
+	configs.ConfigFile = &configFile
+	if err := configs.SetGrowSTLGoConfig(); err != nil {
+		log.Fatalf("config %s", err)
+	}
+	if err := Init(); err != nil {
+		log.Fatalf("Error starting the audit db: %s", err)
+	}
+}
+
+func TestConfigFunctions(t *testing.T) {
+	initConfigTest()
+	t.Run("Test websocket transaction", func(t *testing.T) {
+		host := "localhost"
+		user := "Charlie"
+		messageType := "users"
+		messageComponent := "pageLoad"
+		messageSubComponent := "getUsers"
+		wsRequest := configs.WsMessage{
+			Type:         &messageType,
+			Component:    &messageComponent,
+			SubComponent: &messageSubComponent,
+		}
+		transaction := NewWSTransaction(&host, &user, &wsRequest)
+		require.NotNil(t, transaction)
+		transaction.Recordable = utils.BoolPointer(true)
+		err := transaction.Complete(true)
+		require.NoError(t, err)
+	})
+
+	t.Run("Test REST transaction", func(t *testing.T) {
+		host := "localhost"
+		user := "Charlie"
+		uri := "/foo/bar/glitch"
+		method := "PATCH"
+		transaction := NewRESTTransaction(&host, &uri, &method)
+		require.NotNil(t, transaction)
+		transaction.Recordable = utils.BoolPointer(true)
+		transaction.User = &user
+		err := transaction.Complete(http.StatusUnauthorized)
+		require.NoError(t, err)
+	})
+}

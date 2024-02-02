@@ -16,15 +16,18 @@ package audit
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	_ "github.com/mutecomm/go-sqlcipher/v4" // this is required for the sqlite driver
 
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/utils"
 )
 
 // WSTransaction will be used to record WebSocket transactions and record them to the db
@@ -47,6 +50,7 @@ type RESTTransaction struct {
 	Method          *string
 	Payoload        *string
 	QueryParamaters *string
+	Start           *int64
 	Elapsed         *int64
 	Recordable      *bool
 }
@@ -55,7 +59,7 @@ type table struct {
 	CreateSQL  string
 	InsertSQL  string
 	Indices    []string
-	WriteMutex *sync.Mutex
+	WriteMutex sync.Mutex
 }
 
 var (
@@ -69,10 +73,11 @@ var (
 				type varchar(128) NOT NULL,
 				component varcar(128) NOT NULL,
 				subcomponent varchar(128) NOT NULL,
+				success tinyint(1) NOT NULL default 0,
 				start bigint NOT NULL,
 				stop bigint NOT NULL,
 				elapsed bigint NOT NULL)`,
-			InsertSQL: "INSERT INTO WebSocket values(?,?,?,?,?,?,?,?)",
+			InsertSQL: "INSERT INTO WebSocket values(?,?,?,?,?,?,?,?,?)",
 			Indices: []string{
 				"CREATE INDEX IF NOT EXISTS wshost on WebSocket(host)",
 				"CREATE INDEX IF NOT EXISTS wsuser on WebSocket(user)",
@@ -93,7 +98,7 @@ var (
 				start bigint NOT NULL,
 				stop bigint NOT NULL,
 				elapsed bigint NOT NULL)`,
-			InsertSQL: "INSERT INTO WebSocket values(?,?,?,?,?,?,?,?,?,?)",
+			InsertSQL: "INSERT INTO REST values(?,?,?,?,?,?,?,?,?,?)",
 			Indices: []string{
 				"CREATE INDEX IF NOT EXISTS RESThost on REST(host)",
 				"CREATE INDEX IF NOT EXISTS RESTuri on REST(uri)",
@@ -116,7 +121,7 @@ func Init() error {
 	if configs.GrowSTLGo.SQLite != nil && configs.GrowSTLGo.SQLite.FileName != nil {
 		baseDir := filepath.Dir(*configs.GrowSTLGo.SQLite.FileName)
 		if err := os.MkdirAll(baseDir, 0o750); err != nil {
-			return (err)
+			return err
 		}
 
 		// encrypted db
@@ -124,26 +129,26 @@ func Init() error {
 			if key, err := configs.GrowSTLGo.SQLite.GetEncryptionKey(); err == nil && key != nil {
 				dbname := fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", *configs.GrowSTLGo.SQLite.FileName, *key)
 				sqliteDB, err = sql.Open("sqlite3", dbname)
-				if err == nil {
-					if err = createTables(); err != nil {
-						return (err)
-					}
-					log.Infof("Using encrypted aud database in %s", *configs.GrowSTLGo.SQLite.FileName)
-					return nil
+				if err != nil {
+					return err
 				}
-				return (err)
+				if err := createTables(); err != nil {
+					return err
+				}
+				log.Debugf("Using encrypted aud database in %s", *configs.GrowSTLGo.SQLite.FileName)
+				return nil
 			}
 		}
 		db, err := sql.Open("sqlite3", *configs.GrowSTLGo.SQLite.FileName)
-		if err == nil {
-			sqliteDB = db
-			if err = createTables(); err != nil {
-				return (err)
-			}
-			log.Infof("Using unencrypted aud database in %s", *configs.GrowSTLGo.SQLite.FileName)
-			return nil
+		if err != nil {
+			return err
 		}
-		return err
+		sqliteDB = db
+		if err := createTables(); err != nil {
+			return err
+		}
+		log.Debugf("Using unencrypted aud database in %s", *configs.GrowSTLGo.SQLite.FileName)
+		return nil
 	}
 	return fmt.Errorf("no sutiable configuration for SQLite found in the config file %s", *configs.ConfigFile)
 }
@@ -168,4 +173,116 @@ func createTables() error {
 		}
 	}
 	return nil
+}
+
+// NewWSTransaction creates a new WSTransaction object to record as an auditable thing
+func NewWSTransaction(host, user *string, request *configs.WsMessage) *WSTransaction {
+	return &WSTransaction{
+		Host:         host,
+		Type:         request.Type,
+		Component:    request.Component,
+		SubComponent: request.SubComponent,
+		User:         user,
+		Start:        utils.CurrentTimeInMillis(),
+		Recordable:   utils.BoolPointer(true),
+	}
+}
+
+// Complete is a WSTransaction receiver function to record it to the DB if applicable
+func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && sqliteDB != nil {
+		if table, ok := auditTables["WebSocket"]; ok {
+			stmt, err := sqliteDB.Prepare(table.InsertSQL)
+			if err != nil {
+				return err
+			}
+
+			start := *transaction.Start
+			stop := time.Now().UnixMilli()
+
+			success := 1
+			if errorMessagePresent {
+				success = 0
+			}
+
+			table.WriteMutex.Lock()
+			defer table.WriteMutex.Unlock()
+			result, err := stmt.Exec(
+				transaction.Host,
+				transaction.User,
+				transaction.Type,
+				transaction.Component,
+				transaction.SubComponent,
+				success,
+				start,
+				stop,
+				(stop - start))
+
+			if err != nil {
+				return err
+			}
+
+			rows, err := result.RowsAffected()
+			if err != nil {
+				return err
+			}
+
+			log.Tracef("%d rows inserted into websocket", rows)
+			return nil
+		}
+	}
+	return errors.New("transaction is not recordable")
+}
+
+// NewRESTTransaction creates a new RESTTransaction object to record as an auditable thing
+func NewRESTTransaction(host, uri, method *string) *RESTTransaction {
+	return &RESTTransaction{
+		Host:       host,
+		URI:        uri,
+		Method:     method,
+		Start:      utils.CurrentTimeInMillis(),
+		Recordable: utils.BoolPointer(true),
+	}
+}
+
+// Complete is a RESTTransaction receiver function to record it to the DB if applicable
+func (transaction *RESTTransaction) Complete(httpStatusCode int) error {
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.Start != nil && sqliteDB != nil {
+		if table, ok := auditTables["REST"]; ok {
+			stmt, err := sqliteDB.Prepare(table.InsertSQL)
+			if err != nil {
+				return err
+			}
+
+			start := *transaction.Start
+			stop := time.Now().UnixMilli()
+
+			table.WriteMutex.Lock()
+			defer table.WriteMutex.Unlock()
+			result, err := stmt.Exec(
+				transaction.Host,
+				transaction.URI,
+				transaction.User,
+				transaction.Method,
+				transaction.Payoload,
+				transaction.QueryParamaters,
+				httpStatusCode,
+				start,
+				stop,
+				(stop - start))
+
+			if err != nil {
+				return err
+			}
+
+			rows, err := result.RowsAffected()
+			if err != nil {
+				return err
+			}
+
+			log.Tracef("%d rows inserted into REST", rows)
+			return nil
+		}
+	}
+	return errors.New("transaction is not recordable")
 }

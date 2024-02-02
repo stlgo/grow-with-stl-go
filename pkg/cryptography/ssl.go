@@ -55,6 +55,7 @@ func GenerateDevSSL(etcDir *string) (privateKey, publicKey *string, err error) {
 	return nil, nil, errors.New("etcDir input is nill for GenerateDevSSL")
 }
 
+// generateAndWritePrivateKey will create and write to disk a pem encoded private key
 func generateAndWritePrivateKey(fileName string) (*rsa.PrivateKey, error) {
 	privateKeyBytes, privateKey, err := generatePrivateKey()
 	if err != nil {
@@ -67,6 +68,7 @@ func generateAndWritePrivateKey(fileName string) (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
+// generateAndWritePublicKey will create and write to disk a pem encoded public key
 func generateAndWritePublicKey(fileName string, privateKey *rsa.PrivateKey) error {
 	if privateKey != nil {
 		publicKeyBytes, err := generatePublicKey(privateKey)
@@ -82,7 +84,7 @@ func generateAndWritePublicKey(fileName string, privateKey *rsa.PrivateKey) erro
 	return errors.New("nil input for private key in generateAndWritePublicKey")
 }
 
-// GeneratePrivateKey will a pem encoded private key and an rsa private key object
+// generatePrivateKey will create a pem encoded private key and an rsa private key object
 func generatePrivateKey() ([]byte, *rsa.PrivateKey, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, keySize)
 	if err != nil {

@@ -16,7 +16,7 @@ package utils
 
 import "time"
 
-// CurrentTimeInMillis returns current time as a long int pointer
+// CurrentTimeInMillis returns current time as a long int pointer NARF!
 func CurrentTimeInMillis() *int64 {
 	now := time.Now().UnixMilli()
 	return &now
