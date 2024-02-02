@@ -29,3 +29,12 @@ repos:
       - id: commitlint
         stages: [commit-msg]
         additional_dependencies: ['@commitlint/config-conventional']
+  - repo: local
+    hooks:
+      - id: makefile
+        name: makefile
+        entry: make
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
