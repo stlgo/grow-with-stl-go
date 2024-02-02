@@ -72,6 +72,7 @@ type Config struct {
 	APIUsers   map[string]*APIUser `json:"apiUsers,omitempty"`
 	Proxy      *Proxy              `json:"proxy,omitempty"`
 	Secret     *string             `json:"secret,omitempty"`
+	SQLite     *SQLite             `json:"sqlite,omitempty"`
 	WebService *WebService         `json:"webService,omitempty"`
 }
 
@@ -225,6 +226,10 @@ func checkConfigs() error {
 		return err
 	}
 
+	if err := checkSQLite(); err != nil {
+		return err
+	}
+
 	if rewriteConfig {
 		if err := GrowSTLGo.persist(); err != nil {
 			return err
@@ -323,10 +328,10 @@ func configRecheckTimer() {
 	}
 }
 
-func setEtcDir() (*string, error) {
-	if etcDir == nil {
+func getEtcDir() (*string, error) {
+	if etcDir == nil && ConfigFile != nil {
 		// get the runtime directory
-		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		dir, err := filepath.Abs(filepath.Dir(*ConfigFile))
 		if err != nil {
 			return nil, err
 		}

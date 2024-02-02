@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/webservice"
@@ -68,6 +69,11 @@ func launch(_ *cobra.Command, _ []string) {
 	// read the config file
 	if err := configs.SetGrowSTLGoConfig(); err != nil {
 		log.Fatalf("error in config %s: %s", *configs.ConfigFile, err)
+	}
+
+	// start the auditor
+	if err := audit.Init(); err != nil {
+		log.Fatalf("error starting the embedded SQLite: %s", err)
 	}
 
 	// start webservice and listen for the the ctl + c to exit

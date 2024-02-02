@@ -32,7 +32,7 @@ func checkWebService() error {
 	if GrowSTLGo.WebService == nil {
 		log.Info("No webservice config found, generating ssl keys, host and port info")
 
-		etcDir, err := setEtcDir()
+		etcDir, err := getEtcDir()
 		if err != nil {
 			return err
 		}
