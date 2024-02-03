@@ -103,7 +103,6 @@ backend-coverage: backend-unit-test
 	@echo "Backend coverage report completed successfully"
 
 .PHONY: backend-lint
-backend-lint: $(LINTER)
 backend-lint:
 	@echo "Running backend linting step..."
 	@$(LINTER) run --config $(LINTER_CONFIG)

@@ -143,9 +143,9 @@ func (session *session) onMessage() {
 func (session *session) onClose() {
 	if !session.closing {
 		session.closing = true
-		n := *session.name
-		if session.name == nil {
-			n = "unknown"
+		n := "unknown"
+		if session.name != nil {
+			n = *session.name
 		}
 		log.Infof("closing websocket for %s session %s", n, *session.sessionID)
 		session.ws.Close()
@@ -281,18 +281,20 @@ func idleHandsTester() {
 	time.Sleep(time.Duration(60-time.Now().Local().Second()) * time.Second)
 	for range time.NewTicker(10 * time.Second).C {
 		for _, session := range sessions {
-			if session.lastUsed != nil {
-				// 10 minute timeout
-				if (time.Now().UnixMilli() - *session.lastUsed) > 120000 {
-					session.onClose()
+			if session != nil {
+				if session.lastUsed != nil {
+					// 10 minute timeout
+					if (time.Now().UnixMilli() - *session.lastUsed) > 120000 {
+						session.onClose()
+					}
+					// idle abandoned connections are disconnected at 1 minute
+					if (time.Now().UnixMilli()-*session.lastUsed) > 60000 && session.name == nil {
+						session.onClose()
+					}
 				}
-				// idle abandoned connections are disconnected at 1 minute
-				if (time.Now().UnixMilli()-*session.lastUsed) > 60000 && session.name == nil {
-					session.onClose()
-				}
+				// close sessions without a last used timestamp
+				session.onClose()
 			}
-			// close sessions without a last used timestamp
-			session.onClose()
 		}
 	}
 }

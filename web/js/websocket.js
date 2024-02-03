@@ -14,7 +14,7 @@
 
 import { Log } from './log.js';
 
-export class WebSocketClient {
+class WebSocketClient {
     constructor() {
         this.ws = null;
         this.timeout = null;
@@ -23,6 +23,8 @@ export class WebSocketClient {
         this.sessionID = null;
         this.validUser = null;
         this.type = this.constructor.name.toLocaleLowerCase();
+
+        this.log = new Log();
 
         this.functionMap = {};
 
@@ -62,7 +64,7 @@ export class WebSocketClient {
         };
 
         this.ws.onerror = (event) => {
-            Log.error(`Web Socket recieved an error: ${event.code}`);
+            this.log.error(`Web Socket recieved an error: ${event.code}`);
             this.wsClose(event.code);
         };
 
@@ -82,7 +84,7 @@ export class WebSocketClient {
         if (Object.prototype.hasOwnProperty.call(this.functionMap, type)) {
             this.functionMap[type].handleMessage(json);
         } else {
-            Log.error(`Received invalid message type ${type}`);
+            this.log.error(`Received invalid message type ${type}`);
         }
     }
 
@@ -98,7 +100,7 @@ export class WebSocketClient {
             }));
             break;
         case 'keepalive':
-            Log.trace(`Keepalive received: ${JSON.stringify(json)}`);
+            this.log.trace(`Keepalive received: ${JSON.stringify(json)}`);
             break;
         default:
             this.authDenied();
@@ -117,7 +119,7 @@ export class WebSocketClient {
             this.refreshToken = json.refreshToken;
             break;
         case 'denied':
-            Log.error('Authentication denied');
+            this.log.error('Authentication denied');
             this.authDenied();
             break;
         default:
@@ -128,52 +130,52 @@ export class WebSocketClient {
     }
 
     wsOpen() {
-        Log.info('WebSocket established');
+        this.log.info('WebSocket established');
     }
 
     wsClose(code) {
         switch (code) {
         case 1000:
-            Log.info('Web Socket Closed: Normal closure: ', code);
+            this.log.info('Web Socket Closed: Normal closure: ', code);
             break;
         case 1001:
-            Log.info('Web Socket Closed: An endpoint is "going away", such as a server going down or a browser having navigated away from a page:', code);
+            this.log.info('Web Socket Closed: An endpoint is "going away", such as a server going down or a browser having navigated away from a page:', code);
             break;
         case 1002:
-            Log.info('Web Socket Closed: terminating the connection due to a protocol error: ', code);
+            this.log.info('Web Socket Closed: terminating the connection due to a protocol error: ', code);
             break;
         case 1003:
-            Log.info('Web Socket Closed: terminating the connection because it has received a type of data it cannot accept: ', code);
+            this.log.info('Web Socket Closed: terminating the connection because it has received a type of data it cannot accept: ', code);
             break;
         case 1004:
-            Log.info('Web Socket Closed: Reserved. The specific meaning might be defined in the future: ', code);
+            this.log.info('Web Socket Closed: Reserved. The specific meaning might be defined in the future: ', code);
             break;
         case 1005:
-            Log.info('Web Socket Closed: No status code was actually present: ', code);
+            this.log.info('Web Socket Closed: No status code was actually present: ', code);
             break;
         case 1006:
-            Log.info('Web Socket Closed: The connection was closed abnormally: ', code);
+            this.log.info('Web Socket Closed: The connection was closed abnormally: ', code);
             break;
         case 1007:
-            Log.info('Web Socket Closed: terminating the connection because it has received data within a message that was not consistent with the type of the message: ', code);
+            this.log.info('Web Socket Closed: terminating the connection because it has received data within a message that was not consistent with the type of the message: ', code);
             break;
         case 1008:
-            Log.info('Web Socket Closed: terminating the connection because it has received a message that "violates its policy": ', code);
+            this.log.info('Web Socket Closed: terminating the connection because it has received a message that "violates its policy": ', code);
             break;
         case 1009:
-            Log.info('Web Socket Closed: terminating the connection because it has received a message that is too big for it to process: ', code);
+            this.log.info('Web Socket Closed: terminating the connection because it has received a message that is too big for it to process: ', code);
             break;
         case 1010:
-            Log.info('Web Socket Closed: client is terminating the connection because it has expected the server to negotiate one or more extension, but the server didn\'t return them in the response message of the WebSocket handshake: ', code);
+            this.log.info('Web Socket Closed: client is terminating the connection because it has expected the server to negotiate one or more extension, but the server didn\'t return them in the response message of the WebSocket handshake: ', code);
             break;
         case 1011:
-            Log.info('Web Socket Closed: server is terminating the connection because it encountered an unexpected condition that prevented it from fulfilling the request: ', code);
+            this.log.info('Web Socket Closed: server is terminating the connection because it encountered an unexpected condition that prevented it from fulfilling the request: ', code);
             break;
         case 1015:
-            Log.info('Web Socket Closed: closed due to a failure to perform a TLS handshake (e.g., the server certificate can\'t be verified): ', code);
+            this.log.info('Web Socket Closed: closed due to a failure to perform a TLS handshake (e.g., the server certificate can\'t be verified): ', code);
             break;
         default:
-            Log.info('Web Socket Closed: unknown error code: ', code);
+            this.log.info('Web Socket Closed: unknown error code: ', code);
             break;
         }
 
@@ -183,12 +185,12 @@ export class WebSocketClient {
     }
 
     authAllowed(json) {
-        Log.info(json);
+        this.log.info(json);
     }
 
     authDenied() {
         this.ws.close();
-        Log.error('Auth denied');
+        this.log.error('Auth denied');
     }
 
     keepAlive() {
@@ -233,9 +235,11 @@ export class WebSocketClient {
                 json.timestamp = new Date().getTime();
                 this.ws.send(JSON.stringify(json));
             } catch (err) {
-                Log.error(err);
+                this.log.error(err);
                 window.setTimeout(this.sendMessage(json).bind(this), 250);
             }
         }
     }
 }
+
+export { WebSocketClient };

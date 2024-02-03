@@ -12,55 +12,83 @@
 # limitations under the License.
 */
 
-export const LogLevel = {
-    TRACE: 6,
-    DEBUG: 5,
-    INFO: 4,
-    WARN: 3,
-    ERROR: 2,
-    FATAL: 1
+const logLevel = {
+    6: 'TRACE',
+    5: 'DEBUG',
+    4: 'INFO',
+    3: 'WARN',
+    2: 'ERROR',
+    1: 'FATAL'
 };
 
-export class Log {
+const stackRegex = /\((.*):(\d+):(\d+)\)$/;
+
+class Log {
     constructor() {
         this.level = 5;
     }
 
     setLogLevel(level) {
-        if (level in LogLevel) {
-            this.level = LogLevel[level];
+        if (level in logLevel) {
+            this.level = logLevel[level];
         }
     }
 
-    static trace(message) {
-        this.writeToLog(LogLevel.Trace, message);
+    getLogLevel() {
+        return this.level;
     }
 
-    static debug(message) {
-        this.writeToLog(LogLevel.Debug, message);
+    foo(message) {
+        console.log(message);
+        this.writeToLog(6, message);
     }
 
-    static info(message) {
-        this.writeToLog(LogLevel.Info, message);
+    trace(message) {
+        this.writeToLog(6, message);
     }
 
-    static warn(message) {
-        this.writeToLog(LogLevel.Warn, message);
+    debug(message) {
+        this.writeToLog(5, message);
     }
 
-    static error(message) {
-        this.writeToLog(LogLevel.Error, message);
+    info(message) {
+        this.writeToLog(4, message);
     }
 
-    static fatal(message) {
-        this.writeToLog(LogLevel.Fatal, message);
+    warn(message) {
+        this.writeToLog(3, message);
     }
 
-    static writeToLog(level, message) {
-        if (level <= this.Level) {
-            console.log(
-                `[grow-with-stl-go][${ LogLevel[level] }] ${ new Date().toLocaleString() } - ${
-                    message.className } - ${ message.message }: `, message.logMessage);
+    error(message) {
+        this.writeToLog(2, message);
+    }
+
+    fatal(message) {
+        this.writeToLog(1, message);
+    }
+
+    writeToLog(level, message) {
+        // get the caller function
+        if (level <= this.level) {
+            let stack = new Error().stack.split('\n');
+            // works for chrome
+            if (stack[2].includes('log.js')) {
+                let match = stackRegex.exec(stack[3]);
+                if (match !== null) {
+                    console.log(`[grow-with-stl-go] ${ new Date().toLocaleString() } ${ match[1] }:${ match[2] } [${ logLevel[level] }] ${ message }`);
+                } else {
+                    console.log(`[grow-with-stl-go] ${ new Date().toLocaleString() } [${ logLevel[level] }] ${ message }`);
+                }
+            } else {
+                // works for firefox
+                let caller = stack[2].split('@')[1].replace();
+                caller = caller.substring(0, caller.lastIndexOf(':'));
+                console.log(`[grow-with-stl-go] ${ new Date().toLocaleString() } ${ caller } [${ logLevel[level] }] ${ message }`);
+            }
         }
     }
 }
+
+export {
+    Log
+};

@@ -9,6 +9,18 @@
     <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/styles/styles.css">
     <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type='module'>
+        import { WebSocketClient } from './js/websocket.js';
+        function login() {
+            let ws = new WebSocketClient()
+        }
+
+        document.getElementById("LoginButton").onclick = () => {
+           login()
+            // WebSocketClient.register()
+        }
+    </script>
 </head>
 
 <body>
@@ -29,13 +41,23 @@
         </div>
     </nav>
     <div class="container">
-            <div id="HomeDiv">
-                    <center><h1>Coming Soon!</h1></center>
-            </div>
-            <div id="RouterDiv" class="container"></div>
-            <footer>
-                    <center><small>Copyright &copy; <script>document.write( new Date().getFullYear() );</script> Grow With STL-GO</small></center>
-            </footer>
+        <div id="HomeDiv">
+            <br>
+            <center>
+                <br>
+                <label for="uname"><b>Username</b></label>
+                <input type="text" placeholder="Enter Username" name="uname" required>
+
+                <label for="psw"><b>Password</b></label>
+                <input type="password" placeholder="Enter Password" name="psw" required>
+
+                <button type="submit" id="LoginButton">Login</button>
+            </center>
+        </div>
+        <div id="RouterDiv" class="container"></div>
+        <footer>
+            <br><center><small>Copyright &copy;<script>document.write(new Date().getFullYear());</script> Grow With STL-GO</small></center>
+        </footer>
     </div>
 </body>
 

@@ -31,8 +31,17 @@ repos:
         additional_dependencies: ['@commitlint/config-conventional']
   - repo: local
     hooks:
-      - id: makefile
-        name: makefile
+      - id: make lint
+        name: make lint
+        entry: make lint
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+  - repo: local
+    hooks:
+      - id: make
+        name: make
         entry: make
         language: system
         types: [python]
