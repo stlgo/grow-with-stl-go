@@ -49,7 +49,6 @@ func AppendToWebServiceFunctionMap(requestType string, function func(w http.Resp
 }
 
 func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
-	log.Info("here")
 	uri := r.RequestURI
 
 	if strings.EqualFold(uri, "/REST/v1.0.0/token") && strings.EqualFold(r.Method, http.MethodPost) {
