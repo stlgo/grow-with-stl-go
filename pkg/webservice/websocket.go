@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/utils"
@@ -39,7 +40,7 @@ type session struct {
 	writeMutex  sync.Mutex
 	ws          *websocket.Conn
 	lastUsed    *int64
-	name        *string
+	user        *string
 	closing     bool
 }
 
@@ -106,8 +107,9 @@ func (session *session) onMessage() {
 
 		// this has to be a go routine otherwise it will block any incoming messages waiting for a command return
 		go func() {
+			transaction := audit.NewWSTransaction(session.requestHost, session.user, &request)
 			// test the auth token for request validity on non auth requests
-			if request.Type != nil && !strings.EqualFold(*request.Type, configs.UI) &&
+			if request.Type != nil && !strings.EqualFold(*request.Type, configs.WebsocketClient) &&
 				request.Component != nil && !strings.EqualFold(*request.Type, configs.Auth) &&
 				request.Token != nil {
 				err = session.validateWSToken(&request)
@@ -135,6 +137,12 @@ func (session *session) onMessage() {
 
 				return
 			}
+			session.handleRequest(&request)
+			go func() {
+				if err := transaction.Complete(true); err != nil {
+					log.Trace(err)
+				}
+			}()
 		}()
 	}
 }
@@ -143,11 +151,11 @@ func (session *session) onMessage() {
 func (session *session) onClose() {
 	if !session.closing {
 		session.closing = true
-		n := "unknown"
-		if session.name != nil {
-			n = *session.name
+		user := "unknown"
+		if session.user != nil {
+			user = *session.user
 		}
-		log.Infof("closing websocket for %s session %s", n, *session.sessionID)
+		log.Infof("closing websocket for %s session %s", user, *session.sessionID)
 		session.ws.Close()
 		delete(sessions, *session.sessionID)
 	}
@@ -288,11 +296,12 @@ func idleHandsTester() {
 						session.onClose()
 					}
 					// idle abandoned connections are disconnected at 1 minute
-					if (time.Now().UnixMilli()-*session.lastUsed) > 60000 && session.name == nil {
+					if (time.Now().UnixMilli()-*session.lastUsed) > 60000 && session.user == nil {
 						session.onClose()
 					}
+					return
 				}
-				// close sessions without a last used timestamp
+				// close sessions without a last used timestamp, should happen but you never know
 				session.onClose()
 			}
 		}

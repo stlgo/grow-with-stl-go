@@ -12,10 +12,9 @@
 # limitations under the License.
 */
 
-import { Log } from './log.js';
 
 class WebSocketClient {
-    constructor() {
+    constructor(log) {
         this.ws = null;
         this.timeout = null;
         this.token = null;
@@ -24,7 +23,7 @@ class WebSocketClient {
         this.validUser = null;
         this.type = this.constructor.name.toLocaleLowerCase();
 
-        this.log = new Log();
+        this.log = log;
 
         this.functionMap = {};
 
@@ -184,8 +183,20 @@ class WebSocketClient {
         this.refreshToken = null;
     }
 
+    login(id, password) {
+        this.sendMessage({
+            type: this.type,
+            component: 'auth',
+            subComponent: 'authenticate',
+            authentication: {
+                id: id,
+                password: password
+            }
+        });
+    }
+
     authAllowed(json) {
-        this.log.info(json);
+        this.log.info(JSON.stringify(json));
     }
 
     authDenied() {
@@ -210,7 +221,7 @@ class WebSocketClient {
     }
 
     waitThenSendMessage(json) {
-        document.addEventListener('AuthComplete', () => {
+        document.addEventListener('WebSocketEstablished', () => {
             this.sendMessage(json);
         }, {
             once: true

@@ -11,14 +11,23 @@
     <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type='module'>
-        import { WebSocketClient } from './js/websocket.js';
+        import { GrowWithSTLGO } from './js/main.js';
+
+        var gwsg = null;
+
         function login() {
-            let ws = new WebSocketClient()
+            let id = document.getElementById("IDInput").value
+            let password = document.getElementById("IDInput").value
+            if (id.length >0 && password.length >0) {
+                if (gwsg === null) {
+                    gwsg = new GrowWithSTLGO()
+                }
+                gwsg.login(id, password)
+            }
         }
 
         document.getElementById("LoginButton").onclick = () => {
            login()
-            // WebSocketClient.register()
         }
     </script>
 </head>
@@ -45,11 +54,11 @@
             <br>
             <center>
                 <br>
-                <label for="uname"><b>Username</b></label>
-                <input type="text" placeholder="Enter Username" name="uname" required>
+                <label for="uname"><b>ID</b></label>
+                <input type="text" placeholder="Enter ID" name="uname" id="IDInput" required>
 
                 <label for="psw"><b>Password</b></label>
-                <input type="password" placeholder="Enter Password" name="psw" required>
+                <input type="password" placeholder="Enter Password" name="psw" id="PasswordInput" required>
 
                 <button type="submit" id="LoginButton">Login</button>
             </center>

@@ -31,9 +31,9 @@ repos:
         additional_dependencies: ['@commitlint/config-conventional']
   - repo: local
     hooks:
-      - id: make lint
-        name: make lint
-        entry: make lint
+      - id: make frontend-lint
+        name: make frontend-lint
+        entry: make frontend-lint
         language: system
         types: [python]
         pass_filenames: false
