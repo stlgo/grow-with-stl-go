@@ -125,7 +125,6 @@ class WebSocketClient {
             this.authDenied();
             break;
         }
-        document.dispatchEvent(new Event('AuthComplete'));
     }
 
     wsOpen() {
@@ -197,6 +196,7 @@ class WebSocketClient {
 
     authAllowed(json) {
         this.log.info(JSON.stringify(json));
+        document.dispatchEvent(new Event('AuthComplete'));
     }
 
     authDenied() {

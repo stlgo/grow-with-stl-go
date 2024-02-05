@@ -45,8 +45,8 @@ func populateDefaultAPIUsers() {
 			},
 		}
 
-		if password, err := user.Authentication.GeneratePassword(true); err == nil && password != nil {
-			log.Warnf("Password generated for user %s, password %s.  DO NOT USE THIS FOR PRODUCTION", localID, *password)
+		if password, err := user.Authentication.GeneratePassword(); err == nil && password != nil {
+			log.Warnf("Password generated for user %s, password %s - DO NOT USE THIS FOR PRODUCTION", localID, *password)
 
 			GrowSTLGo.APIUsers[localID] = &user
 		}

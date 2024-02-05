@@ -32,11 +32,12 @@ type Authentication struct {
 
 // ValidateAuthentication will compare the supplied password with the stored one
 func (auth *Authentication) ValidateAuthentication(password *string) error {
-	if auth != nil && auth.Password != nil {
+	if auth != nil && auth.Password != nil && password != nil {
 		plaintext, err := cryptography.Decrypt(auth.Password, GrowSTLGo.Secret)
 		if err != nil {
 			return err
 		}
+
 		if err := cryptography.HashCompare(plaintext, password); err != nil {
 			return errors.New("validation failed")
 		}
@@ -45,7 +46,7 @@ func (auth *Authentication) ValidateAuthentication(password *string) error {
 }
 
 // GeneratePassword will generate a strong password for the authentication object
-func (auth *Authentication) GeneratePassword(encipher bool) (*string, error) {
+func (auth *Authentication) GeneratePassword() (*string, error) {
 	var password bytes.Buffer
 	// generate a 64bit access key
 	for i := 0; i < 4; i++ {
@@ -56,17 +57,15 @@ func (auth *Authentication) GeneratePassword(encipher bool) (*string, error) {
 	s := password.String()
 	auth.Password = &s
 
-	if encipher {
-		if err := auth.HashAuthentication(); err != nil {
-			return nil, err
-		}
+	if err := auth.hashAuthentication(); err != nil {
+		return nil, err
 	}
 
 	return &s, nil
 }
 
 // HashAuthentication will hash the password for the Authentication object
-func (auth *Authentication) HashAuthentication() error {
+func (auth *Authentication) hashAuthentication() error {
 	if auth != nil && auth.Password != nil {
 		hashText, err := cryptography.HashPassword(auth.Password)
 		if err != nil {

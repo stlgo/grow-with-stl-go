@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -72,7 +73,7 @@ var (
 				user varchar(256) NOT NULL,
 				type varchar(128) NOT NULL,
 				component varcar(128) NOT NULL,
-				subcomponent varchar(128) NOT NULL,
+				subcomponent varchar(128),
 				success tinyint(1) NOT NULL default 0,
 				start bigint NOT NULL,
 				stop bigint NOT NULL,
@@ -190,7 +191,8 @@ func NewWSTransaction(host, user *string, request *configs.WsMessage) *WSTransac
 
 // Complete is a WSTransaction receiver function to record it to the DB if applicable
 func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
-	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && sqliteDB != nil {
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && sqliteDB != nil &&
+		transaction.Component != nil && !strings.EqualFold(*transaction.Component, "keepalive") {
 		if table, ok := auditTables["WebSocket"]; ok {
 			stmt, err := sqliteDB.Prepare(table.InsertSQL)
 			if err != nil {
@@ -231,7 +233,8 @@ func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 			return nil
 		}
 	}
-	return errors.New("transaction is not recordable")
+	log.Infof("here %s", *transaction.Component)
+	return nil
 }
 
 // NewRESTTransaction creates a new RESTTransaction object to record as an auditable thing

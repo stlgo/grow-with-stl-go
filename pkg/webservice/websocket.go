@@ -133,16 +133,11 @@ func (session *session) onMessage() {
 					session.onError(err)
 				}
 				defer session.onClose()
-				session.handleRequest(&request)
-
+				transactionHelper(transaction, false)
 				return
 			}
 			session.handleRequest(&request)
-			go func() {
-				if err := transaction.Complete(true); err != nil {
-					log.Trace(err)
-				}
-			}()
+			transactionHelper(transaction, true)
 		}()
 	}
 }
@@ -223,8 +218,18 @@ func (session *session) validateWSToken(request *configs.WsMessage) error {
 	return errors.New("invalid token")
 }
 
+func transactionHelper(transaction *audit.WSTransaction, recordable bool) {
+	if transaction != nil {
+		go func() {
+			if err := transaction.Complete(recordable); err != nil {
+				log.Trace(err)
+			}
+		}()
+	}
+}
+
 // The UI will either request authentication or validation, handle those situations here
-func handleWebSocketAuth(request, response *configs.WsMessage) error {
+func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) {
 	defer log.FunctionTimer()()
 
 	err := errors.New("not authenticated").Error()
@@ -232,11 +237,16 @@ func handleWebSocketAuth(request, response *configs.WsMessage) error {
 	denied := configs.Denied
 	response.SubComponent = &denied
 
-	if request.SubComponent != nil && strings.EqualFold(*request.SubComponent, configs.Authenticate) && request.Authentication != nil {
-		if request.SessionID != nil {
+	if request.SubComponent != nil && strings.EqualFold(*request.SubComponent, configs.Authenticate) && request.SessionID != nil &&
+		request.Authentication != nil && request.Authentication.ID != nil && request.Authentication.Password != nil {
+		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok {
+			if err := user.Authentication.ValidateAuthentication(request.Authentication.Password); err != nil {
+				return user.Authentication.ID, fmt.Errorf("bad password attempt for user %s.  Error: %s", *request.Authentication.ID, err)
+			}
+
 			token, err := createJWTToken(request.Authentication.ID, request.SessionID)
 			if err != nil || token == nil {
-				return err
+				return user.Authentication.ID, err
 			}
 
 			if session, ok := sessions[*request.SessionID]; ok {
@@ -248,10 +258,11 @@ func handleWebSocketAuth(request, response *configs.WsMessage) error {
 			response.Token = token
 			response.Error = nil
 
-			return nil
+			return user.Authentication.ID, nil
 		}
+		return request.Authentication.ID, errors.New("user not found")
 	}
-	return errors.New("unable to process authentication request")
+	return nil, errors.New("unable to process authentication request")
 }
 
 func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
@@ -265,11 +276,12 @@ func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMes
 	case configs.Keepalive:
 		log.Trace(fmt.Sprintf("keepalive received for session %s", *sessionID))
 	case configs.Auth:
-		if err := handleWebSocketAuth(request, &response); err != nil {
-			errStr := err.Error()
-			response.Error = &errStr
-			if sessionID != nil {
-				if session, ok := sessions[*sessionID]; ok {
+		if sessionID != nil {
+			if session, ok := sessions[*sessionID]; ok {
+				user, err := handleWebSocketAuth(request, &response)
+				session.user = user
+				if err != nil {
+					log.Error(err)
 					if err := session.webSocketSend(&response); err != nil {
 						session.onError(err)
 					}

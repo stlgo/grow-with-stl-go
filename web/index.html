@@ -17,7 +17,7 @@
 
         function login() {
             let id = document.getElementById("IDInput").value
-            let password = document.getElementById("IDInput").value
+            let password = document.getElementById("PasswordInput").value
             if (id.length >0 && password.length >0) {
                 if (gwsg === null) {
                     gwsg = new GrowWithSTLGO()
@@ -40,7 +40,7 @@
                 <span class="navbar-toggler-icon" id="navbarIcon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
-                <div class="navbar-nav">
+                <div class="navbar-nav" id="NavbarDiv" style="display: none">
                     <a href="#" class="nav-item nav-link" onclick="event.preventDefault();load('home');">Home</a>
                     <a href="#" class="nav-item nav-link" onclick="event.preventDefault();load('about');">About</a>
                     <a href="#" class="nav-item nav-link" onclick="event.preventDefault();load('seeds');">Seeds</a>
@@ -50,7 +50,7 @@
         </div>
     </nav>
     <div class="container">
-        <div id="HomeDiv">
+        <div id="LoginDiv">
             <br>
             <center>
                 <br>
@@ -63,7 +63,7 @@
                 <button type="submit" id="LoginButton">Login</button>
             </center>
         </div>
-        <div id="RouterDiv" class="container"></div>
+        <div id="RouterDiv" class="container" style="display: none"><center><h2>Loading please wait...</h2></center></div>
         <footer>
             <br><center><small>Copyright &copy;<script>document.write(new Date().getFullYear());</script> Grow With STL-GO</small></center>
         </footer>

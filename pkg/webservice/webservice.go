@@ -87,12 +87,8 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if os.IsExist(err) {
-		http.Redirect(w, r, "/index.html", http.StatusFound)
-		return
-	}
-	log.Error(err)
-	http.Error(w, "file not found", http.StatusNotFound)
+	// redirect to index.html on error
+	http.Redirect(w, r, "/index.html", http.StatusFound)
 }
 
 func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {

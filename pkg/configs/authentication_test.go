@@ -33,7 +33,7 @@ func TestAuthenticationFunctions(t *testing.T) {
 	}
 
 	t.Run("Test generating a password", func(t *testing.T) {
-		password, err := auth.GeneratePassword(true)
+		password, err := auth.GeneratePassword()
 		require.NoError(t, err)
 		require.NotNil(t, password)
 		t.Logf("generated password %s hashed encrypted password %s\n", *password, *auth.Password)
@@ -43,6 +43,6 @@ func TestAuthenticationFunctions(t *testing.T) {
 	t.Run("Test validating authentication", func(t *testing.T) {
 		err := auth.ValidateAuthentication(testPass)
 		require.NoError(t, err)
-		t.Logf("password %s validated vas validated against the stored password\n", *testPass)
+		t.Logf("password %s validated against the stored password\n", *testPass)
 	})
 }
