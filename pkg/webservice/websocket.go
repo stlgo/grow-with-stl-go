@@ -137,6 +137,8 @@ func (session *session) onMessage() {
 				return
 			}
 			session.handleRequest(&request)
+
+			// the user is not populated on the login transaction, this will alleviate that issue
 			if transaction.User == nil && session.user != nil {
 				transaction.User = session.user
 			}

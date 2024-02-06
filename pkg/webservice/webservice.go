@@ -79,7 +79,7 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// redirect to index.html on error
-	http.Redirect(w, r, fmt.Sprintf("/index.html?redirect=%s", r.RequestURI), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/index.html?%s", r.RequestURI), http.StatusFound)
 }
 
 func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {

@@ -48,7 +48,15 @@ class GrowWithSTLGO {
             this.ws.login(id, password);
             document.addEventListener('AuthComplete', () => {
                 this.displayHelper([ 'LoginDiv' ], 'none');
-                this.load('home', '/_home/index.html');
+
+                this.log.info(window.location.search.substring(2));
+                switch (window.location.search.substring(2)) {
+                case 'about': this.load('about', '/_about/index.html'); break;
+                case 'admin': this.load('admin', '/_admin/index.html'); break;
+                case 'seeds': this.load('seeds', '/_seeds/index.html'); break;
+                case 'tools': this.load('tools', '/_tools/index.html'); break;
+                default: this.load('home', '/_home/index.html'); break;
+                }
             });
             document.getElementById('IDInput').value = '';
             document.getElementById('PasswordInput').value = '';
