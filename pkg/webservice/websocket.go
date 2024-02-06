@@ -137,6 +137,9 @@ func (session *session) onMessage() {
 				return
 			}
 			session.handleRequest(&request)
+			if transaction.User == nil && session.user != nil {
+				transaction.User = session.user
+			}
 			transactionHelper(transaction, true)
 		}()
 	}

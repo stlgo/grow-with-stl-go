@@ -233,7 +233,6 @@ func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 			return nil
 		}
 	}
-	log.Infof("here %s", *transaction.Component)
 	return nil
 }
 

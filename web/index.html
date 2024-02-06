@@ -16,14 +16,10 @@
         var gwsg = null;
 
         function login() {
-            let id = document.getElementById("IDInput").value
-            let password = document.getElementById("PasswordInput").value
-            if (id.length >0 && password.length >0) {
-                if (gwsg === null) {
+            if (gwsg === null) {
                     gwsg = new GrowWithSTLGO()
                 }
-                gwsg.login(id, password)
-            }
+                gwsg.login()
         }
 
         document.getElementById("LoginButton").onclick = () => {

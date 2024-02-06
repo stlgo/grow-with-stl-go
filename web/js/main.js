@@ -19,7 +19,7 @@ import { WebSocketClient } from './websocket.js';
 class GrowWithSTLGO {
     constructor() {
         this.log = new Log();
-        this.ws = new WebSocketClient(this.log);
+        this.ws = null;
         this.type = this.constructor.name.toLowerCase();
 
         document.addEventListener('WebSocketClosed', () => {
@@ -37,14 +37,22 @@ class GrowWithSTLGO {
         });
     }
 
-    login(id, password) {
-        this.ws.login(id, password);
-        document.addEventListener('AuthComplete', () => {
-            this.displayHelper([ 'LoginDiv' ], 'none');
-            this.load('home', '/_home/index.html');
-        });
-        document.getElementById('IDInput').value = '';
-        document.getElementById('PasswordInput').value = '';
+    login() {
+        let id = document.getElementById('IDInput').value;
+        let password = document.getElementById('PasswordInput').value;
+        if (id.length > 0 && password.length > 0) {
+            if (this.ws === null) {
+                this.ws = new WebSocketClient(this.log);
+            }
+
+            this.ws.login(id, password);
+            document.addEventListener('AuthComplete', () => {
+                this.displayHelper([ 'LoginDiv' ], 'none');
+                this.load('home', '/_home/index.html');
+            });
+            document.getElementById('IDInput').value = '';
+            document.getElementById('PasswordInput').value = '';
+        }
     }
 
     load(type, uri) {

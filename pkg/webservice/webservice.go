@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -33,8 +32,6 @@ import (
 )
 
 var (
-	staticWebURIPrefixes = regexp.MustCompile(`^(/index.html|/home|/users|/_.*/|/\?.*|/js/|/styles/|/node_modules/|/favicon.ico)`)
-
 	// this is a way to allow for arbitrary messages to be processed by the backend
 	// the message of a specific component is shunted to that subsystem for further processing
 	webServiceFunctionMap = map[string]func(w http.ResponseWriter, r *http.Request){}
@@ -69,13 +66,7 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.TrimPrefix(uri, "/") == "" || staticWebURIPrefixes.MatchString(uri) {
-		serveFile(w, r)
-		return
-	}
-
-	log.Errorf("Rejecting %s attempt for %s from %s", r.Method, uri, r.RemoteAddr)
-	http.Error(w, configs.UnauthorizedError, http.StatusUnauthorized)
+	serveFile(w, r)
 }
 
 // serveFile test if path and file exists, if it does send a page, else 404 or redirect
@@ -88,7 +79,7 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// redirect to index.html on error
-	http.Redirect(w, r, "/index.html", http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/index.html?redirect=%s", r.RequestURI), http.StatusFound)
 }
 
 func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
