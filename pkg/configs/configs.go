@@ -49,6 +49,7 @@ const (
 	// UI Components
 	Auth            string = "auth"
 	AuthComplete    string = "authcomplete"
+	GetPagelet      string = "getPagelet"
 	Initialize      string = "initialize"
 	Keepalive       string = "keepalive"
 	UI              string = "ui"
@@ -62,9 +63,10 @@ const (
 	Validate     string = "validate"
 
 	// http error message "json" to return on errors as a const
+	NotFoundError       = `{"error": "Not Found", "status": 404}`
 	BadRequestError     = `{"error": "Bad Request", "status": 400}`
 	IntenralServerError = `{"error": "Internal Server Error", "status": 500}`
-	UnauthorizedError   = `{"error": "Unauthorized", "status": 400}`
+	UnauthorizedError   = `{"error": "Unauthorized", "status": 401}`
 )
 
 // Config contains the basis of the web service

@@ -23,18 +23,13 @@ class GrowWithSTLGO {
         this.type = this.constructor.name.toLowerCase();
 
         document.addEventListener('WebSocketClosed', () => {
-            this.displayHelper([ 'RouterDiv', 'NavbarDiv' ], 'none');
-            this.displayHelper([ 'LoginDiv' ], '');
+            this.ws.displayHelper([ 'RouterDiv', 'NavbarDiv' ], 'none');
+            this.ws.displayHelper([ 'LoginDiv' ], '');
         });
     }
 
-    displayHelper(elements, display) {
-        elements.forEach((elementID) => {
-            let element = document.getElementById(elementID);
-            if (typeof element !== 'undefined' && element !== null) {
-                element.style.display = display;
-            }
-        });
+    load(pageType) {
+        this.ws.getPagelet(pageType);
     }
 
     login() {
@@ -47,15 +42,13 @@ class GrowWithSTLGO {
 
             this.ws.login(id, password);
             document.addEventListener('AuthComplete', () => {
-                this.displayHelper([ 'LoginDiv' ], 'none');
+                this.ws.displayHelper([ 'LoginDiv' ], 'none');
 
-                this.log.info(window.location.search.substring(2));
-                switch (window.location.search.substring(2)) {
-                case 'about': this.load('about', '/_about/index.html'); break;
-                case 'admin': this.load('admin', '/_admin/index.html'); break;
-                case 'seeds': this.load('seeds', '/_seeds/index.html'); break;
-                case 'tools': this.load('tools', '/_tools/index.html'); break;
-                default: this.load('home', '/_home/index.html'); break;
+                let sessionData = JSON.parse(window.sessionStorage.getItem('grow-with-stlgo'));
+                if (Object.prototype.hasOwnProperty.call(sessionData, 'pageType')) {
+                    this.ws.getPagelet(sessionData.pageType);
+                } else {
+                    this.ws.getPagelet('home');
                 }
             });
             document.getElementById('IDInput').value = '';
@@ -63,24 +56,25 @@ class GrowWithSTLGO {
         }
     }
 
-    load(type, uri) {
-        let div = document.getElementById('RouterDiv');
-        div.innerHTML = `<h2>Loading ${type} please wait...`;
-        this.displayHelper([ 'RouterDiv', 'NavbarDiv' ], '');
+    // load(type) {
+    //     this.ws.getPagelet()
+    //     let div = document.getElementById('RouterDiv');
+    //     div.innerHTML = `<h2>Loading ${type} please wait...`;
+    //     this.displayHelper([ 'RouterDiv', 'NavbarDiv' ], '');
 
-        let request = new XMLHttpRequest();
-        request.open('GET', uri, true);
-        request.onerror = (e) => {
-            this.log.error(`Unable to connect to the backend ${e.target.status}`);
-        };
-        request.onreadystatechange = () => {
-            if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
-                div.innerHTML = request.responseText;
-                window.history.replaceState(null, null, `/${type}`);
-            }
-        };
-        request.send();
-    }
+    //     let request = new XMLHttpRequest();
+    //     request.open('GET', uri, true);
+    //     request.onerror = (e) => {
+    //         this.log.error(`Unable to connect to the backend ${e.target.status}`);
+    //     };
+    //     request.onreadystatechange = () => {
+    //         if (request.readyState === XMLHttpRequest.DONE && request.status === 200) {
+    //             div.innerHTML = request.responseText;
+    //             window.history.replaceState(null, null, `/${type}`);
+    //         }
+    //     };
+    //     request.send();
+    // }
 }
 
 export { GrowWithSTLGO };

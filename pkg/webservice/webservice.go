@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -35,6 +36,9 @@ var (
 	// this is a way to allow for arbitrary messages to be processed by the backend
 	// the message of a specific component is shunted to that subsystem for further processing
 	webServiceFunctionMap = map[string]func(w http.ResponseWriter, r *http.Request){}
+
+	// these are things we don't want to server via REST or the UI
+	webDenialPrefixes = regexp.MustCompile(`^(/.eslint.*|/pagelets.*|/package.*)`)
 )
 
 // AppendToWebServiceFunctionMap allows us to break up the circular reference from the other packages
@@ -71,15 +75,18 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 
 // serveFile test if path and file exists, if it does send a page, else 404 or redirect
 func serveFile(w http.ResponseWriter, r *http.Request) {
-	path := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, r.URL.Path)
-	_, err := os.Stat(path)
-	if err == nil {
-		http.ServeFile(w, r, path)
-		return
+	uri := r.RequestURI
+	if !webDenialPrefixes.MatchString(uri) {
+		path := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, uri)
+		_, err := os.Stat(path)
+		if err == nil {
+			http.ServeFile(w, r, path)
+			return
+		}
 	}
 
 	// redirect to index.html on error
-	http.Redirect(w, r, fmt.Sprintf("/index.html?%s", r.RequestURI), http.StatusFound)
+	http.Redirect(w, r, "/index.html", http.StatusFound)
 }
 
 func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {

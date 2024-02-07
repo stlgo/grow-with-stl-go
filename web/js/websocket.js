@@ -92,6 +92,17 @@ class WebSocketClient {
         case 'auth':
             this.handleAuth(json);
             break;
+        case 'getPagelet':
+            if (Object.prototype.hasOwnProperty.call(json, 'error')) {
+                this.log.error(json.error);
+                window.history.replaceState(null, null, '/');
+            } else {
+                document.getElementById('RouterDiv').innerHTML = json.data;
+                this.displayHelper([ 'RouterDiv', 'NavbarDiv' ], '');
+                window.history.replaceState(null, null, `/${json.subComponent}`);
+                window.sessionStorage.setItem('grow-with-stlgo', JSON.stringify({ timestamp: new Date().getTime(), pageType: location.pathname.substring(1) }));
+            }
+            break;
         case 'initialize':
             this.sessionID = json.sessionID;
             document.dispatchEvent(new CustomEvent('WebSocketEstablished', {
@@ -190,6 +201,23 @@ class WebSocketClient {
             authentication: {
                 id: id,
                 password: password
+            }
+        });
+    }
+
+    getPagelet(page) {
+        this.sendMessage({
+            type: this.type,
+            component: 'getPagelet',
+            subComponent: page,
+        });
+    }
+
+    displayHelper(elements, display) {
+        elements.forEach((elementID) => {
+            let element = document.getElementById(elementID);
+            if (typeof element !== 'undefined' && element !== null) {
+                element.style.display = display;
             }
         });
     }

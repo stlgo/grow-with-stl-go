@@ -18,6 +18,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -223,6 +225,28 @@ func (session *session) validateWSToken(request *configs.WsMessage) error {
 	return errors.New("invalid token")
 }
 
+// webSocketSend allows for the sender to be thread safe, we cannot write to the websocket at the same time
+func (session *session) webSocketSend(response *configs.WsMessage) error {
+	session.writeMutex.Lock()
+	defer session.writeMutex.Unlock()
+	response.Timestamp = utils.CurrentTimeInMillis()
+	response.SessionID = session.sessionID
+
+	return session.ws.WriteJSON(response)
+}
+
+// sendInit is generated on the onOpen event and sends the information the UI needs to startup
+func (session *session) sendInit() {
+	wsClient := configs.WebsocketClient
+	initialize := configs.Initialize
+	if err := session.webSocketSend(&configs.WsMessage{
+		Type:      &wsClient,
+		Component: &initialize,
+	}); err != nil {
+		log.Errorf("error receiving / sending init to session %s: %s\n", *session.sessionID, err)
+	}
+}
+
 func transactionHelper(transaction *audit.WSTransaction, recordable bool) {
 	if transaction != nil {
 		go func() {
@@ -277,29 +301,55 @@ func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMes
 		SubComponent: request.SubComponent,
 	}
 
-	switch *request.Component {
-	case configs.Keepalive:
-		log.Trace(fmt.Sprintf("keepalive received for session %s", *sessionID))
-	case configs.Auth:
-		if sessionID != nil {
-			if session, ok := sessions[*sessionID]; ok {
-				user, err := handleWebSocketAuth(request, &response)
-				session.user = user
-				if err != nil {
-					log.Error(err)
-					if err := session.webSocketSend(&response); err != nil {
-						session.onError(err)
+	if request.Component != nil {
+		switch *request.Component {
+		case configs.GetPagelet:
+			getPagelet(request, &response)
+		case configs.Keepalive:
+			log.Trace(fmt.Sprintf("keepalive received for session %s", *sessionID))
+		case configs.Auth:
+			if sessionID != nil {
+				if session, ok := sessions[*sessionID]; ok {
+					user, err := handleWebSocketAuth(request, &response)
+					session.user = user
+					if err != nil {
+						log.Error(err)
+						if err := session.webSocketSend(&response); err != nil {
+							session.onError(err)
+						}
+						session.onClose()
 					}
-					session.onClose()
 				}
 			}
+		default:
+			err := fmt.Sprintf("component %s not implemented", *request.Component)
+			log.Error(err)
+			response.Error = &err
 		}
-	default:
-		err := "not implemented"
-		log.Error(err)
-		response.Error = &err
+		return &response
 	}
+	err := fmt.Errorf("bad request").Error()
+	response.Error = &err
 	return &response
+}
+
+func getPagelet(request, response *configs.WsMessage) {
+	defer log.FunctionTimer()()
+	err := errors.New(configs.NotFoundError).Error()
+	response.Error = &err
+
+	if request.SubComponent != nil {
+		fileName := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, "pagelets", fmt.Sprintf("%s.html", *request.SubComponent))
+		_, err := os.Stat(fileName)
+		if err == nil {
+			bytes, err := os.ReadFile(fileName)
+			if err != nil {
+				return
+			}
+			response.Data = string(bytes)
+			response.Error = nil
+		}
+	}
 }
 
 func idleHandsTester() {
@@ -354,16 +404,6 @@ func newSession(requestHost *string, ws *websocket.Conn) *session {
 	return session
 }
 
-// webSocketSend allows for the sender to be thread safe, we cannot write to the websocket at the same time
-func (session *session) webSocketSend(response *configs.WsMessage) error {
-	session.writeMutex.Lock()
-	defer session.writeMutex.Unlock()
-	response.Timestamp = utils.CurrentTimeInMillis()
-	response.SessionID = session.sessionID
-
-	return session.ws.WriteJSON(response)
-}
-
 // WebSocketSend allows of other packages to send a request for the websocket
 func WebSocketSend(response *configs.WsMessage) error {
 	if response.SessionID != nil {
@@ -373,18 +413,6 @@ func WebSocketSend(response *configs.WsMessage) error {
 		return fmt.Errorf("session id %s not found", *response.SessionID)
 	}
 	return errors.New("no session id found in response")
-}
-
-// sendInit is generated on the onOpen event and sends the information the UI needs to startup
-func (session *session) sendInit() {
-	wsClient := configs.WebsocketClient
-	initialize := configs.Initialize
-	if err := session.webSocketSend(&configs.WsMessage{
-		Type:      &wsClient,
-		Component: &initialize,
-	}); err != nil {
-		log.Errorf("error receiving / sending init to session %s: %s\n", *session.sessionID, err)
-	}
 }
 
 // Shutdown is called when the system is exiting to cleanly close all the current connections
