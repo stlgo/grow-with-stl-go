@@ -44,7 +44,7 @@ class GrowWithSTLGO {
             document.addEventListener('AuthComplete', () => {
                 this.ws.displayHelper([ 'LoginDiv' ], 'none');
                 let sessionData = JSON.parse(window.sessionStorage.getItem('grow-with-stlgo'));
-                if (Object.prototype.hasOwnProperty.call(sessionData, 'pageType')) {
+                if (sessionData && Object.prototype.hasOwnProperty.call(sessionData, 'pageType')) {
                     this.ws.getPagelet(sessionData.pageType);
                 } else {
                     this.ws.getPagelet('home');
