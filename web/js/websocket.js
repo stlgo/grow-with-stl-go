@@ -122,8 +122,8 @@ class WebSocketClient {
         switch(json.subComponent) {
         case 'approved':
             this.token = json.token;
-            this.authAllowed(json);
             this.keepAlive();
+            document.dispatchEvent(new Event('AuthComplete'));
             break;
         case 'refresh':
             this.refreshToken = json.refreshToken;
@@ -220,11 +220,6 @@ class WebSocketClient {
                 element.style.display = display;
             }
         });
-    }
-
-    authAllowed(json) {
-        this.log.info(JSON.stringify(json));
-        document.dispatchEvent(new Event('AuthComplete'));
     }
 
     authDenied() {
