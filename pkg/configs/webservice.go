@@ -15,6 +15,8 @@
 package configs
 
 import (
+	"errors"
+
 	"stl-go/grow-with-stl-go/pkg/cryptography"
 	"stl-go/grow-with-stl-go/pkg/log"
 )
@@ -37,30 +39,36 @@ func checkWebService() error {
 			return err
 		}
 
-		privateKeyFile, publicKeyFile, err := cryptography.GenerateDevSSL(etcDir)
-		if err != nil {
-			return err
+		if etcDir != nil {
+			privateKeyFile, publicKeyFile, err := cryptography.GenerateDevSSL(etcDir)
+			if err != nil {
+				return err
+			}
+
+			if privateKeyFile != nil && publicKeyFile != nil {
+				port := 10443
+				host := "localhost"
+				staticWebDir := "web"
+
+				GrowSTLGo.WebService = &WebService{
+					Host:         &host,
+					Port:         &port,
+					PublicKey:    publicKeyFile,
+					PrivateKey:   privateKeyFile,
+					StaticWebDir: &staticWebDir,
+				}
+
+				err = cryptography.CheckCertValidity(publicKeyFile)
+				if err != nil {
+					return err
+				}
+
+				rewriteConfig = true
+				return nil
+			}
+			return errors.New("nil private key or public key, cannot continue")
 		}
-
-		port := 10443
-		host := "localhost"
-		staticWebDir := "web"
-
-		GrowSTLGo.WebService = &WebService{
-			Host:         &host,
-			Port:         &port,
-			PublicKey:    publicKeyFile,
-			PrivateKey:   privateKeyFile,
-			StaticWebDir: &staticWebDir,
-		}
-
-		err = cryptography.CheckCertValidity(publicKeyFile)
-		if err != nil {
-			return err
-		}
-
-		rewriteConfig = true
-		return nil
+		return errors.New("nil etc dir, cannot continue")
 	}
 	return nil
 }

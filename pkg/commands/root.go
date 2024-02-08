@@ -54,7 +54,7 @@ func init() {
 	rootCmd.Flags().IntVar(
 		&log.LogLevel,
 		"loglevel",
-		5,
+		4,
 		"This will set the log level, anything at or below that level will be viewed, all others suppressed\n"+
 			"  6 -- Trace\n"+
 			"  5 -- Debug\n"+

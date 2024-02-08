@@ -156,20 +156,22 @@ func Init() error {
 
 func createTables() error {
 	for _, table := range auditTables {
-		stmt, err := sqliteDB.Prepare(table.CreateSQL)
-		if err != nil {
-			return err
-		}
-		if _, err = stmt.Exec(); err != nil {
-			return err
-		}
-		for _, index := range table.Indices {
-			stmt, err := sqliteDB.Prepare(index)
+		if table != nil {
+			stmt, err := sqliteDB.Prepare(table.CreateSQL)
 			if err != nil {
 				return err
 			}
 			if _, err = stmt.Exec(); err != nil {
 				return err
+			}
+			for _, index := range table.Indices {
+				stmt, err := sqliteDB.Prepare(index)
+				if err != nil {
+					return err
+				}
+				if _, err = stmt.Exec(); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -193,7 +195,7 @@ func NewWSTransaction(host, user *string, request *configs.WsMessage) *WSTransac
 func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && sqliteDB != nil &&
 		transaction.Component != nil && !strings.EqualFold(*transaction.Component, "keepalive") {
-		if table, ok := auditTables["WebSocket"]; ok {
+		if table, ok := auditTables["WebSocket"]; ok && table != nil {
 			stmt, err := sqliteDB.Prepare(table.InsertSQL)
 			if err != nil {
 				return err
@@ -250,7 +252,7 @@ func NewRESTTransaction(host, uri, method *string) *RESTTransaction {
 // Complete is a RESTTransaction receiver function to record it to the DB if applicable
 func (transaction *RESTTransaction) Complete(httpStatusCode int) error {
 	if transaction.Recordable != nil && *transaction.Recordable && transaction.Start != nil && sqliteDB != nil {
-		if table, ok := auditTables["REST"]; ok {
+		if table, ok := auditTables["REST"]; ok && table != nil {
 			stmt, err := sqliteDB.Prepare(table.InsertSQL)
 			if err != nil {
 				return err

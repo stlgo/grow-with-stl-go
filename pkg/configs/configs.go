@@ -220,9 +220,7 @@ func scanJSONHelper(jo any, value interface{}, key string) error {
 }
 
 func checkConfigs() error {
-	if GrowSTLGo.APIUsers == nil {
-		populateDefaultAPIUsers()
-	}
+	checkAPIUsers()
 
 	if err := checkWebService(); err != nil {
 		return err
