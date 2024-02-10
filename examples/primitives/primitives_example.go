@@ -93,7 +93,7 @@ func stringTypes() {
 	fmt.Printf("%T variable ba's value of %s\n", ba, ba)
 	fmt.Printf("%T variable pointer bap's address %p value of %s\n", bap, bap, *bap)
 
-	byteArrays := [][]byte{[]byte("This is a byte array"), ba, *bap} // slice (array) of byte array type values
+	byteArrays := [][]byte{[]byte("This is a byte array array"), ba, *bap} // slice (array) of byte array type values
 	for index, value := range byteArrays {
 		fmt.Printf("%T variable at %d index of the byteArrays slice has a value of %s\n", value, index, value)
 	}
