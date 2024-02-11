@@ -30,7 +30,7 @@ func versionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Show version",
 		Long:  "Version for grow with stl-go binary",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			out := cmd.OutOrStdout()
 
 			fmt.Fprintln(out, "grow with stl-go version", Version())

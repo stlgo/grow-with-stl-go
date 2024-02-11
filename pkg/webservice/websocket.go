@@ -192,8 +192,10 @@ func (session *session) handleRequest(request *configs.WsMessage) {
 }
 
 func (session *session) resetIdleTimer(request *configs.WsMessage) {
-	if !strings.EqualFold(*request.Component, configs.Keepalive) {
-		session.lastUsed = utils.CurrentTimeInMillis()
+	if session != nil && request != nil {
+		if !strings.EqualFold(*request.Component, configs.Keepalive) {
+			session.lastUsed = utils.CurrentTimeInMillis()
+		}
 	}
 }
 
@@ -359,7 +361,7 @@ func idleHandsTester() {
 			if session != nil {
 				if session.lastUsed != nil {
 					// 10 minute timeout
-					if (time.Now().UnixMilli() - *session.lastUsed) > 120000 {
+					if (time.Now().UnixMilli() - *session.lastUsed) > 60000 {
 						session.onClose()
 					}
 					// idle abandoned connections are disconnected at 1 minute

@@ -177,7 +177,7 @@ linters-settings:
       - sliceclear
       - sloppylen
       - sloppyreassign
-      - sloppytestfuncname
+      #- sloppytestfuncname
       - sloppytypeassert
       - sortslice
       - sprintfquotedstring

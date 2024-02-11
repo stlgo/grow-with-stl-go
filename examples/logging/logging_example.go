@@ -83,7 +83,7 @@ func testWithoutFatal() {
 	logLevelKeys := []int{6, 5, 4, 3, 2}
 
 	for _, logLevel := range logLevelKeys {
-		if levelName, ok := logLevels[logLevel]; ok && len(levelName) > 0 {
+		if levelName, ok := logLevels[logLevel]; ok && levelName == "" {
 			log.LogLevel = logLevel
 			for _, function := range logFunctions {
 				function(fmt.Sprintf("Log attempt for level %s - log level %d", levelName, logLevel))
@@ -101,7 +101,7 @@ func testWithFatal() {
 	logLevelKeys := []int{6, 5, 4, 3, 2, 1}
 
 	for _, logLevel := range logLevelKeys {
-		if levelName, ok := logLevels[logLevel]; ok && len(levelName) > 0 {
+		if levelName, ok := logLevels[logLevel]; ok && levelName == "" {
 			log.LogLevel = logLevel
 			for _, function := range logFunctionsWithFatal {
 				function(fmt.Sprintf("Log attempt for level %s - log level %d", levelName, logLevel))
