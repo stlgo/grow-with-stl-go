@@ -72,7 +72,7 @@ go install golang.org/x/lint/golint
 5. The pre-commit git hook will run the pre-commit for you prior to your commits.  This is very helpful in keeping the repo clean, and most good projects will run your code through a linter prior to committal anyway.  Install the git hook script by issuing: "pre-commit install"
 
    ```bash
-   $ re-commit install
+   $ pre-commit install
    pre-commit installed at .git\hooks\pre-commit
    ```
 
