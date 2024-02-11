@@ -49,6 +49,8 @@ class GrowWithSTLGO {
                 } else {
                     this.ws.getPagelet('home');
                 }
+            }, {
+                once: true
             });
             document.getElementById('IDInput').value = '';
             document.getElementById('PasswordInput').value = '';

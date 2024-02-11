@@ -16,9 +16,11 @@ package configs
 
 import (
 	"bytes"
+	"database/sql"
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -40,8 +42,8 @@ func checkSQLite() error {
 		if err != nil {
 			return err
 		}
-		log.Debug("No audit database found in the config file, generating a default configuration")
-		fileName := filepath.Join(*etcDir, "audit.db")
+		log.Debug("No embedded database found in the config file, generating a default configuration")
+		fileName := filepath.Join(*etcDir, "grow-with-stl-go.db")
 		sqlite := SQLite{
 			FileName:        &fileName,
 			EncryptDatabase: utils.BoolPointer(true),
@@ -52,9 +54,39 @@ func checkSQLite() error {
 
 		GrowSTLGo.SQLite = &sqlite
 		rewriteConfig = true
+	}
+	return startDB()
+}
+
+// Init will setup the default tables in the sqlite embedded database
+func startDB() error {
+	if GrowSTLGo.SQLite != nil && GrowSTLGo.SQLite.FileName != nil {
+		baseDir := filepath.Dir(*GrowSTLGo.SQLite.FileName)
+		if err := os.MkdirAll(baseDir, 0o750); err != nil {
+			return err
+		}
+
+		// encrypted db
+		if GrowSTLGo.SQLite.EncryptionKey != nil {
+			if key, err := GrowSTLGo.SQLite.GetEncryptionKey(); err == nil && key != nil {
+				dbname := fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", *GrowSTLGo.SQLite.FileName, *key)
+				SqliteDB, err = sql.Open("sqlite3", dbname)
+				if err != nil {
+					return err
+				}
+				log.Debugf("Using encrypted aud database in %s", *GrowSTLGo.SQLite.FileName)
+				return nil
+			}
+		}
+		db, err := sql.Open("sqlite3", *GrowSTLGo.SQLite.FileName)
+		if err != nil {
+			return err
+		}
+		SqliteDB = db
+		log.Debugf("Using unencrypted aud database in %s", *GrowSTLGo.SQLite.FileName)
 		return nil
 	}
-	return nil
+	return fmt.Errorf("no sutiable configuration for SQLite found in the config file %s", *ConfigFile)
 }
 
 func (sqlite *SQLite) generateEncryptionKeys() error {

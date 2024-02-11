@@ -15,10 +15,10 @@
 package configs
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -26,6 +26,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	_ "github.com/mutecomm/go-sqlcipher/v4" // this is required for the sqlite driver
 
 	"stl-go/grow-with-stl-go/pkg/cryptography"
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -42,6 +44,9 @@ var (
 	watchSetup     bool
 	writeMutex     sync.Mutex
 	keysToEncrypt  = regexp.MustCompile("([a-zA-Z]+sswd|[a-zA-Z]+pswd|[a-zA-Z]+assword)")
+
+	// SqliteDB is an embedded database
+	SqliteDB *sql.DB
 )
 
 // constant keys used by the websocket communications
@@ -343,7 +348,7 @@ func getEtcDir() (*string, error) {
 		}
 
 		// make sure the dir is there
-		err = os.MkdirAll(dir, fs.ModeAppend)
+		err = os.MkdirAll(dir, 0o750)
 		if err != nil {
 			return nil, err
 		}

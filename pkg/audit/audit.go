@@ -15,16 +15,11 @@
 package audit
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-
-	_ "github.com/mutecomm/go-sqlcipher/v4" // this is required for the sqlite driver
 
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -64,8 +59,6 @@ type table struct {
 }
 
 var (
-	sqliteDB *sql.DB
-
 	auditTables = map[string]*table{
 		"WebSocket": {
 			CreateSQL: `CREATE TABLE IF NOT EXISTS WebSocket (
@@ -119,59 +112,35 @@ var (
 
 // Init will setup the default tables in the sqlite embedded database
 func Init() error {
-	if configs.GrowSTLGo.SQLite != nil && configs.GrowSTLGo.SQLite.FileName != nil {
-		baseDir := filepath.Dir(*configs.GrowSTLGo.SQLite.FileName)
-		if err := os.MkdirAll(baseDir, 0o750); err != nil {
-			return err
-		}
-
-		// encrypted db
-		if configs.GrowSTLGo.SQLite.EncryptionKey != nil {
-			if key, err := configs.GrowSTLGo.SQLite.GetEncryptionKey(); err == nil && key != nil {
-				dbname := fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", *configs.GrowSTLGo.SQLite.FileName, *key)
-				sqliteDB, err = sql.Open("sqlite3", dbname)
-				if err != nil {
-					return err
-				}
-				if err := createTables(); err != nil {
-					return err
-				}
-				log.Debugf("Using encrypted aud database in %s", *configs.GrowSTLGo.SQLite.FileName)
-				return nil
-			}
-		}
-		db, err := sql.Open("sqlite3", *configs.GrowSTLGo.SQLite.FileName)
-		if err != nil {
-			return err
-		}
-		sqliteDB = db
+	if configs.SqliteDB != nil {
 		if err := createTables(); err != nil {
 			return err
 		}
-		log.Debugf("Using unencrypted aud database in %s", *configs.GrowSTLGo.SQLite.FileName)
 		return nil
 	}
 	return fmt.Errorf("no sutiable configuration for SQLite found in the config file %s", *configs.ConfigFile)
 }
 
 func createTables() error {
-	for _, table := range auditTables {
-		if table != nil {
-			stmt, err := sqliteDB.Prepare(table.CreateSQL)
+	for tableName, table := range auditTables {
+		if table == nil {
+			continue
+		}
+		log.Tracef("Audit table %s was created", tableName)
+		stmt, err := configs.SqliteDB.Prepare(table.CreateSQL)
+		if err != nil {
+			return err
+		}
+		if _, err = stmt.Exec(); err != nil {
+			return err
+		}
+		for _, index := range table.Indices {
+			stmt, err := configs.SqliteDB.Prepare(index)
 			if err != nil {
 				return err
 			}
 			if _, err = stmt.Exec(); err != nil {
 				return err
-			}
-			for _, index := range table.Indices {
-				stmt, err := sqliteDB.Prepare(index)
-				if err != nil {
-					return err
-				}
-				if _, err = stmt.Exec(); err != nil {
-					return err
-				}
 			}
 		}
 	}
@@ -193,10 +162,10 @@ func NewWSTransaction(host, user *string, request *configs.WsMessage) *WSTransac
 
 // Complete is a WSTransaction receiver function to record it to the DB if applicable
 func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
-	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && sqliteDB != nil &&
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && configs.SqliteDB != nil &&
 		transaction.Component != nil && !strings.EqualFold(*transaction.Component, "keepalive") {
 		if table, ok := auditTables["WebSocket"]; ok && table != nil {
-			stmt, err := sqliteDB.Prepare(table.InsertSQL)
+			stmt, err := configs.SqliteDB.Prepare(table.InsertSQL)
 			if err != nil {
 				return err
 			}
@@ -251,9 +220,9 @@ func NewRESTTransaction(host, uri, method *string) *RESTTransaction {
 
 // Complete is a RESTTransaction receiver function to record it to the DB if applicable
 func (transaction *RESTTransaction) Complete(httpStatusCode int) error {
-	if transaction.Recordable != nil && *transaction.Recordable && transaction.Start != nil && sqliteDB != nil {
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.Start != nil && configs.SqliteDB != nil {
 		if table, ok := auditTables["REST"]; ok && table != nil {
-			stmt, err := sqliteDB.Prepare(table.InsertSQL)
+			stmt, err := configs.SqliteDB.Prepare(table.InsertSQL)
 			if err != nil {
 				return err
 			}
