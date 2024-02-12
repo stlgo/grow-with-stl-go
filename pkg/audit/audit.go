@@ -16,9 +16,7 @@ package audit
 
 import (
 	"errors"
-	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -51,15 +49,8 @@ type RESTTransaction struct {
 	Recordable      *bool
 }
 
-type table struct {
-	CreateSQL  string
-	InsertSQL  string
-	Indices    []string
-	WriteMutex sync.Mutex
-}
-
 var (
-	auditTables = map[string]*table{
+	auditTables = map[string]*configs.Table{
 		"WebSocket": {
 			CreateSQL: `CREATE TABLE IF NOT EXISTS WebSocket (
 				host varchar(1024) NOT NULL,
@@ -112,34 +103,9 @@ var (
 
 // Init will setup the default tables in the sqlite embedded database
 func Init() error {
-	if configs.SqliteDB != nil {
-		if err := createTables(); err != nil {
-			return err
-		}
-		return nil
-	}
-	return fmt.Errorf("no sutiable configuration for SQLite found in the config file %s", *configs.ConfigFile)
-}
-
-func createTables() error {
 	for tableName, table := range auditTables {
-		if table == nil {
-			continue
-		}
-		log.Tracef("Audit table %s was created", tableName)
-		stmt, err := configs.SqliteDB.Prepare(table.CreateSQL)
-		if err != nil {
-			return err
-		}
-		if _, err = stmt.Exec(); err != nil {
-			return err
-		}
-		for _, index := range table.Indices {
-			stmt, err := configs.SqliteDB.Prepare(index)
-			if err != nil {
-				return err
-			}
-			if _, err = stmt.Exec(); err != nil {
+		if table != nil {
+			if err := table.CreateTable(&tableName); err != nil {
 				return err
 			}
 		}

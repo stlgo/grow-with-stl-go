@@ -22,12 +22,21 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/cryptography"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/utils"
 )
+
+// Table is a struct used by various packages to create insert / update data to the embedded db
+type Table struct {
+	CreateSQL  string
+	InsertSQL  string
+	Indices    []string
+	WriteMutex sync.Mutex
+}
 
 // SQLite is used to define the sqlite embedded database
 type SQLite struct {
@@ -113,4 +122,29 @@ func (sqlite *SQLite) GetEncryptionKey() (*string, error) {
 		return cryptography.Decrypt(sqlite.EncryptionKey, GrowSTLGo.Secret)
 	}
 	return nil, errors.New("sqlite does not meet the encryption requirements")
+}
+
+// CreateTable is a helper function that will create the table & indexes in the embedded database
+func (table *Table) CreateTable(tableName *string) error {
+	if table != nil && tableName != nil {
+		log.Tracef("Audit table %s was created", *tableName)
+		stmt, err := SqliteDB.Prepare(table.CreateSQL)
+		if err != nil {
+			return err
+		}
+		if _, err = stmt.Exec(); err != nil {
+			return err
+		}
+		for _, index := range table.Indices {
+			stmt, err := SqliteDB.Prepare(index)
+			if err != nil {
+				return err
+			}
+			if _, err = stmt.Exec(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return errors.New("tables is nil cannot create tables")
 }
