@@ -117,5 +117,6 @@ Sometimes seeing things in context helps.  The next set of examples is included 
 
 1. [Linting](docs/linting.md)
 2. Makefile
+3. [The Zen of Python, by Tim Peters](docs/zen-of-programing.md), yes we know it says Python but the concepts are solid and apply here too.
 
 ## The "Grow with stl-go" example application
