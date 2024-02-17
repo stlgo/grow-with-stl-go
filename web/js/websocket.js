@@ -101,6 +101,7 @@ class WebSocketClient {
                 this.displayHelper([ 'RouterDiv', 'NavbarDiv' ], '');
                 window.history.replaceState(null, null, `/${json.subComponent}`);
                 window.sessionStorage.setItem('grow-with-stlgo', JSON.stringify({ timestamp: new Date().getTime(), pageType: location.pathname.substring(1) }));
+                document.dispatchEvent(new CustomEvent(`${json.subComponent}`));
             }
             break;
         case 'initialize':

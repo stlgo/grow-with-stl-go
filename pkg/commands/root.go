@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"stl-go/grow-with-stl-go/pkg/admin"
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/inventory"
@@ -80,6 +81,12 @@ func launch(_ *cobra.Command, _ []string) {
 	// register the web services
 	if err := inventory.Init(); err != nil {
 		log.Fatalf("error populating the inventory: %s", err)
+	}
+
+	// register the web services
+	initFunctions := []func(){admin.Init}
+	for _, function := range initFunctions {
+		function()
 	}
 
 	// start webservice and listen for the the ctl + c to exit
