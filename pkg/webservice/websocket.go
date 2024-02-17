@@ -183,7 +183,10 @@ func (session *session) handleRequest(request *configs.WsMessage) {
 			}
 			return
 		}
-		if err := session.webSocketSend(requestErrorHelper(fmt.Sprintf("requested type: %s is not found", *request.Type), request)); err != nil {
+
+		typeNotFound := fmt.Sprintf("requested type: %s is not found", *request.Type)
+		log.Error(typeNotFound)
+		if err := session.webSocketSend(requestErrorHelper(&typeNotFound, request)); err != nil {
 			session.onError(err)
 		}
 		return
@@ -378,12 +381,15 @@ func idleHandsTester() {
 }
 
 // formats an error response in the way that we're expecting on the UI
-func requestErrorHelper(err string, request *configs.WsMessage) *configs.WsMessage {
-	return &configs.WsMessage{
-		Type:      request.Type,
-		Component: request.Component,
-		Error:     &err,
+func requestErrorHelper(err *string, request *configs.WsMessage) *configs.WsMessage {
+	if err != nil {
+		return &configs.WsMessage{
+			Type:      request.Type,
+			Component: request.Component,
+			Error:     err,
+		}
 	}
+	return nil
 }
 
 // newSession generates a new session

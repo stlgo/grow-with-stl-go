@@ -12,7 +12,7 @@
 # limitations under the License.
 */
 
-
+import { Admin } from './admin.js';
 import { Log } from './log.js';
 import { WebSocketClient } from './websocket.js';
 
@@ -38,6 +38,7 @@ class GrowWithSTLGO {
         if (id.length > 0 && password.length > 0) {
             if (this.ws === null) {
                 this.ws = new WebSocketClient(this.log);
+                let admin = new Admin(this.ws, this.log);
             }
 
             this.ws.login(id, password);

@@ -13,3 +13,52 @@
 */
 
 package admin
+
+import (
+	"fmt"
+
+	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/webservice"
+)
+
+const (
+	addUser    = "addUser"
+	updateUser = "updateUser"
+	removeUser = "removeUser"
+	pageLoad   = "pageLoad"
+)
+
+// Init is different than the standard init because it is called outside of the object load
+func Init() {
+	webservice.AppendToFunctionMap("admin", handleMessage)
+}
+
+func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
+	response := configs.WsMessage{
+		Type:         request.Type,
+		Component:    request.Component,
+		SubComponent: request.SubComponent,
+	}
+
+	if request.Component != nil {
+		switch *request.Component {
+		case pageLoad:
+			log.Info("page load")
+		case addUser:
+			log.Trace(addUser)
+		case updateUser:
+			log.Trace(updateUser)
+		case removeUser:
+			log.Trace(removeUser)
+		default:
+			err := fmt.Sprintf("component %s not implemented", *request.Component)
+			log.Error(err)
+			response.Error = &err
+		}
+		return &response
+	}
+	err := fmt.Errorf("bad request").Error()
+	response.Error = &err
+	return &response
+}
