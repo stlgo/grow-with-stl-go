@@ -41,6 +41,10 @@ var (
 	webDenialPrefixes = regexp.MustCompile(`^(/.eslint.*|/pagelets.*|/package.*)`)
 )
 
+const (
+	fontAwesomePrefix = "/node_modules/font-awesome/fonts/fontawesome-webfont"
+)
+
 // AppendToWebServiceFunctionMap allows us to break up the circular reference from the other packages
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
@@ -76,6 +80,10 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 // serveFile test if path and file exists, if it does send a page, else 404 or redirect
 func serveFile(w http.ResponseWriter, r *http.Request) {
 	uri := r.RequestURI
+	// have to make a special condition for font awesome node modules
+	if strings.HasPrefix(uri, fontAwesomePrefix) {
+		uri = strings.Split(uri, "?")[0]
+	}
 	if !webDenialPrefixes.MatchString(uri) {
 		path := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, uri)
 		_, err := os.Stat(path)

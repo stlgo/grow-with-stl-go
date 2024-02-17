@@ -12,6 +12,19 @@
     "eslint": "^8.56.0"
   },
   "dependencies": {
-    "bootstrap": "^5.0.1"
+    "@fortawesome/fontawesome-free": "^6.5.1",
+    "@fortawesome/fontawesome-free-solid": "^5.0.13",
+    "@fortawesome/free-solid-svg-icons": "^6.5.1",
+    "@styled-icons/fa-solid": "^10.47.0",
+    "bootstrap": "^5.0.1",
+    "datatables.net": "^2.0.0",
+    "datatables.net-autofill": "^2.7.0",
+    "datatables.net-buttons": "^3.0.0",
+    "datatables.net-dt": "^2.0.0",
+    "datatables.net-responsive": "^3.0.0",
+    "datatables.net-select-dt": "^2.0.0",
+    "font-awesome": "^4.7.0",
+    "font-awesome-icons": "^1.6.0",
+    "jquery": "^3.7.1"
   }
 }

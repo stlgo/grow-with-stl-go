@@ -44,7 +44,17 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 	if request.Component != nil {
 		switch *request.Component {
 		case pageLoad:
-			log.Info("page load")
+			response.Data = map[string]interface{}{
+				"aschiefe": map[string]interface{}{
+					"lastLogin": 1708194017000,
+				},
+				"user": map[string]interface{}{
+					"lastLogin": 1708194017000,
+				},
+				"admin": map[string]interface{}{
+					"lastLogin": 1708194017000,
+				},
+			}
 		case addUser:
 			log.Trace(addUser)
 		case updateUser:

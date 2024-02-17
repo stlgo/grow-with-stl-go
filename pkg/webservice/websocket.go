@@ -70,7 +70,7 @@ var websocketFuncMap = map[string]func(*string, *configs.WsMessage) *configs.WsM
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
 func AppendToFunctionMap(requestType string, function func(*string, *configs.WsMessage) *configs.WsMessage) {
-	log.Debugf("Regestering %s as a WebSocket Endpoint", requestType)
+	log.Debugf("Regestering '%s' as a WebSocket Endpoint", requestType)
 	websocketFuncMap[requestType] = function
 }
 

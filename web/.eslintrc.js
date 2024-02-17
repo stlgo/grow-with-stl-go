@@ -4,7 +4,8 @@ module.exports = exports = {
     env: {
         "browser": true,
         "node": true,
-        "es2020": true
+        "es2020": true,
+        "jquery": true
     },
 
     parserOptions: {

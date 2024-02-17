@@ -5,36 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
     <title>Grow With STL-GO</title>
+    <link rel="icon" href="data:;base64,=">
 
-    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/styles/styles.css">
     <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script type='module'>
-        import { GrowWithSTLGO } from './js/main.js';
-
-        var gwsg = null;
-
-        function login() {
-            if (gwsg === null) {
-                    gwsg = new GrowWithSTLGO()
-                }
-                gwsg.login()
-        }
-
-        document.getElementById("LoginButton").onclick = () => {
-           login()
-        }
-
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.onclick = (event) => {
-                event.preventDefault();
-                gwsg.load(new URL(link.href).pathname.substring(1));
-            }
-        });
-    </script>
+    <script src="/node_modules/jquery/dist/jquery.slim.min.js"></script>
+    <script src="/node_modules/datatables.net/js/dataTables.min.js"></script>
+    <script src="/node_modules/datatables.net-select/js/dataTables.select.min.js"></script>
+    <link rel="stylesheet" href="/node_modules/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/node_modules/datatables.net-dt/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="/node_modules/datatables.net-select-dt/css/select.dataTables.min.css">
+    <link rel="stylesheet" href="/styles/styles.css">
 </head>
+<script type='module'>
+    import { GrowWithSTLGO } from './js/main.js';
 
+    var gwsg = null;
+
+    function login() {
+        if (gwsg === null) {
+                gwsg = new GrowWithSTLGO()
+            }
+            gwsg.login()
+    }
+
+    document.getElementById("LoginButton").onclick = () => {
+        login()
+    }
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.onclick = (event) => {
+            event.preventDefault();
+            gwsg.load(new URL(link.href).pathname.substring(1));
+        }
+    });
+</script>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light navbar-shadow" style="background-color: #47b53f;">
         <div class="container-fluid">
