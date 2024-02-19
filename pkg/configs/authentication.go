@@ -30,6 +30,19 @@ type Authentication struct {
 	Password *string `json:"password,omitempty"`
 }
 
+// GeneratePassword will generate a 64 bit password string on demand
+func GeneratePassword() *string {
+	var password bytes.Buffer
+	// generate a 64bit access key
+	for i := 0; i < 4; i++ {
+		// golangci-lint tosses a false positive G404: Use of weak random number generator error so we'll skip that for this line
+		password.WriteString(fmt.Sprintf("%x", rand.New(rand.NewSource(time.Now().UnixNano()+int64(i))).Uint64())) // #nosec
+	}
+
+	s := password.String()
+	return &s
+}
+
 // ValidateAuthentication will compare the supplied password with the stored one
 func (auth *Authentication) ValidateAuthentication(password *string) error {
 	if auth != nil && auth.Password != nil && password != nil {
@@ -47,21 +60,14 @@ func (auth *Authentication) ValidateAuthentication(password *string) error {
 
 // GeneratePassword will generate a strong password for the authentication object
 func (auth *Authentication) GeneratePassword() (*string, error) {
-	var password bytes.Buffer
-	// generate a 64bit access key
-	for i := 0; i < 4; i++ {
-		// golangci-lint tosses a false positive G404: Use of weak random number generator error so we'll skip that for this line
-		password.WriteString(fmt.Sprintf("%x", rand.New(rand.NewSource(time.Now().UnixNano()+int64(i))).Uint64())) // #nosec
-	}
-
-	s := password.String()
-	auth.Password = &s
+	passwd := GeneratePassword()
+	auth.Password = passwd
 
 	if err := auth.hashAuthentication(); err != nil {
 		return nil, err
 	}
 
-	return &s, nil
+	return passwd, nil
 }
 
 // HashAuthentication will hash the password for the Authentication object

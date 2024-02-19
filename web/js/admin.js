@@ -30,18 +30,44 @@ class Admin {
         });
     }
 
-    handleMessage(json) {
-        if (Object.prototype.hasOwnProperty.call(json, 'error')) {
-            this.log.error(json.error);
-        } else {
-            switch(json.component) {
-            case 'addUser':
-            case 'pageLoad':
-                this.showUsers(json.data);
+    bindButtons() {
+        let element = document.getElementById('UserIDInput');
+        element.onblur = () => {
+            if (element.validity.valid && document.getElementById('PasswordInput').value === '') {
+                this.generatePassword('newUser');
+            }
+        };
+        document.getElementById('RefreshPassword').onclick = () => {
+            this.generatePassword('newUser');
+        };
+    }
+
+    generatePassword(uesrType) {
+        this.ws.sendMessage({
+            type: this.type,
+            component: 'generatePassword',
+            subComponent: uesrType,
+        });
+    }
+
+    populatePassword(userType, data) {
+        if (Object.prototype.hasOwnProperty.call(data, 'password')) {
+            switch(userType) {
+            case 'newUser':
+                document.getElementById('GeneratedPasswd').value = data.password;
+                navigator.clipboard.writeText(data.password);
+                alert('Password has been copied to your clipboard'); // eslint-disable-line no-alert
+                break;
+            case 'existingUser':
+                if (Object.prototype.hasOwnProperty.call(data, 'target')) {
+                    document.getElementById(data.target).value = data.password;
+                    navigator.clipboard.writeText(data.password);
+                    alert('Password has been copied to your clipboard'); // eslint-disable-line no-alert
+                    break;
+                }
                 break;
             default:
-                this.log.error(`Cannot handle component '${json.component}' for ${this.type}`);
-                break;
+                this.log.error(`cannot apply password for user type '${userType}'`);
             }
         }
     }
@@ -154,6 +180,26 @@ class Admin {
                 console.log(userID);
             }
         });
+    }
+
+    handleMessage(json) {
+        if (Object.prototype.hasOwnProperty.call(json, 'error')) {
+            this.log.error(json.error);
+        } else {
+            switch(json.component) {
+            case 'addUser':
+            case 'pageLoad':
+                this.showUsers(json.data);
+                this.bindButtons();
+                break;
+            case 'generatePassword':
+                this.populatePassword(json.subComponent, json.data);
+                break;
+            default:
+                this.log.error(`Cannot handle component '${json.component}' for ${this.type}`);
+                break;
+            }
+        }
     }
 }
 

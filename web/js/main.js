@@ -50,7 +50,7 @@ class GrowWithSTLGO {
         if (id.length > 0 && password.length > 0) {
             if (this.ws === null) {
                 this.ws = new WebSocketClient(this.log);
-                let admin = new Admin(this.ws, this.log);
+                const admin = new Admin(this.ws, this.log);
             }
 
             this.ws.login(id, password);

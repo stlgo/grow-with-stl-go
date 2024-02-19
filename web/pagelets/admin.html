@@ -1,5 +1,30 @@
 <h1>User Admin</h1>
 <fieldset>
     <legend>Current Users</legend>
-    <div id="CurrentUsersDiv"></div>
+    <div id="CurrentUsersDiv">
+        <h2>Loading Please Wait...</h2>
+    </div>
+</fieldset>
+<fieldset>
+    <legend>New User</legend>
+    <table>
+        <tr>
+            <td><b>User ID:</b></td>
+            <td>
+                <input type="text" id="UserIDInput" pattern="[a-zA-Z0-9]{4}.*" placeholder="User ID" size="70" required>
+            </td>
+            <td>
+                <button class="btn btn-outline-primary" id="AddUserButton" title="Add a new User">Add User</button>
+            </td>
+        </tr>
+        <tr>
+            <td><b>Password:</b></td>
+            <td>
+                <input type="text" id="GeneratedPasswd" size="70" placeholder="Passwords can only be reset not recovered copy prior to submission" disabled>
+            </td>
+            <td>
+                <button class="btn btn-outline-primary" id="RefreshPassword" title="Generate new password"><i class="fa fa-refresh"></i></button>
+            </td>
+        </tr>
+    </table>
 </fieldset>

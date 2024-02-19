@@ -24,10 +24,11 @@ import (
 )
 
 const (
-	addUser    = "addUser"
-	updateUser = "updateUser"
-	removeUser = "removeUser"
-	pageLoad   = "pageLoad"
+	addUser          = "addUser"
+	updateUser       = "updateUser"
+	removeUser       = "removeUser"
+	pageLoad         = "pageLoad"
+	generatePassword = "generatePassword"
 )
 
 // Init is different than the standard init because it is called outside of the object load
@@ -53,7 +54,10 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 				return &response
 			}
 			response.Data = data
-
+		case generatePassword:
+			response.Data = map[string]*string{
+				"password": configs.GeneratePassword(),
+			}
 		case addUser:
 			log.Trace(addUser)
 		case updateUser:

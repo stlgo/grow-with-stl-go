@@ -150,7 +150,7 @@ func RecordLogin(userID *string, protocol string, goodLogin bool) {
 
 		log.Tracef("%d rows inserted into user", rows)
 	}
-	log.Error("did not meet the requirements to record the login")
+	log.Trace("did not meet the requirements to record the login")
 }
 
 // GetLastLogins will query the database for the last recorded login of the users
