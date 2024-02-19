@@ -15,6 +15,7 @@
 package admin
 
 import (
+	"errors"
 	"fmt"
 
 	"stl-go/grow-with-stl-go/pkg/audit"
@@ -25,11 +26,16 @@ import (
 
 const (
 	addUser          = "addUser"
-	updateUser       = "updateUser"
+	updateActive     = "updateActive"
+	resetPassword    = "resetPassword"
 	removeUser       = "removeUser"
 	pageLoad         = "pageLoad"
 	generatePassword = "generatePassword"
 )
+
+type userActive struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
 
 // Init is different than the standard init because it is called outside of the object load
 func Init() {
@@ -59,11 +65,44 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 				"password": configs.GeneratePassword(),
 			}
 		case addUser:
-			log.Trace(addUser)
-		case updateUser:
-			log.Trace(updateUser)
+			err := configs.AddUser(request.SubComponent, request.Data)
+			if err != nil {
+				log.Error(err)
+				e := err.Error()
+				response.Error = &e
+				return &response
+			}
+			data, err := getUserInfo()
+			if err != nil {
+				log.Error(err)
+			}
+			response.Data = data
+		case updateActive:
+			err := updateUserActive(request.SubComponent, request.Data)
+			if err != nil {
+				log.Error(err)
+				e := err.Error()
+				response.Error = &e
+				return &response
+			}
+			data, err := getUserInfo()
+			if err != nil {
+				log.Error(err)
+			}
+			response.Data = data
 		case removeUser:
-			log.Trace(removeUser)
+			err := configs.RemoveUser(request.SubComponent)
+			if err != nil {
+				log.Error(err)
+				e := err.Error()
+				response.Error = &e
+				return &response
+			}
+			data, err := getUserInfo()
+			if err != nil {
+				log.Error(err)
+			}
+			response.Data = data
 		default:
 			err := fmt.Sprintf("component %s not implemented", *request.Component)
 			log.Error(err)
@@ -74,6 +113,17 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 	err := fmt.Errorf("bad request").Error()
 	response.Error = &err
 	return &response
+}
+
+func updateUserActive(userID *string, data interface{}) error {
+	if userID != nil {
+		if activeData, ok := data.(userActive); ok {
+			if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
+				return apiUser.ToggleActive(activeData.Enabled)
+			}
+		}
+	}
+	return errors.New("cannot update user active flag")
 }
 
 func getUserInfo() (map[string]interface{}, error) {

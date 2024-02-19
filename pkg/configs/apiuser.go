@@ -15,6 +15,8 @@
 package configs
 
 import (
+	"errors"
+
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/utils"
 )
@@ -54,4 +56,54 @@ func checkAPIUsers() {
 		}
 		rewriteConfig = true
 	}
+}
+
+// AddUser will add a new user to the configs
+func AddUser(userID *string, data interface{}) error {
+	if authentication, ok := data.(Authentication); ok {
+		if userID != nil && data != nil {
+			if _, ok := GrowSTLGo.APIUsers[*userID]; !ok {
+				GrowSTLGo.APIUsers[*userID] = &APIUser{
+					Active:         utils.BoolPointer(true),
+					Authentication: &authentication,
+				}
+				return GrowSTLGo.persist()
+			}
+		}
+	}
+	return errors.New("cannot add user")
+}
+
+// RemoveUser will permanently delete the user from the configs
+func RemoveUser(userID *string) error {
+	if userID != nil {
+		if _, ok := GrowSTLGo.APIUsers[*userID]; ok {
+			delete(GrowSTLGo.APIUsers, *userID)
+			return GrowSTLGo.persist()
+		}
+	}
+	return errors.New("cannot remove user")
+}
+
+// ResetPassword will reset the password of a given user
+func (apiUser *APIUser) ResetPassword(password *string) error {
+	if apiUser != nil && apiUser.Authentication != nil && password != nil {
+		backupAuth := apiUser.Authentication
+		apiUser.Authentication.Password = password
+		if err := apiUser.Authentication.hashAuthentication(); err != nil {
+			apiUser.Authentication = backupAuth
+			return err
+		}
+		return GrowSTLGo.persist()
+	}
+	return errors.New("unable to reset password: nil api user or nill password")
+}
+
+// ToggleActive will set user to enabled / disabled based on input
+func (apiUser *APIUser) ToggleActive(active *bool) error {
+	if apiUser != nil && active != nil {
+		apiUser.Active = active
+		return GrowSTLGo.persist()
+	}
+	return errors.New("unable to set activity: nil api user or nil active boolean")
 }

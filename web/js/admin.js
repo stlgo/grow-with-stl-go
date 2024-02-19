@@ -40,6 +40,25 @@ class Admin {
         document.getElementById('RefreshPassword').onclick = () => {
             this.generatePassword('newUser');
         };
+        document.getElementById('AddUserButton').onclick = () => {
+            this.addUser();
+        };
+    }
+
+    addUser() {
+        let userIDInput = document.getElementById('UserIDInput');
+        let passwordInput = document.getElementById('GeneratedPasswd');
+        if (userIDInput.validity.valid && passwordInput.value.length >= 10) {
+            this.ws.sendMessage({
+                type: this.type,
+                component: 'addUser',
+                subComponent: userIDInput.value,
+                data: {
+                    id: userIDInput.value,
+                    password: passwordInput.value
+                }
+            });
+        }
     }
 
     generatePassword(uesrType) {
@@ -187,23 +206,33 @@ class Admin {
     bindActiveToggle() {
         document.querySelectorAll('.user-active-chk').forEach((chkBox) => {
             chkBox.onclick = () => {
-                const user = chkBox.name;
+                const userID = chkBox.name;
                 let active = false;
                 active = chkBox.checked;
-                this.log.info(active);
+                if (window.confirm(`Confirm toggle of user "${userID}"`)) { // eslint-disable-line no-alert
+                    this.ws.sendMessage({
+                        type: this.type,
+                        component: 'updateActive',
+                        subComponent: userID,
+                    });
+                }
             };
         });
     }
 
     bindRemoveUser(table) {
-        // TODO (aschiefe): replace jquery lookup with pure JS one
-        $('#UsersTable tbody').on('click', 'td.remove-user', function() {
-            const tr = $(this).closest('tr'); // eslint-disable-line no-invalid-this
-            const row = table.row(tr);
-            const userID = row.data()[1];
-            if (window.confirm(`Confirm removal of user "${userID}"`)) { // eslint-disable-line no-alert
-                console.log(userID);
-            }
+        document.querySelectorAll('.remove-user').forEach((removeButton) => {
+            removeButton.onclick = () => {
+                const row = table.row(removeButton.parentNode.parentNode);
+                const userID = row.data()[1];
+                if (window.confirm(`Confirm removal of user "${userID}"`)) { // eslint-disable-line no-alert
+                    this.ws.sendMessage({
+                        type: this.type,
+                        component: 'removeUser',
+                        subComponent: userID,
+                    });
+                }
+            };
         });
     }
 
@@ -213,6 +242,8 @@ class Admin {
         } else {
             switch(json.component) {
             case 'addUser':
+            case 'updateActive':
+            case 'removeUser':
             case 'pageLoad':
                 this.showUsers(json.data);
                 this.bindButtons();
