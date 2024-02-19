@@ -26,6 +26,18 @@ class GrowWithSTLGO {
             this.ws.displayHelper([ 'RouterDiv', 'NavbarDiv' ], 'none');
             this.ws.displayHelper([ 'LoginDiv' ], '');
         });
+
+        document.querySelectorAll('.loginInput').forEach((input) => {
+            input.addEventListener('keypress', (event) => {
+                // If the user presses the "Enter" key on the keyboard
+                if (event.key === 'Enter') {
+                    // Cancel the default action, if needed
+                    event.preventDefault();
+                    // Trigger the button element with a click
+                    document.getElementById('LoginButton').click();
+                }
+            });
+        });
     }
 
     load(pageType) {

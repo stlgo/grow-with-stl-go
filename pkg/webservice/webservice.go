@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"strings"
 
+	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 
@@ -111,6 +112,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.UnauthorizedError, http.StatusUnauthorized)
+			go audit.RecordLogin(id, "REST", false)
 			return
 		}
 
@@ -119,6 +121,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			go audit.RecordLogin(id, "REST", false)
 			return
 		}
 
@@ -126,6 +129,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			go audit.RecordLogin(id, "REST", false)
 			return
 		}
 
@@ -134,10 +138,12 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			go audit.RecordLogin(id, "REST", false)
 			return
 		}
 
 		log.Infof("Token authentication %s successful for %s session %s", r.Method, *id, sessionID)
+		go audit.RecordLogin(id, "REST", true)
 		return
 	}
 	log.Error("http request was nil")

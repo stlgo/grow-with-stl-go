@@ -138,7 +138,7 @@ func (session *session) onMessage() {
 				transactionHelper(transaction, false)
 				return
 			}
-			session.handleRequest(&request)
+			session.handleRequest(&request, transaction)
 
 			// the user is not populated on the login transaction, this will alleviate that issue
 			if transaction.User == nil && session.user != nil {
@@ -171,11 +171,16 @@ func (session *session) onError(err error) {
 	session.onClose()
 }
 
-func (session *session) handleRequest(request *configs.WsMessage) {
-	if request.Type != nil {
+func (session *session) handleRequest(request *configs.WsMessage, transaction *audit.WSTransaction) {
+	if request.Type != nil && request.Component != nil {
 		if handleMessageFunc, ok := websocketFuncMap[*request.Type]; ok {
 			// reset the idle timer if it's appropriate
 			go session.resetIdleTimer(request)
+
+			if strings.EqualFold(*request.Component, configs.GetPagelet) {
+				transaction.Recordable = utils.BoolPointer(false)
+			}
+
 			// do the rest
 			response := handleMessageFunc(session.sessionID, request)
 			if err := session.webSocketSend(response); err != nil {
@@ -275,11 +280,13 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 		request.Authentication != nil && request.Authentication.ID != nil && request.Authentication.Password != nil {
 		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok {
 			if err := user.Authentication.ValidateAuthentication(request.Authentication.Password); err != nil {
+				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
 				return user.Authentication.ID, fmt.Errorf("bad password attempt for user %s.  Error: %s", *request.Authentication.ID, err)
 			}
 
 			token, err := createJWTToken(request.Authentication.ID, request.SessionID)
 			if err != nil || token == nil {
+				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
 				return user.Authentication.ID, err
 			}
 
@@ -292,6 +299,7 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 			response.Token = token
 			response.Error = nil
 
+			go audit.RecordLogin(user.Authentication.ID, "WebSocket", true)
 			return user.Authentication.ID, nil
 		}
 		return request.Authentication.ID, errors.New("user not found")

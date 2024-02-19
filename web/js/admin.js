@@ -68,7 +68,12 @@ class Admin {
             tr = tb.insertRow(-1);
             tr.insertCell(-1);
             tr.insertCell(-1).innerHTML = userID;
-            tr.insertCell(-1).innerHTML = new Date(data[userID].lastLogin).toLocaleString('en-us', { timeZoneName: 'short' });
+            if (data[userID].lastLogin === null) {
+                tr.insertCell(-1).innerHTML = 'Never Logged In';
+            } else {
+                tr.insertCell(-1).innerHTML = new Date(data[userID].lastLogin).toLocaleString('en-us', { timeZoneName: 'short' });
+            }
+
 
             let checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -107,6 +112,7 @@ class Admin {
     }
 
     bindSlideOut(table) {
+        // TODO (aschiefe): replace jquery lookup with pure JS one
         $('#UsersTable tbody').on('click', 'td.details-control', function() {
             const tr = $(this).closest('tr'); // eslint-disable-line no-invalid-this
             const row = table.row(tr);
@@ -139,6 +145,7 @@ class Admin {
     }
 
     bindRemoveUser(table) {
+        // TODO (aschiefe): replace jquery lookup with pure JS one
         $('#UsersTable tbody').on('click', 'td.remove-user', function() {
             const tr = $(this).closest('tr'); // eslint-disable-line no-invalid-this
             const row = table.row(tr);

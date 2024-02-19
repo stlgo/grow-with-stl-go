@@ -113,6 +113,68 @@ func Init() error {
 	return nil
 }
 
+// RecordLogin will insert a record into the users table once a user attempts a login
+func RecordLogin(userID *string, protocol string, goodLogin bool) {
+	if table, ok := auditTables["user"]; ok && table != nil && userID != nil {
+		stmt, err := configs.SqliteDB.Prepare(table.InsertSQL)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		observed := time.Now().UnixMilli()
+
+		success := 0
+		if goodLogin {
+			success = 1
+		}
+
+		table.WriteMutex.Lock()
+		defer table.WriteMutex.Unlock()
+		result, err := stmt.Exec(
+			userID,
+			protocol,
+			success,
+			observed)
+
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		rows, err := result.RowsAffected()
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		log.Tracef("%d rows inserted into user", rows)
+	}
+	log.Error("did not meet the requirements to record the login")
+}
+
+// GetLastLogins will query the database for the last recorded login of the users
+func GetLastLogins() (map[string]*int64, error) {
+	if configs.SqliteDB != nil {
+		users := make(map[string]*int64)
+		rows, err := configs.SqliteDB.Query("select user, max(observed) from user where success = 1 group by user")
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var userID string
+			var lastLogin *int64
+			if err := rows.Scan(&userID, &lastLogin); err != nil {
+				return nil, err
+			}
+			users[userID] = lastLogin
+		}
+		return users, nil
+	}
+	return nil, errors.New("the sqlite database is nil, cannot get last logins")
+}
+
 // NewWSTransaction creates a new WSTransaction object to record as an auditable thing
 func NewWSTransaction(host, user *string, request *configs.WsMessage) *WSTransaction {
 	return &WSTransaction{
@@ -123,6 +185,17 @@ func NewWSTransaction(host, user *string, request *configs.WsMessage) *WSTransac
 		User:         user,
 		Start:        utils.CurrentTimeInMillis(),
 		Recordable:   utils.BoolPointer(true),
+	}
+}
+
+// NewRESTTransaction creates a new RESTTransaction object to record as an auditable thing
+func NewRESTTransaction(host, uri, method *string) *RESTTransaction {
+	return &RESTTransaction{
+		Host:       host,
+		URI:        uri,
+		Method:     method,
+		Start:      utils.CurrentTimeInMillis(),
+		Recordable: utils.BoolPointer(true),
 	}
 }
 
@@ -171,17 +244,6 @@ func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 		}
 	}
 	return nil
-}
-
-// NewRESTTransaction creates a new RESTTransaction object to record as an auditable thing
-func NewRESTTransaction(host, uri, method *string) *RESTTransaction {
-	return &RESTTransaction{
-		Host:       host,
-		URI:        uri,
-		Method:     method,
-		Start:      utils.CurrentTimeInMillis(),
-		Recordable: utils.BoolPointer(true),
-	}
 }
 
 // Complete is a RESTTransaction receiver function to record it to the DB if applicable

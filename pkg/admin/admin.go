@@ -17,6 +17,7 @@ package admin
 import (
 	"fmt"
 
+	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/webservice"
@@ -44,17 +45,15 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 	if request.Component != nil {
 		switch *request.Component {
 		case pageLoad:
-			response.Data = map[string]interface{}{
-				"aschiefe": map[string]interface{}{
-					"lastLogin": 1708194017000,
-				},
-				"user": map[string]interface{}{
-					"lastLogin": 1708194017000,
-				},
-				"admin": map[string]interface{}{
-					"lastLogin": 1708194017000,
-				},
+			data, err := getUserInfo()
+			if err != nil {
+				log.Error(err)
+				e := "Unable to retrieve user information"
+				response.Error = &e
+				return &response
 			}
+			response.Data = data
+
 		case addUser:
 			log.Trace(addUser)
 		case updateUser:
@@ -71,4 +70,25 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 	err := fmt.Errorf("bad request").Error()
 	response.Error = &err
 	return &response
+}
+
+func getUserInfo() (map[string]interface{}, error) {
+	data := make(map[string]interface{})
+	lastLogins, err := audit.GetLastLogins()
+	if err != nil {
+		return nil, err
+	}
+	for userID, apiUser := range configs.GrowSTLGo.APIUsers {
+		data[userID] = map[string]interface{}{
+			"lastLogin": nil,
+			"active":    apiUser.Active,
+		}
+		if lastLogin, ok := lastLogins[userID]; ok {
+			data[userID] = map[string]interface{}{
+				"lastLogin": lastLogin,
+				"active":    apiUser.Active,
+			}
+		}
+	}
+	return data, nil
 }
