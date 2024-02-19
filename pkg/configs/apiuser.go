@@ -15,6 +15,7 @@
 package configs
 
 import (
+	"encoding/json"
 	"errors"
 
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -60,14 +61,17 @@ func checkAPIUsers() {
 
 // AddUser will add a new user to the configs
 func AddUser(userID *string, data interface{}) error {
-	if authentication, ok := data.(Authentication); ok {
-		if userID != nil && data != nil {
-			if _, ok := GrowSTLGo.APIUsers[*userID]; !ok {
-				GrowSTLGo.APIUsers[*userID] = &APIUser{
-					Active:         utils.BoolPointer(true),
-					Authentication: &authentication,
+	if userID != nil && data != nil {
+		if bytes, err := json.Marshal(data); err == nil {
+			var authentication *Authentication
+			if err := json.Unmarshal(bytes, &authentication); err == nil && authentication != nil {
+				if _, ok := GrowSTLGo.APIUsers[*userID]; !ok {
+					GrowSTLGo.APIUsers[*userID] = &APIUser{
+						Active:         utils.BoolPointer(true),
+						Authentication: authentication,
+					}
+					return GrowSTLGo.persist()
 				}
-				return GrowSTLGo.persist()
 			}
 		}
 	}

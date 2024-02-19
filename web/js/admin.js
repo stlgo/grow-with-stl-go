@@ -58,6 +58,8 @@ class Admin {
                     password: passwordInput.value
                 }
             });
+            userIDInput.value = '';
+            passwordInput.value = '';
         }
     }
 
@@ -239,6 +241,7 @@ class Admin {
     handleMessage(json) {
         if (Object.prototype.hasOwnProperty.call(json, 'error')) {
             this.log.error(json.error);
+            alert(json.error); // eslint-disable-line no-alert
         } else {
             switch(json.component) {
             case 'addUser':
