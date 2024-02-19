@@ -92,7 +92,7 @@ class Admin {
         let tb = table.createTBody();
         Object.keys(data).forEach((userID) => {
             tr = tb.insertRow(-1);
-            tr.insertCell(-1);
+            tr.insertCell(-1).innerHTML = `<div id="${userID}-details"><i class="fa fa-plus-circle fa-lg details-control" style="color:green"></i></div>`;
             tr.insertCell(-1).innerHTML = userID;
             if (data[userID].lastLogin === null) {
                 tr.insertCell(-1).innerHTML = 'Never Logged In';
@@ -108,7 +108,8 @@ class Admin {
             checkbox.classList.add('user-active-chk');
             checkbox.checked = true;
             tr.insertCell(-1).appendChild(checkbox);
-            tr.insertCell(-1);
+
+            tr.insertCell(-1).innerHTML = '<i class="fa fa-trash fa-lg remove-user" style="color:maroon"></i>';
         });
         let div = document.getElementById('CurrentUsersDiv');
         div.innerHTML = '';
@@ -119,16 +120,10 @@ class Admin {
             orderClasses: false,
             columnDefs: [ {
                 targets: 0,
-                className: 'details-control',
                 orderable: false,
-                data: null,
-                defaultContent: '<i class="fa fa-plus-circle fa-lg" style="color:green"></i>'
             }, {
                 targets: 4,
-                className: 'remove-user',
                 orderable: false,
-                data: null,
-                defaultContent: '<i class="fa fa-trash fa-lg" style="color:maroon"></i>'
             } ]
         });
 
@@ -138,24 +133,54 @@ class Admin {
     }
 
     bindSlideOut(table) {
-        // TODO (aschiefe): replace jquery lookup with pure JS one
-        $('#UsersTable tbody').on('click', 'td.details-control', function() {
-            const tr = $(this).closest('tr'); // eslint-disable-line no-invalid-this
-            const row = table.row(tr);
-
-            if (row.child.isShown()) {
-                row.child.hide();
-                tr.removeClass('shown');
-                this.innerHTML = '<i class="fa fa-plus-circle fa-lg" style="color:green"></i>'; // eslint-disable-line no-invalid-this
-            } else {
+        document.querySelectorAll('.details-control').forEach((slideButton) => {
+            slideButton.onclick = () => {
+                const row = table.row(slideButton.parentNode.parentNode);
                 const userID = row.data()[1];
-                const div = document.createElement('div');
-                div.id = `${userID}-detailsDiv`;
-                div.innerHTML = `Loading data for user "${userID}" please wait...`;
-                row.child(div).show();
-                tr.addClass('shown');
-                this.innerHTML = '<i class="fa fa-times-circle fa-lg" style="color:maroon"></i>'; // eslint-disable-line no-invalid-this
-            }
+                const details = document.getElementById(`${userID}-details`);
+
+                if (details.innerHTML.includes('color:maroon')) {
+                    row.child.hide();
+                    details.innerHTML = '<i class="fa fa-plus-circle fa-lg details-control" style="color:green"></i>';
+                } else {
+                    const clone = document.getElementById('NewUserFieldset').cloneNode(true);
+                    clone.id = `${userID}-details`;
+
+                    const elementTypes = [ 'button', 'input', 'fieldset', 'legend', 'table' ];
+                    elementTypes.forEach((element) => {
+                        Array.from(clone.getElementsByTagName(element)).forEach((tagElement) => {
+                            const id = tagElement.id;
+                            if (id.length > 0) {
+                                tagElement.id = `${userID}-${id}`;
+                            }
+
+                            switch (tagElement.id) {
+                            case `${userID}-UserIDInput`:
+                                tagElement.value = userID;
+                                tagElement.disabled = true;
+                                break;
+                            case `${userID}-AddUserButton`:
+                                tagElement.innerHTML = 'Update User';
+                                tagElement.onclick = () => {
+                                    this.generatePassword(tagElement.id.split('-')[0]);
+                                };
+                                break;
+                            }
+
+                            const name = tagElement.name;
+                            if (name !== undefined && name.length > 0) {
+                                tagElement.name = `${userID}-${name}`;
+                            }
+                        });
+                    });
+
+                    row.child(clone).show();
+                    details.innerHTML = '<i class="fa fa-times-circle fa-lg details-control" style="color:maroon"></i>';
+
+                    // rebind click
+                    this.bindSlideOut(table);
+                }
+            };
         });
     }
 
