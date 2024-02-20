@@ -88,10 +88,7 @@ func UpdateUser(userID *string, data interface{}) error {
 			if err := json.Unmarshal(bytes, &authentication); err == nil && authentication.ID != nil && authentication.Password != nil {
 				if err := authentication.hashAuthentication(); err == nil {
 					if apiUser, ok := GrowSTLGo.APIUsers[*userID]; ok {
-						GrowSTLGo.APIUsers[*userID] = &APIUser{
-							Active:         apiUser.Active,
-							Authentication: &authentication,
-						}
+						apiUser.Authentication = &authentication
 						return GrowSTLGo.persist()
 					}
 				}
