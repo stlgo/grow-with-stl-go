@@ -63,6 +63,22 @@ class Admin {
         }
     }
 
+    updateUser(userID) {
+        let passwordInput = document.getElementById(`${userID}-GeneratedPasswd`);
+        if (passwordInput.value.length >= 10) {
+            this.ws.sendMessage({
+                type: this.type,
+                component: 'updateUser',
+                subComponent: userID,
+                data: {
+                    id: userID,
+                    password: passwordInput.value
+                }
+            });
+            passwordInput.value = '';
+        }
+    }
+
     generatePassword(uesrType) {
         this.ws.sendMessage({
             type: this.type,
@@ -76,20 +92,13 @@ class Admin {
             switch(userType) {
             case 'newUser':
                 document.getElementById('GeneratedPasswd').value = data.password;
-                navigator.clipboard.writeText(data.password);
-                alert('Password has been copied to your clipboard'); // eslint-disable-line no-alert
-                break;
-            case 'existingUser':
-                if (Object.prototype.hasOwnProperty.call(data, 'target')) {
-                    document.getElementById(data.target).value = data.password;
-                    navigator.clipboard.writeText(data.password);
-                    alert('Password has been copied to your clipboard'); // eslint-disable-line no-alert
-                    break;
-                }
                 break;
             default:
-                this.log.error(`cannot apply password for user type '${userType}'`);
+                document.getElementById(`${userType}-GeneratedPasswd`).value = data.password;
+                break;
             }
+            navigator.clipboard.writeText(data.password);
+            alert('Password has been copied to your clipboard'); // eslint-disable-line no-alert
         }
     }
 
@@ -127,7 +136,7 @@ class Admin {
             checkbox.id = `${userID}_active_chk`;
             checkbox.name = userID;
             checkbox.classList.add('user-active-chk');
-            checkbox.checked = true;
+            checkbox.checked = data[userID].active;
             tr.insertCell(-1).appendChild(checkbox);
 
             tr.insertCell(-1).innerHTML = '<i class="fa fa-trash fa-lg remove-user" style="color:maroon"></i>';
@@ -183,7 +192,13 @@ class Admin {
                             case `${userID}-AddUserButton`:
                                 tagElement.innerHTML = 'Update User';
                                 tagElement.onclick = () => {
-                                    this.generatePassword(tagElement.id.split('-')[0]);
+                                    this.updateUser(userID);
+                                };
+                                break;
+                            case `${userID}-RefreshPassword`:
+                                tagElement.value = '';
+                                tagElement.onclick = () => {
+                                    this.generatePassword(userID);
                                 };
                                 break;
                             }
@@ -210,13 +225,19 @@ class Admin {
             chkBox.onclick = () => {
                 const userID = chkBox.name;
                 let active = false;
-                active = chkBox.checked;
+                if (chkBox.checked) {
+                    active = true;
+                }
                 if (window.confirm(`Confirm toggle of user "${userID}"`)) { // eslint-disable-line no-alert
                     this.ws.sendMessage({
                         type: this.type,
                         component: 'updateActive',
                         subComponent: userID,
+                        data: {
+                            enabled: active
+                        }
                     });
+                    this.log.info(active);
                 }
             };
         });
@@ -245,6 +266,7 @@ class Admin {
         } else {
             switch(json.component) {
             case 'addUser':
+            case 'updateUser':
             case 'updateActive':
             case 'removeUser':
             case 'pageLoad':

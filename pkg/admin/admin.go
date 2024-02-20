@@ -15,6 +15,7 @@
 package admin
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -27,6 +28,7 @@ import (
 const (
 	addUser          = "addUser"
 	updateActive     = "updateActive"
+	updateUser       = "updateUser"
 	resetPassword    = "resetPassword"
 	removeUser       = "removeUser"
 	pageLoad         = "pageLoad"
@@ -64,45 +66,8 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 			response.Data = map[string]*string{
 				"password": configs.GeneratePassword(),
 			}
-		case addUser:
-			err := configs.AddUser(request.SubComponent, request.Data)
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return &response
-			}
-			data, err := getUserInfo()
-			if err != nil {
-				log.Error(err)
-			}
-			response.Data = data
-		case updateActive:
-			err := updateUserActive(request.SubComponent, request.Data)
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return &response
-			}
-			data, err := getUserInfo()
-			if err != nil {
-				log.Error(err)
-			}
-			response.Data = data
-		case removeUser:
-			err := configs.RemoveUser(request.SubComponent)
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return &response
-			}
-			data, err := getUserInfo()
-			if err != nil {
-				log.Error(err)
-			}
-			response.Data = data
+		case addUser, updateUser, updateActive, removeUser:
+			userAction(request.Component, request, &response)
 		default:
 			err := fmt.Sprintf("component %s not implemented", *request.Component)
 			log.Error(err)
@@ -117,13 +82,67 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 
 func updateUserActive(userID *string, data interface{}) error {
 	if userID != nil {
-		if activeData, ok := data.(userActive); ok {
-			if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
-				return apiUser.ToggleActive(activeData.Enabled)
+		if bytes, err := json.Marshal(data); err == nil {
+			var activeData userActive
+			if err := json.Unmarshal(bytes, &activeData); err == nil && activeData.Enabled != nil {
+				if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
+					return apiUser.ToggleActive(activeData.Enabled)
+				}
 			}
 		}
 	}
 	return errors.New("cannot update user active flag")
+}
+
+func userAction(component *string, request, response *configs.WsMessage) *configs.WsMessage {
+	if component != nil && request != nil && response != nil {
+		switch *component {
+		case addUser:
+			err := configs.AddUser(request.SubComponent, request.Data)
+			if err != nil {
+				log.Error(err)
+				e := err.Error()
+				response.Error = &e
+				return response
+			}
+		case updateUser:
+			err := configs.UpdateUser(request.SubComponent, request.Data)
+			if err != nil {
+				log.Error(err)
+				e := err.Error()
+				response.Error = &e
+				return response
+			}
+		case updateActive:
+			err := updateUserActive(request.SubComponent, request.Data)
+			if err != nil {
+				log.Error(err)
+				e := err.Error()
+				response.Error = &e
+				return response
+			}
+		case removeUser:
+			err := configs.RemoveUser(request.SubComponent)
+			if err != nil {
+				log.Error(err)
+				e := err.Error()
+				response.Error = &e
+				return response
+			}
+		default:
+			err := fmt.Sprintf("component %s not implemented", *request.Component)
+			log.Error(err)
+			response.Error = &err
+		}
+
+		data, err := getUserInfo()
+		if err != nil {
+			log.Error(err)
+		}
+		response.Data = data
+		return response
+	}
+	return nil
 }
 
 func getUserInfo() (map[string]interface{}, error) {

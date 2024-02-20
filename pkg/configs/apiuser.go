@@ -63,19 +63,42 @@ func checkAPIUsers() {
 func AddUser(userID *string, data interface{}) error {
 	if userID != nil && data != nil {
 		if bytes, err := json.Marshal(data); err == nil {
-			var authentication *Authentication
-			if err := json.Unmarshal(bytes, &authentication); err == nil && authentication != nil {
-				if _, ok := GrowSTLGo.APIUsers[*userID]; !ok {
-					GrowSTLGo.APIUsers[*userID] = &APIUser{
-						Active:         utils.BoolPointer(true),
-						Authentication: authentication,
+			var authentication Authentication
+			if err := json.Unmarshal(bytes, &authentication); err == nil && authentication.ID != nil && authentication.Password != nil {
+				if err := authentication.hashAuthentication(); err == nil {
+					if _, ok := GrowSTLGo.APIUsers[*userID]; !ok {
+						GrowSTLGo.APIUsers[*userID] = &APIUser{
+							Active:         utils.BoolPointer(true),
+							Authentication: &authentication,
+						}
+						return GrowSTLGo.persist()
 					}
-					return GrowSTLGo.persist()
 				}
 			}
 		}
 	}
 	return errors.New("cannot add user")
+}
+
+// UpdateUser will add a new user to the configs
+func UpdateUser(userID *string, data interface{}) error {
+	if userID != nil && data != nil {
+		if bytes, err := json.Marshal(data); err == nil {
+			var authentication Authentication
+			if err := json.Unmarshal(bytes, &authentication); err == nil && authentication.ID != nil && authentication.Password != nil {
+				if err := authentication.hashAuthentication(); err == nil {
+					if apiUser, ok := GrowSTLGo.APIUsers[*userID]; ok {
+						GrowSTLGo.APIUsers[*userID] = &APIUser{
+							Active:         apiUser.Active,
+							Authentication: &authentication,
+						}
+						return GrowSTLGo.persist()
+					}
+				}
+			}
+		}
+	}
+	return errors.New("cannot update user")
 }
 
 // RemoveUser will permanently delete the user from the configs
@@ -107,6 +130,7 @@ func (apiUser *APIUser) ResetPassword(password *string) error {
 func (apiUser *APIUser) ToggleActive(active *bool) error {
 	if apiUser != nil && active != nil {
 		apiUser.Active = active
+		log.Info(*active)
 		return GrowSTLGo.persist()
 	}
 	return errors.New("unable to set activity: nil api user or nil active boolean")

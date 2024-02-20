@@ -83,6 +83,7 @@ func (auth *Authentication) hashAuthentication() error {
 			return err
 		}
 		auth.Password = cipherText
+		return nil
 	}
-	return nil
+	return errors.New("cannot hash password")
 }

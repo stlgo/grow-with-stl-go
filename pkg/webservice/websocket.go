@@ -278,7 +278,7 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 
 	if request.SubComponent != nil && strings.EqualFold(*request.SubComponent, configs.Authenticate) && request.SessionID != nil &&
 		request.Authentication != nil && request.Authentication.ID != nil && request.Authentication.Password != nil {
-		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok {
+		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok && user.Active != nil && *user.Active {
 			if err := user.Authentication.ValidateAuthentication(request.Authentication.Password); err != nil {
 				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
 				return user.Authentication.ID, fmt.Errorf("bad password attempt for user %s.  Error: %s", *request.Authentication.ID, err)
