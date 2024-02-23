@@ -13,3 +13,30 @@
 */
 
 package seeds
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/log"
+)
+
+func initConfigTest() {
+	configFile := "../../etc/grow-with-stl-go.json"
+	configs.ConfigFile = &configFile
+	if err := configs.SetGrowSTLGoConfig(); err != nil {
+		log.Fatalf("config %s", err)
+	}
+}
+
+func TestConfigFunctions(t *testing.T) {
+	initConfigTest()
+	t.Run("Test grabbing the inventory", func(t *testing.T) {
+		data, err := getInventory()
+		require.NoError(t, err)
+		require.NotNil(t, data)
+		log.Info(data)
+	})
+}

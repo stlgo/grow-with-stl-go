@@ -15,13 +15,13 @@
 package audit
 
 import (
-	"log"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/utils"
 )
 
