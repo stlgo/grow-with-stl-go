@@ -13,6 +13,7 @@
 */
 
 import { Admin } from './admin.js';
+import { Seeds } from './seeds.js';
 import { Log } from './log.js';
 import { WebSocketClient } from './websocket.js';
 
@@ -51,6 +52,7 @@ class GrowWithSTLGO {
             if (this.ws === null) {
                 this.ws = new WebSocketClient(this.log);
                 const admin = new Admin(this.ws, this.log);
+                const seeds = new Seeds(this.ws, this.log);
             }
 
             this.ws.login(id, password);

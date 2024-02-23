@@ -24,8 +24,8 @@ import (
 	"stl-go/grow-with-stl-go/pkg/admin"
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
-	"stl-go/grow-with-stl-go/pkg/inventory"
 	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/seeds"
 	"stl-go/grow-with-stl-go/pkg/webservice"
 )
 
@@ -79,8 +79,8 @@ func launch(_ *cobra.Command, _ []string) {
 	}
 
 	// register the web services
-	if err := inventory.Init(); err != nil {
-		log.Fatalf("error populating the inventory: %s", err)
+	if err := seeds.Init(); err != nil {
+		log.Fatalf("error populating the seeds: %s", err)
 	}
 
 	// register the web services

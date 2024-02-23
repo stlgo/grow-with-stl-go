@@ -12,4 +12,31 @@
  limitations under the License.
 */
 
-package inventory
+package utils
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"stl-go/grow-with-stl-go/pkg/log"
+)
+
+func TestConfigFunctions(t *testing.T) {
+	t.Run("Test now timestamp pointer", func(t *testing.T) {
+		now := CurrentTimeInMillis()
+		require.NotNil(t, now)
+
+		log.Infof("%d", *now)
+	})
+
+	t.Run("Test now bool pointer", func(t *testing.T) {
+		b := BoolPointer(false)
+		require.NotNil(t, b)
+		require.False(t, *b)
+
+		b = BoolPointer(true)
+		require.NotNil(t, b)
+		require.True(t, *b)
+	})
+}

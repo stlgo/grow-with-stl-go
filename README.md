@@ -15,6 +15,7 @@ Learning anything is a uniquely individual process.  There are some hypotheses t
 ### Self paced example driven learning
 
 <https://go.dev/doc/effective_go>
+
 <https://gobyexample.com/>
 
 ### Code Review Comments
@@ -38,7 +39,7 @@ Go can be downloaded and installed from here: <https://go.dev/dl/>
 - [Go Critic](https://marketplace.visualstudio.com/items?itemName=neverik.go-critic)
 - [vscode-go-syntax](https://marketplace.visualstudio.com/items?itemName=dunstontc.vscode-go-syntax)
 
-#### There are several other extensions that will come into use during this course
+#### There are several other extensions that will come into use with this learning project
 
 - [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
 - [Spelling Checker for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker)
@@ -117,6 +118,31 @@ Sometimes seeing things in context helps.  The next set of examples is included 
 
 1. [Linting](docs/linting.md)
 2. Makefile
-3. [The Zen of Python, by Tim Peters](docs/zen-of-programing.md), yes we know it says Python but the concepts are solid and apply here too.
 
 ## The "Grow with stl-go" example application
+
+## Special considerations for programming
+
+Programming is both an art and a science and that concept is sometimes lost in translation.  If you've read Isaac Asimov's [The Relativity of Wrong](https://www.sas.upenn.edu/~dbalmer/eportfolio/Nature%20of%20Science_Asimov.pdf) you'll understand what he put into words is that we may not always get everything 100% perfectly right every time but so long as we continue to move towards a more correct and better way to do things we'll improve.  To that end Tim Peters wrote a small blurb called the [Zen of Python](https://en.wikipedia.org/wiki/Zen_of_Python), and while it does have the word python in the title, the concepts can be applied to this or any project you may be involved in and should be considered in how you approach problem solving:
+
+```text
+    Beautiful is better than ugly.
+    Explicit is better than implicit.
+    Simple is better than complex.
+    Complex is better than complicated.
+    Flat is better than nested.
+    Sparse is better than dense.
+    Readability counts.
+    Special cases aren't special enough to break the rules.
+    Although practicality beats purity.
+    Errors should never pass silently.
+    Unless explicitly silenced.
+    In the face of ambiguity, refuse the temptation to guess.
+    There should be one-- and preferably only one --obvious way to do it.
+    Although that way may not be obvious at first unless you're Dutch.
+    Now is better than never.
+    Although never is often better than right now.
+    If the implementation is hard to explain, it's a bad idea.
+    If the implementation is easy to explain, it may be a good idea.
+    Namespaces are one honking great idea – let's do more of those!
+```
