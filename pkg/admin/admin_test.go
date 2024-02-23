@@ -33,7 +33,7 @@ func initConfigTest() {
 
 func TestConfigFunctions(t *testing.T) {
 	initConfigTest()
-	t.Run("Test setting the config", func(t *testing.T) {
+	t.Run("Test getting user data from the db", func(t *testing.T) {
 		data, err := getUserInfo()
 		require.NoError(t, err)
 		require.NotEmpty(t, data)

@@ -35,6 +35,7 @@ type Table struct {
 	CreateSQL  string
 	InsertSQL  string
 	Indices    []string
+	Defaults   map[string]string
 	WriteMutex sync.Mutex
 }
 
@@ -127,7 +128,7 @@ func (sqlite *SQLite) GetEncryptionKey() (*string, error) {
 // CreateTable is a helper function that will create the table & indexes in the embedded database
 func (table *Table) CreateTable(tableName *string) error {
 	if table != nil && tableName != nil {
-		log.Tracef("Audit table %s was created", *tableName)
+		log.Tracef("Audit table %s was created if it didn't already exist", *tableName)
 		stmt, err := SqliteDB.Prepare(table.CreateSQL)
 		if err != nil {
 			return err
@@ -142,6 +143,18 @@ func (table *Table) CreateTable(tableName *string) error {
 			}
 			if _, err = stmt.Exec(); err != nil {
 				return err
+			}
+		}
+		if table.Defaults != nil {
+			for key, sql := range table.Defaults {
+				log.Tracef("Inserting default %s for table %s if it doesn't already exist", key, *tableName)
+				stmt, err := SqliteDB.Prepare(sql)
+				if err != nil {
+					return err
+				}
+				if _, err = stmt.Exec(); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
