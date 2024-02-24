@@ -28,6 +28,7 @@ import (
 const (
 	addUser          = "addUser"
 	updateActive     = "updateActive"
+	updateAdmin      = "updateAdmin"
 	updateUser       = "updateUser"
 	resetPassword    = "resetPassword"
 	removeUser       = "removeUser"
@@ -35,7 +36,7 @@ const (
 	generatePassword = "generatePassword"
 )
 
-type userActive struct {
+type checboxEnabled struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
@@ -70,7 +71,7 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 			response.Data = map[string]*string{
 				"password": configs.GeneratePassword(),
 			}
-		case addUser, updateUser, updateActive, removeUser:
+		case addUser, updateUser, updateActive, updateAdmin, removeUser:
 			userAction(request.Component, request, &response)
 		default:
 			err := fmt.Sprintf("component %s not implemented", *request.Component)
@@ -87,7 +88,7 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 func updateUserActive(userID *string, data interface{}) error {
 	if userID != nil {
 		if bytes, err := json.Marshal(data); err == nil {
-			var activeData userActive
+			var activeData checboxEnabled
 			if err := json.Unmarshal(bytes, &activeData); err == nil && activeData.Enabled != nil {
 				if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
 					return apiUser.ToggleActive(activeData.Enabled)
@@ -98,50 +99,56 @@ func updateUserActive(userID *string, data interface{}) error {
 	return errors.New("cannot update user active flag")
 }
 
+func updateUserAdmin(userID *string, data interface{}) error {
+	if userID != nil {
+		if bytes, err := json.Marshal(data); err == nil {
+			var activeData checboxEnabled
+			if err := json.Unmarshal(bytes, &activeData); err == nil && activeData.Enabled != nil {
+				if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
+					return apiUser.ToggleAdmin(activeData.Enabled)
+				}
+			}
+		}
+	}
+	return errors.New("cannot update user admin flag")
+}
+
 func userAction(component *string, request, response *configs.WsMessage) *configs.WsMessage {
 	if component != nil && request != nil && response != nil {
+		var err error
 		switch *component {
 		case addUser:
-			err := configs.AddUser(request.SubComponent, request.Data)
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return response
-			}
+			err = configs.AddUser(request.SubComponent, request.Data)
+
 		case updateUser:
-			err := configs.UpdateUser(request.SubComponent, request.Data)
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return response
-			}
+			err = configs.UpdateUser(request.SubComponent, request.Data)
+
 		case updateActive:
-			err := updateUserActive(request.SubComponent, request.Data)
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return response
-			}
+			err = updateUserActive(request.SubComponent, request.Data)
+
+		case updateAdmin:
+			err = updateUserAdmin(request.SubComponent, request.Data)
+
 		case removeUser:
-			err := configs.RemoveUser(request.SubComponent)
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return response
-			}
+			err = configs.RemoveUser(request.SubComponent)
+
 		default:
-			err := fmt.Sprintf("component %s not implemented", *request.Component)
+			err = fmt.Errorf("component %s not implemented", *request.Component)
+		}
+
+		if err != nil {
 			log.Error(err)
-			response.Error = &err
+			e := err.Error()
+			response.Error = &e
+			return response
 		}
 
 		data, err := getUserInfo()
 		if err != nil {
 			log.Error(err)
+			e := err.Error()
+			response.Error = &e
+			return response
 		}
 		response.Data = data
 		return response
@@ -159,11 +166,13 @@ func getUserInfo() (map[string]interface{}, error) {
 		data[userID] = map[string]interface{}{
 			"lastLogin": nil,
 			"active":    apiUser.Active,
+			"admin":     apiUser.Admin,
 		}
 		if lastLogin, ok := lastLogins[userID]; ok {
 			data[userID] = map[string]interface{}{
 				"lastLogin": lastLogin,
 				"active":    apiUser.Active,
+				"admin":     apiUser.Admin,
 			}
 		}
 	}

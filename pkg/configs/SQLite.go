@@ -41,9 +41,10 @@ type Table struct {
 
 // SQLite is used to define the sqlite embedded database
 type SQLite struct {
-	FileName        *string `json:"fileName,omitempty"`
-	EncryptDatabase *bool   `json:"encryptDatabase,omitempty"`
-	EncryptionKey   *string `json:"encryptionKey,omitempty"`
+	FileName        *string             `json:"fileName,omitempty"`
+	EncryptDatabase *bool               `json:"encryptDatabase,omitempty"`
+	EncryptionKey   *string             `json:"encryptionKey,omitempty"`
+	PopulatedTables map[string]struct{} `json:"populatedTables,omitempty"`
 }
 
 func checkSQLite() error {
@@ -61,7 +62,6 @@ func checkSQLite() error {
 		if err := sqlite.generateEncryptionKeys(); err != nil {
 			return err
 		}
-
 		GrowSTLGo.SQLite = &sqlite
 		rewriteConfig = true
 	}
@@ -145,7 +145,12 @@ func (table *Table) CreateTable(tableName *string) error {
 				return err
 			}
 		}
-		if table.Defaults != nil {
+
+		if GrowSTLGo.SQLite.PopulatedTables == nil {
+			GrowSTLGo.SQLite.PopulatedTables = make(map[string]struct{})
+		}
+
+		if _, ok := GrowSTLGo.SQLite.PopulatedTables[*tableName]; !ok && table.Defaults != nil {
 			for key, sql := range table.Defaults {
 				log.Tracef("Inserting default %s for table %s if it doesn't already exist", key, *tableName)
 				stmt, err := SqliteDB.Prepare(sql)
@@ -155,6 +160,10 @@ func (table *Table) CreateTable(tableName *string) error {
 				if _, err = stmt.Exec(); err != nil {
 					return err
 				}
+			}
+			GrowSTLGo.SQLite.PopulatedTables[*tableName] = struct{}{}
+			if err := GrowSTLGo.persist(); err != nil {
+				return err
 			}
 		}
 		return nil

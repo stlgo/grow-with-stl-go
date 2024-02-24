@@ -108,6 +108,7 @@ class Admin {
             'ID',
             'Last Login',
             'Enabled',
+            'Admin',
             ''
         ];
         const table = document.createElement('table');
@@ -131,13 +132,21 @@ class Admin {
             }
 
 
-            let checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = `${userID}_active_chk`;
-            checkbox.name = userID;
-            checkbox.classList.add('user-active-chk');
-            checkbox.checked = data[userID].active;
-            tr.insertCell(-1).appendChild(checkbox);
+            let activeChk = document.createElement('input');
+            activeChk.type = 'checkbox';
+            activeChk.id = `${userID}_active_chk`;
+            activeChk.name = userID;
+            activeChk.classList.add('user-active-chk');
+            activeChk.checked = data[userID].active;
+            tr.insertCell(-1).appendChild(activeChk);
+
+            let adminChk = document.createElement('input');
+            adminChk.type = 'checkbox';
+            adminChk.id = `${userID}_admin_chk`;
+            adminChk.name = userID;
+            adminChk.classList.add('user-admin-chk');
+            adminChk.checked = data[userID].admin;
+            tr.insertCell(-1).appendChild(adminChk);
 
             tr.insertCell(-1).innerHTML = '<i class="fa fa-trash fa-lg remove-user" style="color:maroon"></i>';
         });
@@ -158,6 +167,7 @@ class Admin {
         });
 
         this.bindActiveToggle();
+        this.bindAdminToggle();
         this.bindSlideOut(userTable);
         this.bindRemoveUser(userTable);
     }
@@ -222,13 +232,15 @@ class Admin {
 
     bindActiveToggle() {
         document.querySelectorAll('.user-active-chk').forEach((chkBox) => {
-            chkBox.onclick = () => {
+            chkBox.onclick = (event) => {
+                event.preventDefault();
                 const userID = chkBox.name;
                 let active = false;
                 if (chkBox.checked) {
                     active = true;
                 }
-                if (window.confirm(`Confirm toggle of user "${userID}"`)) { // eslint-disable-line no-alert
+                let confirm = window.confirm(`Confirm toggle of user "${userID}" active to ${active}`); // eslint-disable-line no-alert
+                if (confirm === true) {
                     this.ws.sendMessage({
                         type: this.type,
                         component: 'updateActive',
@@ -236,8 +248,32 @@ class Admin {
                         data: {
                             enabled: active
                         }
+
                     });
-                    this.log.info(active);
+                }
+            };
+        });
+    }
+
+    bindAdminToggle() {
+        document.querySelectorAll('.user-admin-chk').forEach((chkBox) => {
+            chkBox.onclick = (event) => {
+                event.preventDefault();
+                const userID = chkBox.name;
+                let admin = false;
+                if (chkBox.checked) {
+                    admin = true;
+                }
+                let confirm = window.confirm(`Confirm toggle of user "${userID}" admin to ${admin}`); // eslint-disable-line no-alert
+                if (confirm === true) {
+                    this.ws.sendMessage({
+                        type: this.type,
+                        component: 'updateAdmin',
+                        subComponent: userID,
+                        data: {
+                            enabled: admin
+                        }
+                    });
                 }
             };
         });
@@ -268,6 +304,7 @@ class Admin {
             case 'addUser':
             case 'updateUser':
             case 'updateActive':
+            case 'updateAdmin':
             case 'removeUser':
             case 'pageLoad':
                 this.showUsers(json.data);

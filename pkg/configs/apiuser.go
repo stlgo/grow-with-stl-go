@@ -25,9 +25,9 @@ import (
 // APIUser is our storage point for REST & WebSocket users
 type APIUser struct {
 	Active         *bool           `json:"active,omitempty"`
+	Admin          *bool           `json:"admin,omitempty"`
 	Authentication *Authentication `json:"authentication,omitempty"`
 	LastLogin      *int64          `json:"lastLogin,omitempty"`
-	Admin          *bool           `json:"admin,omitempty"`
 }
 
 func checkAPIUsers() {
@@ -42,7 +42,8 @@ func checkAPIUsers() {
 		for id, isAdmin := range ids {
 			localID := id
 			user := APIUser{
-				Active: utils.BoolPointer(isAdmin),
+				Active: utils.BoolPointer(true),
+				Admin:  utils.BoolPointer(isAdmin),
 
 				Authentication: &Authentication{
 					ID: &localID,
@@ -127,8 +128,16 @@ func (apiUser *APIUser) ResetPassword(password *string) error {
 func (apiUser *APIUser) ToggleActive(active *bool) error {
 	if apiUser != nil && active != nil {
 		apiUser.Active = active
-		log.Info(*active)
 		return GrowSTLGo.persist()
 	}
 	return errors.New("unable to set activity: nil api user or nil active boolean")
+}
+
+// ToggleAdmin will set user to enabled / disabled based on input
+func (apiUser *APIUser) ToggleAdmin(admin *bool) error {
+	if apiUser != nil && admin != nil {
+		apiUser.Admin = admin
+		return GrowSTLGo.persist()
+	}
+	return errors.New("unable to set admin: nil api user or nil active boolean")
 }
