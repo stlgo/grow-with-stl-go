@@ -43,7 +43,8 @@ type session struct {
 	ws          *websocket.Conn
 	lastUsed    *int64
 	user        *string
-	closing     bool
+	closing     *bool
+	isAdmin     *bool
 }
 
 // sessions keeps track of open websocket sessions
@@ -110,6 +111,7 @@ func (session *session) onMessage() {
 		// this has to be a go routine otherwise it will block any incoming messages waiting for a command return
 		go func() {
 			transaction := audit.NewWSTransaction(session.requestHost, session.user, &request)
+			request.IsAdmin = session.isAdmin
 			// test the auth token for request validity on non auth requests
 			if request.Type != nil && !strings.EqualFold(*request.Type, configs.WebsocketClient) &&
 				request.Component != nil && !strings.EqualFold(*request.Type, configs.Auth) &&
@@ -151,8 +153,8 @@ func (session *session) onMessage() {
 
 // common websocket close with logging
 func (session *session) onClose() {
-	if !session.closing {
-		session.closing = true
+	if session.closing == nil || !*session.closing {
+		session.closing = utils.BoolPointer(true)
 		user := "unknown"
 		if session.user != nil {
 			user = *session.user
@@ -292,11 +294,13 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 
 			if session, ok := sessions[*request.SessionID]; ok {
 				session.jwt = token
+				session.isAdmin = user.Admin
 			}
 
 			approved := configs.Approved
 			response.SubComponent = &approved
 			response.Token = token
+			response.IsAdmin = user.Admin
 			response.Error = nil
 
 			go audit.RecordLogin(user.Authentication.ID, "WebSocket", true)
@@ -352,6 +356,12 @@ func getPagelet(request, response *configs.WsMessage) {
 	response.Error = &err
 
 	if request.SubComponent != nil {
+		// ignore pages non admins shouldn't see
+		if strings.EqualFold(*request.SubComponent, "admin") && (request.IsAdmin == nil || !*request.IsAdmin) {
+			log.Errorf("attempt to access the admin page by non admin user")
+			return
+		}
+		// everyone else is free to move about the cabin
 		fileName := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, "pagelets", fmt.Sprintf("%s.html", *request.SubComponent))
 		_, err := os.Stat(fileName)
 		if err == nil {

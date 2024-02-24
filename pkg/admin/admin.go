@@ -56,7 +56,7 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 		SubComponent: request.SubComponent,
 	}
 
-	if request.Component != nil {
+	if request.Component != nil || (request.IsAdmin == nil || !*request.IsAdmin) {
 		switch *request.Component {
 		case pageLoad:
 			data, err := getUserInfo()

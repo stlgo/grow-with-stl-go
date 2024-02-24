@@ -96,6 +96,7 @@ class WebSocketClient {
             if (Object.prototype.hasOwnProperty.call(json, 'error')) {
                 this.log.error(json.error);
                 window.history.replaceState(null, null, '/');
+                window.sessionStorage.setItem('grow-with-stlgo', JSON.stringify({ timestamp: new Date().getTime(), pageType: 'home' }));
             } else {
                 document.getElementById('RouterDiv').innerHTML = json.data;
                 this.displayHelper([ 'RouterDiv', 'NavbarDiv' ], '');
@@ -124,6 +125,9 @@ class WebSocketClient {
         case 'approved':
             this.token = json.token;
             this.keepAlive();
+            if (Object.prototype.hasOwnProperty.call(json, 'isAdmin') && json.isAdmin !== undefined && json.isAdmin) {
+                this.displayHelper([ 'AdminNavLink' ], '');
+            }
             document.dispatchEvent(new Event('AuthComplete'));
             break;
         case 'refresh':

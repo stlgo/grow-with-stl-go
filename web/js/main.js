@@ -24,7 +24,7 @@ class GrowWithSTLGO {
         this.type = this.constructor.name.toLowerCase();
 
         document.addEventListener('WebSocketClosed', () => {
-            this.ws.displayHelper([ 'RouterDiv', 'NavbarDiv' ], 'none');
+            this.ws.displayHelper([ 'RouterDiv', 'NavbarDiv', 'AdminNavLink' ], 'none');
             this.ws.displayHelper([ 'LoginDiv' ], '');
         });
 

@@ -106,6 +106,7 @@ type WsMessage struct {
 	Authentication *Authentication `json:"authentication,omitempty"`
 	Token          *string         `json:"token,omitempty"`
 	RefreshToken   *string         `json:"refreshToken,omitempty"`
+	IsAdmin        *bool           `json:"isAdmin,omitempty"`
 }
 
 // SetGrowSTLGoConfig sets the config for the application
