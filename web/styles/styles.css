@@ -1,7 +1,7 @@
 .rounded {
     border-radius: 1rem !important;
-    width: 200px;
-    height: 200px;
+    width: 300px;
+    height: 300px;
     overflow: hidden;
 }
 
@@ -71,4 +71,8 @@ fieldset {
     padding: 0 10px 10px;
     border: 1px solid black;
     border-radius: 4px;
+}
+
+#number {
+    width: 3em;
 }

@@ -45,14 +45,53 @@ class Seeds {
                 data[category].items.forEach((seed) => {
                     let seedDiv = document.createElement('div');
                     let h3 = document.createElement('h3');
-                    h3.innerHTML = seed.commonName;
+                    h3.innerHTML = seed.cultivar === undefined ? seed.commonName : `${seed.cultivar} ${seed.commonName}`;
 
                     let img = document.createElement('img');
                     img.classList.add('rounded');
                     img.src = seed.image;
 
+                    let packets = parseInt(seed.packets);
+                    let input = document.createElement('input');
+                    input.classList.add('form-control');
+                    input.type = 'number';
+                    input.min = 1;
+                    input.max = packets;
+                    input.onkeyup = () => {
+                        let value = input.value;
+                        console.log(value);
+                        let result = '';
+                        console.log(Array.from(value));
+                        Array.from(value).forEach((char) => {
+                            console.log(char);
+                            if (!isNaN(char)) {
+                                result = result + char;
+                            } else {
+                                console.log(char);
+                            }
+                        });
+                        console.log(result);
+                        value = parseInt(result);
+                        console.log(value);
+                        switch (value) {
+                        case value < 0:
+                            input.value = 1;
+                            break;
+                        case value > packets:
+                            input.value = packets;
+                            break;
+                        default:
+                            input.value = value;
+                            break;
+                        }
+                    };
+                    input.value = 1;
+
+
                     seedDiv.appendChild(h3);
                     seedDiv.appendChild(img);
+                    seedDiv.appendChild(input);
+
                     tr.insertCell(-1).appendChild(seedDiv);
                 });
                 div.appendChild(table);
@@ -62,65 +101,6 @@ class Seeds {
                 div.appendChild(heading);
             }
         });
-        // const table = document.createElement('table');
-        // table.setAttribute('width', '99%');
-        // table.id = 'UsersTable';
-        // table.classList.add('display', 'responsive', 'seeds');
-        // let th = table.createTHead();
-        // let tr = th.insertRow(-1);
-        // headers.forEach((header) => {
-        //     tr.insertCell(-1).innerHTML = header;
-        // });
-        // let tb = table.createTBody();
-        // Object.keys(data).forEach((userID) => {
-        //     tr = tb.insertRow(-1);
-        //     tr.insertCell(-1).innerHTML = `<div id="${userID}-details"><i class="fa fa-plus-circle fa-lg details-control" style="color:green"></i></div>`;
-        //     tr.insertCell(-1).innerHTML = userID;
-        //     if (data[userID].lastLogin === null) {
-        //         tr.insertCell(-1).innerHTML = 'Never Logged In';
-        //     } else {
-        //         tr.insertCell(-1).innerHTML = new Date(data[userID].lastLogin).toLocaleString('en-us', { timeZoneName: 'short' });
-        //     }
-
-
-        //     let activeChk = document.createElement('input');
-        //     activeChk.type = 'checkbox';
-        //     activeChk.id = `${userID}_active_chk`;
-        //     activeChk.name = userID;
-        //     activeChk.classList.add('user-active-chk');
-        //     activeChk.checked = data[userID].active;
-        //     tr.insertCell(-1).appendChild(activeChk);
-
-        //     let adminChk = document.createElement('input');
-        //     adminChk.type = 'checkbox';
-        //     adminChk.id = `${userID}_admin_chk`;
-        //     adminChk.name = userID;
-        //     adminChk.classList.add('user-admin-chk');
-        //     adminChk.checked = data[userID].admin;
-        //     tr.insertCell(-1).appendChild(adminChk);
-
-        //     tr.insertCell(-1).innerHTML = '<i class="fa fa-trash fa-lg remove-user" style="color:maroon"></i>';
-        // });
-        // let div = document.getElementById('CurrentUsersDiv');
-        // div.innerHTML = '';
-        // div.appendChild(table);
-
-        // let userTable = $('#UsersTable').DataTable({
-        //     deferRender: true,
-        //     orderClasses: false,
-        //     columnDefs: [ {
-        //         targets: 0,
-        //         orderable: false,
-        //     }, {
-        //         targets: 4,
-        //         orderable: false,
-        //     } ]
-        // });
-
-        // this.bindActiveToggle();
-        // this.bindAdminToggle();
-        // this.bindSlideOut(userTable);
-        // this.bindRemoveUser(userTable);
     }
 
     handleMessage(json) {
