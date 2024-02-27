@@ -34,6 +34,7 @@ import (
 type Table struct {
 	CreateSQL  string
 	InsertSQL  string
+	UpdateSQL  string
 	Indices    []string
 	Defaults   map[string]string
 	WriteMutex sync.Mutex

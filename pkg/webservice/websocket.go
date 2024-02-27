@@ -202,7 +202,7 @@ func (session *session) handleRequest(request *configs.WsMessage, transaction *a
 }
 
 func (session *session) resetIdleTimer(request *configs.WsMessage) {
-	if session != nil && request != nil {
+	if session != nil && request != nil && request.Component != nil {
 		if !strings.EqualFold(*request.Component, configs.Keepalive) {
 			session.lastUsed = utils.CurrentTimeInMillis()
 		}
@@ -375,24 +375,33 @@ func getPagelet(request, response *configs.WsMessage) {
 	}
 }
 
+// NotifyAll will broadcast a user event to all websocket clients currently attached
+func NotifyAll(sessionID *string, message *configs.WsMessage) {
+	if sessionID != nil && message != nil {
+		for _, session := range sessions {
+			// don't send a notification to the user that requested the action
+			if session != nil && session.sessionID != nil && !strings.EqualFold(*sessionID, *session.sessionID) {
+				if err := session.webSocketSend(message); err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}
+}
+
 func idleHandsTester() {
 	time.Sleep(time.Duration(60-time.Now().Local().Second()) * time.Second)
 	for range time.NewTicker(10 * time.Second).C {
 		for _, session := range sessions {
-			if session != nil {
-				if session.lastUsed != nil {
-					// 10 minute timeout
-					if (time.Now().UnixMilli() - *session.lastUsed) > 60000 {
-						session.onClose()
-					}
-					// idle abandoned connections are disconnected at 1 minute
-					if (time.Now().UnixMilli()-*session.lastUsed) > 60000 && session.user == nil {
-						session.onClose()
-					}
-					return
+			if session != nil && session.lastUsed != nil {
+				// 10 minute timeout
+				if (time.Now().UnixMilli() - *session.lastUsed) > 600000 {
+					session.onClose()
 				}
-				// close sessions without a last used timestamp, should happen but you never know
-				session.onClose()
+				// idle abandoned connections are disconnected at 30 seconds
+				if (time.Now().UnixMilli()-*session.lastUsed) > 30000 && session.user == nil {
+					session.onClose()
+				}
 			}
 		}
 	}

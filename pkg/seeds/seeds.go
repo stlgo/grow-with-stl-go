@@ -17,6 +17,7 @@ package seeds
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -26,12 +27,12 @@ import (
 )
 
 const (
-	seeds            = "seeds"
-	getInventoryWS   = "getInventory"
-	getDetailWS      = "getDetail"
-	addInventory     = "addInventory"
-	reserveInventory = "reserveInventory"
-	removeInventory  = "removeInventory"
+	seeds           = "seeds"
+	getInventoryWS  = "getInventory"
+	getDetailWS     = "getDetail"
+	addInventory    = "addInventory"
+	purchaseWS      = "purchase"
+	removeInventory = "removeInventory"
 )
 
 var (
@@ -50,7 +51,8 @@ var (
 				perpacketcount int NOT NULL,
 				packets int NOT NULL,
 				image varcar(1024))`,
-			InsertSQL: "INSERT INTO WebSocket values(?,?,?,?,?,?,?,?,?,?)",
+			InsertSQL: "INSERT INTO seeds values(?,?,?,?,?,?,?,?,?,?,?,?)",
+			UpdateSQL: "UPDATE seeds set packets = ? where id = ?",
 			Indices: []string{
 				"CREATE INDEX IF NOT EXISTS seedid on seeds(id)",
 				"CREATE INDEX IF NOT EXISTS seedcategory on seeds(category)",
@@ -102,23 +104,12 @@ var (
 				"plum regal": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Tomato', 'Solanum', 'lycopersicum', 'Plum Regal', 'Tomato',
 				'Medium-size plants with good leaf cover produce high yields of blocky, 4 oz. plum tomatoes. Fruits have a deep red color with good flavor. Determinate.',
 				1, 2.96, 25, 100, '/images/tomatoes/determinate/plum_regal.jpg')`, uuid.New().String()),
-				"cherokee purple": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Tomato', 'Solanum', 'lycopersicum', 'Cherokee Purple', 'Tomato',
-				'Indeterminate heirloom. Medium-large, flattened globe, 8-12 oz. fruits. Color is dusky pink with dark shoulders.',
-				0, 3.78, 12, 100, '/images/tomatoes/indeterminate/cherokee_purple.jpg')`, uuid.New().String()),
+				"carbon": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Tomato', 'Solanum', 'lycopersicum', 'Carbon', 'Tomato',
+				'Indeterminate heirloom. Resists cracking better than other large, black heirlooms. Blocky-round, 10-14 oz. fruit with dark olive shoulders.',
+				0, 3.78, 12, 100, '/images/tomatoes/indeterminate/carbon.jpg')`, uuid.New().String()),
 				"san marzano": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Tomato', 'Solanum', 'lycopersicum', 'San Marzano', 'Tomato',
 				'San Marzano is considered one of the best paste tomatoes of all time, with Old World look and taste.  Indeterminate',
 				0, 6.45, 15, 100, '/images/tomatoes/indeterminate/san_marzano.jpg')`, uuid.New().String()),
-			},
-		}, "tools": {
-			CreateSQL: `CREATE TABLE IF NOT EXISTS tools (
-				name varcar(1024) NOT NULL,
-				description varcar(1024) NOT NULL,
-				price int NOT NULL,
-				inStock int NOT NULL,
-				image varcar(1024))`,
-			InsertSQL: "INSERT INTO WebSocket values(?,?,?,?,?)",
-			Indices: []string{
-				"CREATE INDEX IF NOT EXISTS toolsName on tools(name)",
 			},
 		},
 	}
@@ -144,7 +135,7 @@ type InventoryItem struct {
 	Hybrid         *bool    `json:"hybrid,omitempty"`
 	Price          *float32 `json:"price,omitempty"`
 	PerPacketCount *int32   `json:"perPacketCount,omitempty"`
-	Packets        *int32   `json:"packets,omitempty"`
+	Packets        *int     `json:"packets,omitempty"`
 	Image          *string  `json:"image,omitempty"`
 }
 
@@ -167,7 +158,7 @@ func Init() error {
 	return nil
 }
 
-func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
+func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
 	response := configs.WsMessage{
 		Type:         request.Type,
 		Component:    request.Component,
@@ -183,6 +174,11 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 			response.Data, err = getInventory()
 		case getDetailWS:
 			response.Data, err = getDetail(request.SubComponent, request.Data)
+		case purchaseWS:
+			response.Data, err = purchase(request.SubComponent, request.Data)
+			if err == nil {
+				webservice.NotifyAll(sessionID, &response)
+			}
 		default:
 			err := fmt.Sprintf("component %s not implemented", *request.Component)
 			log.Error(err)
@@ -237,6 +233,60 @@ func getInventory() (map[string]*InventoryCategory, error) {
 		return inventoryCache, nil
 	}
 	return nil, errors.New("the sqlite database is nil, cannot get last logins")
+}
+
+func purchase(categoryName *string, data interface{}) (*InventoryItem, error) {
+	if categoryName != nil && data != nil {
+		if rawData, ok := data.(map[string]interface{}); ok {
+			if category, ok := inventoryCache[*categoryName]; ok && category != nil {
+				if id, ok := rawData["id"].(string); ok {
+					if item, ok := category.Items[id]; ok {
+						if str, ok := rawData["quantity"].(string); ok {
+							quantity, err := strconv.Atoi(str)
+							if err != nil {
+								return nil, err
+							}
+							remainder := *item.Packets - quantity
+							item.Packets = &remainder
+							if err := updateItemInDB(item); err != nil {
+								return nil, err
+							}
+							return item, nil
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil, fmt.Errorf("item not found")
+}
+
+func updateItemInDB(item *InventoryItem) error {
+	if table, ok := inventoryTables["seeds"]; ok && table != nil && item != nil {
+		stmt, err := configs.SqliteDB.Prepare(table.UpdateSQL)
+		if err != nil {
+			return err
+		}
+
+		table.WriteMutex.Lock()
+		defer table.WriteMutex.Unlock()
+		result, err := stmt.Exec(
+			item.Packets,
+			item.ID)
+
+		if err != nil {
+			return err
+		}
+
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		log.Tracef("%d rows updated in seeds", rows)
+		return nil
+	}
+	return errors.New("requirements not met to update item in db")
 }
 
 func getDetail(categoryName *string, data interface{}) (*InventoryItem, error) {

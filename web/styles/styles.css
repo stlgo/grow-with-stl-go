@@ -78,5 +78,14 @@ fieldset {
 }
 
 .seed-button {
-    width: 5em;
+    width: 6em;
+}
+
+.seed-info-table>thead>tr>th,
+.seed-info-table>tbody>tr>th,
+.seed-info-table>tfoot>tr>th,
+.seed-info-table>thead>tr>td,
+.seed-info-table>tbody>tr>td,
+.seed-info-table>tfoot>tr>td {
+    padding: 5px;
 }

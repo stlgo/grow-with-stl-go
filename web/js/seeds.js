@@ -56,6 +56,7 @@ class Seeds {
 
                     let packets = parseInt(seed.packets);
                     let input = document.createElement('input');
+                    input.id = `${seed.id}-quantity`;
                     input.classList.add('seed-input');
                     input.min = 1;
                     input.type = 'number';
@@ -81,9 +82,32 @@ class Seeds {
                     };
 
                     let itemTable = document.createElement('table');
+                    itemTable.classList.add('seed-info-table');
                     let itemBody = itemTable.createTBody();
+
                     let itemTR = itemBody.insertRow(-1);
                     let itemCell = itemTR.insertCell(-1);
+                    itemCell.colSpan = '2';
+                    itemCell.innerHTML = '<b>Seeds Per Packet</b>';
+                    itemTR.insertCell(-1).innerHTML = seed.perPacketCount;
+
+                    itemTR = itemBody.insertRow(-1);
+                    itemCell = itemTR.insertCell(-1);
+                    itemCell.colSpan = '2';
+                    itemCell.innerHTML = '<b>Price Per Packet</b>';
+                    itemTR.insertCell(-1).innerHTML = `$${seed.price}`;
+
+                    itemTR = itemBody.insertRow(-1);
+                    itemCell = itemTR.insertCell(-1);
+                    itemCell.colSpan = '2';
+                    itemCell.innerHTML = '<b>Packets Available</b>';
+                    let availableDiv = document.createElement('div');
+                    availableDiv.id = `${seed.id}-available`;
+                    availableDiv.innerHTML = seed.packets;
+                    itemTR.insertCell(-1).appendChild(availableDiv);
+
+                    itemTR = itemBody.insertRow(-1);
+                    itemCell = itemTR.insertCell(-1);
                     let infoButton = document.createElement('button');
                     infoButton.innerHTML = 'Info';
                     infoButton.classList.add('btn', 'btn-info', 'seed-button');
@@ -100,21 +124,22 @@ class Seeds {
                     itemCell.appendChild(infoButton);
                     itemTR.insertCell(-1).appendChild(input);
 
-                    let requestButton = document.createElement('button');
-                    requestButton.innerHTML = 'Request';
-                    requestButton.classList.add('btn', 'btn-danger', 'seed-button');
-                    requestButton.onclick = () => {
+                    let purchaseButton = document.createElement('button');
+                    purchaseButton.id = `${seed.id}-purchase`;
+                    purchaseButton.innerHTML = 'Purchase';
+                    purchaseButton.classList.add('btn', 'btn-danger', 'seed-button');
+                    purchaseButton.onclick = () => {
                         this.ws.sendMessage({
                             type: this.type,
-                            component: 'requestSeeds',
-                            subComponent: seed.id,
+                            component: 'purchase',
+                            subComponent: seed.category,
                             data: {
                                 id: seed.id,
                                 quantity: input.value
                             }
                         });
                     };
-                    itemTR.insertCell(-1).appendChild(requestButton);
+                    itemTR.insertCell(-1).appendChild(purchaseButton);
 
                     seedDiv.appendChild(h3);
                     seedDiv.appendChild(img);
@@ -145,6 +170,7 @@ class Seeds {
         cell.appendChild(img);
 
         let detailTable = document.createElement('table');
+        detailTable.classList.add('seed-info-table');
         let dtb = detailTable.createTBody();
         let dtr = dtb.insertRow(-1);
         dtr.insertCell(-1).innerHTML = '<b>Category</b>';
@@ -157,7 +183,7 @@ class Seeds {
         dtr.insertCell(-1).innerHTML = data.species;
         dtr = dtb.insertRow(-1);
         dtr.insertCell(-1).innerHTML = '<b>Cultivar</b>';
-        dtr.insertCell(-1).innerHTML = data.cultivar;
+        dtr.insertCell(-1).innerHTML = data.cultivar === undefined ? 'N/A' : data.cultivar;
         dtr = dtb.insertRow(-1);
         dtr.insertCell(-1).innerHTML = '<b>Common Name</b>';
         dtr.insertCell(-1).innerHTML = data.commonName;
@@ -169,16 +195,43 @@ class Seeds {
         dtr.insertCell(-1).innerHTML = data.perPacketCount;
         dtr = dtb.insertRow(-1);
         dtr.insertCell(-1).innerHTML = '<b>Packets Available</b>';
-        dtr.insertCell(-1).innerHTML = data.packets;
+        let availableDiv = document.createElement('div');
+        availableDiv.id = `${data.id}-available`;
+        availableDiv.innerHTML = data.packets;
+        dtr.insertCell(-1).appendChild(availableDiv);
         dtr = dtb.insertRow(-1);
         dtr.insertCell(-1).innerHTML = '<b>Price</b>';
         dtr.insertCell(-1).innerHTML = `$${data.price}`;
+        dtr = dtb.insertRow(-1);
+        let element = document.getElementById(`${data.id}-quantity`);
+        let parent = element.parentElement;
+        parent.removeChild(element);
+        dtr.insertCell(-1).appendChild(element);
+        element = document.getElementById(`${data.id}-purchase`);
+        parent = element.parentElement;
+        parent.removeChild(element);
+        dtr.insertCell(-1).appendChild(element);
 
         tr.insertCell(-1).appendChild(detailTable);
 
+        let backHref = document.createElement('a');
+        backHref.textContent = 'Return to seeds';
+        backHref.href = '/seeds';
+        backHref.onclick = (event) => {
+            event.preventDefault();
+            this.ws.getPagelet('seeds');
+        };
+
         const div = document.getElementById('SeedsDiv');
         div.innerHTML = '';
+
+        div.appendChild(backHref);
         div.appendChild(table);
+    }
+
+    updateSeed(data) {
+        document.getElementById(`${data.id}-available`).innerHTML = data.packets;
+        document.getElementById(`${data.id}-quantity`).max = data.packets;
     }
 
     handleMessage(json) {
@@ -192,6 +245,9 @@ class Seeds {
                 break;
             case 'getInventory':
                 this.showSeeds(json.data);
+                break;
+            case 'purchase':
+                this.updateSeed(json.data);
                 break;
             default:
                 this.log.error(`Cannot handle component '${json.component}' for ${this.type}`);
