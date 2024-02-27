@@ -145,6 +145,40 @@ class Seeds {
         cell.appendChild(img);
 
         let detailTable = document.createElement('table');
+        let dtb = detailTable.createTBody();
+        let dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Category</b>';
+        dtr.insertCell(-1).innerHTML = data.category;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Genus</b>';
+        dtr.insertCell(-1).innerHTML = data.genus;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Species</b>';
+        dtr.insertCell(-1).innerHTML = data.species;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Cultivar</b>';
+        dtr.insertCell(-1).innerHTML = data.cultivar;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Common Name</b>';
+        dtr.insertCell(-1).innerHTML = data.commonName;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Description</b>';
+        dtr.insertCell(-1).innerHTML = data.description;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Seeds Per Packet</b>';
+        dtr.insertCell(-1).innerHTML = data.perPacketCount;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Packets Available</b>';
+        dtr.insertCell(-1).innerHTML = data.packets;
+        dtr = dtb.insertRow(-1);
+        dtr.insertCell(-1).innerHTML = '<b>Price</b>';
+        dtr.insertCell(-1).innerHTML = `$${data.price}`;
+
+        tr.insertCell(-1).appendChild(detailTable);
+
+        const div = document.getElementById('SeedsDiv');
+        div.innerHTML = '';
+        div.appendChild(table);
     }
 
     handleMessage(json) {
@@ -154,7 +188,7 @@ class Seeds {
         } else {
             switch(json.component) {
             case 'getDetail':
-                console.log(JSON.stringify(json.data));
+                this.showDetail(json.data);
                 break;
             case 'getInventory':
                 this.showSeeds(json.data);
