@@ -22,6 +22,8 @@ class Seeds {
         this.ws.registerHandlers(this.type, this);
 
         document.addEventListener('seeds', () => {
+            this.ws.displayHelper([ 'SeedsDiv' ], 'none');
+            this.ws.displayHelper([ 'LoadingSeeds' ], '');
             this.ws.sendMessage({
                 type: this.type,
                 component: 'getInventory',
@@ -42,7 +44,8 @@ class Seeds {
                 table.classList.add('display', 'responsive', 'seeds', 'pictures');
                 let tb = table.createTBody();
                 let tr = tb.insertRow(-1);
-                data[category].items.forEach((seed) => {
+                Object.keys(data[category].items).forEach((id) => {
+                    let seed = data[category].items[id];
                     let seedDiv = document.createElement('div');
                     let h3 = document.createElement('h3');
                     h3.innerHTML = seed.cultivar === undefined ? seed.commonName : `${seed.cultivar} ${seed.commonName}`;
@@ -53,44 +56,69 @@ class Seeds {
 
                     let packets = parseInt(seed.packets);
                     let input = document.createElement('input');
-                    input.classList.add('form-control');
-                    input.type = 'number';
+                    input.classList.add('seed-input');
                     input.min = 1;
+                    input.type = 'number';
                     input.max = packets;
+                    input.value = 1;
                     input.onkeyup = () => {
-                        let value = input.value;
-                        console.log(value);
-                        let result = '';
-                        console.log(Array.from(value));
-                        Array.from(value).forEach((char) => {
-                            console.log(char);
-                            if (!isNaN(char)) {
-                                result = result + char;
-                            } else {
-                                console.log(char);
+                        let oldValue = input.min;
+                        Array.from(input.value).forEach((c) => {
+                            if (!isNaN) {
+                                oldValue = oldValue + c;
                             }
                         });
-                        console.log(result);
-                        value = parseInt(result);
-                        console.log(value);
-                        switch (value) {
-                        case value < 0:
-                            input.value = 1;
-                            break;
-                        case value > packets:
-                            input.value = packets;
-                            break;
-                        default:
-                            input.value = value;
-                            break;
+                        if (input.value !== '') {
+                            if (parseInt(input.value) < parseInt(input.min)) {
+                                input.value = input.min;
+                            }
+                            if (parseInt(input.value) > parseInt(input.max)) {
+                                input.value = input.max;
+                            }
+                        } else {
+                            input.value = oldValue;
                         }
                     };
-                    input.value = 1;
 
+                    let itemTable = document.createElement('table');
+                    let itemBody = itemTable.createTBody();
+                    let itemTR = itemBody.insertRow(-1);
+                    let itemCell = itemTR.insertCell(-1);
+                    let infoButton = document.createElement('button');
+                    infoButton.innerHTML = 'Info';
+                    infoButton.classList.add('btn', 'btn-info', 'seed-button');
+                    infoButton.onclick = () => {
+                        this.ws.sendMessage({
+                            type: this.type,
+                            component: 'getDetail',
+                            subComponent: seed.category,
+                            data: {
+                                id: id
+                            }
+                        });
+                    };
+                    itemCell.appendChild(infoButton);
+                    itemTR.insertCell(-1).appendChild(input);
+
+                    let requestButton = document.createElement('button');
+                    requestButton.innerHTML = 'Request';
+                    requestButton.classList.add('btn', 'btn-danger', 'seed-button');
+                    requestButton.onclick = () => {
+                        this.ws.sendMessage({
+                            type: this.type,
+                            component: 'requestSeeds',
+                            subComponent: seed.id,
+                            data: {
+                                id: seed.id,
+                                quantity: input.value
+                            }
+                        });
+                    };
+                    itemTR.insertCell(-1).appendChild(requestButton);
 
                     seedDiv.appendChild(h3);
                     seedDiv.appendChild(img);
-                    seedDiv.appendChild(input);
+                    seedDiv.appendChild(itemTable);
 
                     tr.insertCell(-1).appendChild(seedDiv);
                 });
@@ -101,6 +129,22 @@ class Seeds {
                 div.appendChild(heading);
             }
         });
+        this.ws.displayHelper([ 'SeedsDiv' ], '');
+        this.ws.displayHelper([ 'LoadingSeeds' ], 'none');
+    }
+
+    showDetail(data) {
+        let table = document.createElement('table');
+        let tb = table.createTBody();
+        let tr = tb.insertRow(-1);
+
+        let cell = tr.insertCell(-1);
+        let img = document.createElement('img');
+        img.classList.add('rounded-lg', 'pictures-img');
+        img.src = data.image;
+        cell.appendChild(img);
+
+        let detailTable = document.createElement('table');
     }
 
     handleMessage(json) {
@@ -109,6 +153,9 @@ class Seeds {
             alert(json.error); // eslint-disable-line no-alert
         } else {
             switch(json.component) {
+            case 'getDetail':
+                console.log(JSON.stringify(json.data));
+                break;
             case 'getInventory':
                 this.showSeeds(json.data);
                 break;

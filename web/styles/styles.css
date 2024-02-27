@@ -73,6 +73,10 @@ fieldset {
     border-radius: 4px;
 }
 
-#number {
-    width: 3em;
+.seed-input {
+    width: 4em;
+}
+
+.seed-button {
+    width: 5em;
 }

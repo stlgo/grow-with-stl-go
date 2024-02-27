@@ -28,6 +28,7 @@ import (
 const (
 	seeds            = "seeds"
 	getInventoryWS   = "getInventory"
+	getDetailWS      = "getDetail"
 	addInventory     = "addInventory"
 	reserveInventory = "reserveInventory"
 	removeInventory  = "removeInventory"
@@ -69,20 +70,20 @@ var (
 				'Suitable for growing in field or containers. Dark green leaves with very good uniformity. USDA Certified Organic.',
 				0, 2.18, 100, 100, '/images/herbs/polyvert_chive.jpg')`, uuid.New().String()),
 
-				"ailsa craig": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Ailsa Craig', 'Yellow Onion',
+				"ailsa craig": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Ailsa Craig', 'Yellow',
 				'Long day. Very well-known globe-shaped heirloom onion that reaches a really huge size—5 lbs is rather common',
 				0, 2.67, 20, 100, '/images/onions/ailsa_craig.jpg')`, uuid.New().String()),
-				"patterson": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Patterson', 'Yellow Onion',
+				"patterson": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Patterson', 'Yellow',
 				'Patterson’ is a keeper—the longest-storing onion you can find. Straw-colored, globe-shaped bulbs with sweet, mildly pungent yellow flesh',
 				0, 4.28, 100, 100, '/images/onions/patterson.jpg')`, uuid.New().String()),
-				"red wing": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Red Wing', 'Red Onion',
+				"red wing": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Red Wing', 'Red',
 				'Uniform, large onions with deep red color. Thick skin, very hard bulbs for long storage. Consistent internal color.',
 				1, 3.95, 50, 100, '/images/onions/red_wing.jpg')`, uuid.New().String()),
-				"walla walla": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Walla Walla', 'Sweet Onion',
+				"walla walla": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Onion', 'Allium', 'cepa', 'Walla Walla', 'Sweet',
 				'Juicy, sweet, regional favorite. In the Northwest,  very large, flattened, ultra-mild onions',
 				0, 2.18, 100, 100, '/images/onions/walla_walla.jpg')`, uuid.New().String()),
 
-				"bell pepper": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Pepper', 'Capsicum', 'annuum', 'Ozark Giant', 'Bell Pepper',
+				"bell pepper": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Pepper', 'Capsicum', 'annuum', 'Ozark Giant', 'Bell',
 				'Green bell peppers are bell peppers that have been harvested early. Red bell peppers have been allowed to ripen longer.',
 				0, 4.58, 50, 100, '/images/peppers/green_bell.jpg')`, uuid.New().String()),
 				"poblano": fmt.Sprintf(`insert or ignore into seeds values ('%s', 'Pepper', 'Capsicum', 'annuum', null, 'Poblano',
@@ -127,8 +128,8 @@ var (
 
 // InventoryCategory is a way to hold inventory categories together
 type InventoryCategory struct {
-	Category *string          `json:"category,omitempty"`
-	Items    []*InventoryItem `json:"items,omitempty"`
+	Category *string                   `json:"category,omitempty"`
+	Items    map[string]*InventoryItem `json:"items,omitempty"`
 }
 
 // InventoryItem data we stored in the database
@@ -174,23 +175,27 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 	}
 
 	if request.Component != nil {
+		var err error
 		switch *request.Component {
 		case addInventory:
 			log.Trace("add inventory")
 		case getInventoryWS:
-			data, err := getInventory()
-			if err != nil {
-				log.Error(err)
-				e := err.Error()
-				response.Error = &e
-				return &response
-			}
-			response.Data = data
+			response.Data, err = getInventory()
+		case getDetailWS:
+			response.Data, err = getDetail(request.SubComponent, request.Data)
 		default:
 			err := fmt.Sprintf("component %s not implemented", *request.Component)
 			log.Error(err)
 			response.Error = &err
 		}
+
+		if err != nil {
+			log.Error(err)
+			e := err.Error()
+			response.Error = &e
+			response.Data = nil
+		}
+
 		return &response
 	}
 	err := fmt.Errorf("bad request").Error()
@@ -216,11 +221,13 @@ func getInventory() (map[string]*InventoryCategory, error) {
 				}
 				if ii.ID != nil && ii.Category != nil {
 					if category, ok := inventory[*ii.Category]; ok && category.Items != nil {
-						category.Items = append(category.Items, &ii)
+						category.Items[*ii.ID] = &ii
 					} else {
 						inventory[*ii.Category] = &InventoryCategory{
 							Category: ii.Category,
-							Items:    []*InventoryItem{&ii},
+							Items: map[string]*InventoryItem{
+								*ii.ID: &ii,
+							},
 						}
 					}
 				}
@@ -230,4 +237,19 @@ func getInventory() (map[string]*InventoryCategory, error) {
 		return inventoryCache, nil
 	}
 	return nil, errors.New("the sqlite database is nil, cannot get last logins")
+}
+
+func getDetail(categoryName *string, data interface{}) (*InventoryItem, error) {
+	if categoryName != nil && data != nil {
+		if idData, ok := data.(map[string]interface{})["id"]; ok {
+			if category, ok := inventoryCache[*categoryName]; ok && category != nil {
+				if id, ok := idData.(string); ok {
+					if item, ok := category.Items[id]; ok {
+						return item, nil
+					}
+				}
+			}
+		}
+	}
+	return nil, fmt.Errorf("item not found")
 }
