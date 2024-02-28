@@ -42,7 +42,7 @@ type checboxEnabled struct {
 
 // Init is different than the standard init because it is called outside of the object load
 func Init() {
-	webservice.AppendToFunctionMap("admin", handleMessage)
+	webservice.AppendToWebsocketFunctionMap("admin", handleMessage)
 	// warm up the db connection so when we hit the page the first time it's faster
 	if _, err := getUserInfo(); err != nil {
 		log.Error(err)

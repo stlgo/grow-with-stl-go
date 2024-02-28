@@ -67,10 +67,10 @@ var websocketFuncMap = map[string]func(*string, *configs.WsMessage) *configs.WsM
 	configs.WebsocketClient: handleMessage,
 }
 
-// AppendToFunctionMap allows us to break up the circular reference from the other packages
+// AppendToWebsocketFunctionMap allows us to break up the circular reference from the other packages
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
-func AppendToFunctionMap(requestType string, function func(*string, *configs.WsMessage) *configs.WsMessage) {
+func AppendToWebsocketFunctionMap(requestType string, function func(*string, *configs.WsMessage) *configs.WsMessage) {
 	log.Debugf("Regestering '%s' as a WebSocket Endpoint", requestType)
 	websocketFuncMap[requestType] = function
 }

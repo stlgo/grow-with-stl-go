@@ -15,9 +15,13 @@
 package seeds
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
+	"strings"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -27,12 +31,10 @@ import (
 )
 
 const (
-	seeds           = "seeds"
-	getInventoryWS  = "getInventory"
-	getDetailWS     = "getDetail"
-	addInventory    = "addInventory"
-	purchaseWS      = "purchase"
-	removeInventory = "removeInventory"
+	seeds               = "seeds"
+	getInventoryRequest = "getInventory"
+	getDetailRequest    = "getDetail"
+	purchaseRequest     = "purchase"
 )
 
 var (
@@ -141,7 +143,8 @@ type InventoryItem struct {
 
 // Init is called by the launch in the pkg/commands/root.go
 func Init() error {
-	webservice.AppendToFunctionMap(seeds, handleMessage)
+	webservice.AppendToWebsocketFunctionMap(seeds, handleWebsocketRequest)
+	webservice.AppendToRESTFunctionMap(seeds, handleRESTRequest)
 	for tableName, table := range inventoryTables {
 		if table != nil {
 			if err := table.CreateTable(&tableName); err != nil {
@@ -158,7 +161,7 @@ func Init() error {
 	return nil
 }
 
-func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
+func handleWebsocketRequest(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
 	response := configs.WsMessage{
 		Type:         request.Type,
 		Component:    request.Component,
@@ -168,13 +171,15 @@ func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMes
 	if request.Component != nil {
 		var err error
 		switch *request.Component {
-		case addInventory:
-			log.Trace("add inventory")
-		case getInventoryWS:
+		case getInventoryRequest:
 			response.Data, err = getInventory()
-		case getDetailWS:
-			response.Data, err = getDetail(request.SubComponent, request.Data)
-		case purchaseWS:
+		case getDetailRequest:
+			if idData, ok := request.Data.(map[string]interface{})["id"]; ok {
+				if id, ok := idData.(string); ok {
+					response.Data, err = getDetail(request.SubComponent, &id)
+				}
+			}
+		case purchaseRequest:
 			response.Data, err = purchase(request.SubComponent, request.Data)
 			if err == nil {
 				webservice.NotifyAll(sessionID, &response)
@@ -192,11 +197,70 @@ func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMes
 			response.Data = nil
 		}
 
+		if response.Data == nil {
+			e := "no data round"
+			log.Error(e)
+			response.Error = &e
+		}
+
 		return &response
 	}
 	err := fmt.Errorf("bad request").Error()
 	response.Error = &err
 	return &response
+}
+
+func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
+	restURI := strings.TrimPrefix(r.RequestURI, fmt.Sprintf("/REST/v1.0.0/%s/", seeds))
+	uriParts := strings.Split(restURI, "/")
+	log.Info(uriParts)
+
+	switch uriParts[0] {
+	case getInventoryRequest:
+		data, err := getInventory()
+		if err != nil {
+			log.Error(err)
+			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			return
+		}
+		writeRESTResponse(data, w)
+	case getDetailRequest:
+
+		if len(uriParts) >= 2 {
+			data, err := getDetail(&uriParts[1], &uriParts[2])
+			if err != nil {
+				log.Error(err)
+				http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+				return
+			}
+			writeRESTResponse(data, w)
+		}
+		http.Error(w, configs.BadRequestError, http.StatusBadRequest)
+	case purchaseRequest:
+		purchaseREST(w, r)
+		return
+	default:
+		log.Errorf("%s URI not found", restURI)
+		http.Error(w, configs.NotFoundError, http.StatusNotFound)
+		return
+	}
+}
+
+func writeRESTResponse(data interface{}, w http.ResponseWriter) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write(b)
+	if err != nil {
+		log.Error(err)
+		http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+		return
+	}
 }
 
 // getInventory will query the database for the inventory data
@@ -235,23 +299,59 @@ func getInventory() (map[string]*InventoryCategory, error) {
 	return nil, errors.New("the sqlite database is nil, cannot get last logins")
 }
 
+func purchaseREST(w http.ResponseWriter, r *http.Request) {
+	if strings.EqualFold(r.Method, http.MethodPost) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, configs.BadRequestError, http.StatusBadRequest)
+			return
+		}
+
+		var requestBody map[string]interface{}
+		if err := json.Unmarshal(body, &requestBody); err != nil {
+			log.Errorf("bad request body: %s", body)
+			http.Error(w, configs.BadRequestError, http.StatusBadRequest)
+			return
+		}
+
+		if category, ok := requestBody["category"].(string); ok {
+			data, err := purchase(&category, requestBody)
+			if err != nil {
+				log.Error(err)
+				http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+				return
+			}
+
+			writeRESTResponse(data, w)
+			return
+		}
+	}
+	log.Error("bad request")
+	http.Error(w, configs.BadRequestError, http.StatusBadRequest)
+}
+
 func purchase(categoryName *string, data interface{}) (*InventoryItem, error) {
 	if categoryName != nil && data != nil {
 		if rawData, ok := data.(map[string]interface{}); ok {
 			if category, ok := inventoryCache[*categoryName]; ok && category != nil {
 				if id, ok := rawData["id"].(string); ok {
 					if item, ok := category.Items[id]; ok {
+						// TODO: (aschiefe) fix this so you can determine via reflection if it's already a number
 						if str, ok := rawData["quantity"].(string); ok {
 							quantity, err := strconv.Atoi(str)
 							if err != nil {
 								return nil, err
 							}
-							remainder := *item.Packets - quantity
-							item.Packets = &remainder
-							if err := updateItemInDB(item); err != nil {
-								return nil, err
+							if *item.Packets > quantity {
+								remainder := *item.Packets - quantity
+								item.Packets = &remainder
+								if err := updateItemInDB(item); err != nil {
+									return nil, err
+								}
+								return item, nil
 							}
-							return item, nil
+							return nil, errors.New("cannot purchase more packets than what the inventory contains")
 						}
 					}
 				}
@@ -289,15 +389,11 @@ func updateItemInDB(item *InventoryItem) error {
 	return errors.New("requirements not met to update item in db")
 }
 
-func getDetail(categoryName *string, data interface{}) (*InventoryItem, error) {
-	if categoryName != nil && data != nil {
-		if idData, ok := data.(map[string]interface{})["id"]; ok {
-			if category, ok := inventoryCache[*categoryName]; ok && category != nil {
-				if id, ok := idData.(string); ok {
-					if item, ok := category.Items[id]; ok {
-						return item, nil
-					}
-				}
+func getDetail(categoryName, id *string) (*InventoryItem, error) {
+	if categoryName != nil && id != nil {
+		if category, ok := inventoryCache[*categoryName]; ok && category != nil {
+			if item, ok := category.Items[*id]; ok {
+				return item, nil
 			}
 		}
 	}

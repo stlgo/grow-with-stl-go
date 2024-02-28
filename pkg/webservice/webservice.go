@@ -46,10 +46,10 @@ const (
 	fontAwesomePrefix = "/node_modules/font-awesome/fonts/fontawesome-webfont"
 )
 
-// AppendToWebServiceFunctionMap allows us to break up the circular reference from the other packages
+// AppendToRESTFunctionMap allows us to break up the circular reference from the other packages
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
-func AppendToWebServiceFunctionMap(requestType string, function func(w http.ResponseWriter, r *http.Request)) {
+func AppendToRESTFunctionMap(requestType string, function func(w http.ResponseWriter, r *http.Request)) {
 	log.Debugf("Regestering %s as a REST Endpoint", requestType)
 	webServiceFunctionMap[requestType] = function
 }
@@ -63,14 +63,15 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	restURI := strings.TrimPrefix(uri, "/REST/v1.0.0/")
-	if restFunction, ok := webServiceFunctionMap[restURI]; ok {
+	uriParts := strings.Split(restURI, "/")
+	if restFunction, ok := webServiceFunctionMap[uriParts[0]]; ok {
 		id, err := handleRESTAuth(r)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.BadRequestError, http.StatusBadRequest)
 			return
 		}
-		log.Infof("User %s authenticated for %s on %s", *id, r.Method, uri)
+		log.Infof("User '%s' authenticated for %s on %s", *id, r.Method, uri)
 		restFunction(w, r)
 		return
 	}
