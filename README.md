@@ -117,9 +117,11 @@ More details about the [Grow with stl-go](docs/grow-with-stl-go-application.md) 
 ### Prerequisites
 
 1. [Go](https://go.dev/dl/)
-2. [Make](https://www.gnu.org/software/make/) - For windows you can use [cygwin](https://www.cygwin.com/), note that you'll need [MinGW](https://www.mingw-w64.org/) on the path prior to cygwin to compile the Sqlite module.
+2. [Make](https://www.gnu.org/software/make/)*
 3. [npm](https://nodejs.org/en)
 4. (optional for linting) [python](https://www.python.org/downloads/)
+
+*For windows you can use [cygwin](https://www.cygwin.com/), note that you'll need [MinGW](https://www.mingw-w64.org/) on the path prior to cygwin to compile the Sqlite module.
 
 ## Working with the sample app
 
