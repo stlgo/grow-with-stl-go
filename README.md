@@ -108,18 +108,13 @@ We have some examples and some documentation on how to go from "hello world" to 
 Sometimes seeing things in context helps.  The next set of examples is included in the "Grow with stl-go" application example.  It is a fully functioning webservice with a UI and REST / WebSocket apis
 
 1. [Logging](examples/logging/README.md)
-2. [Cobra](doc/cobra.md)
-2. Application configurations
-3. HTTP Client
-4. HTTP Server / WebService
-5. WebSockets
-
-### Making sure we put some shine on our projects
-
-1. [Linting](docs/linting.md)
-2. Makefile
+2. [Linting](docs/linting.md)
 
 ## The "Grow with stl-go" example application
+
+More details about the [Grow with stl-go](docs/grow-with-stl-go-application.md) can be found on the [docs](docs/grow-with-stl-go-application.md).
+
+### Prerequisites
 
 ## Special considerations for programming
 
