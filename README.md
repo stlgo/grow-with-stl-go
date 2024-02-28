@@ -116,6 +116,88 @@ More details about the [Grow with stl-go](docs/grow-with-stl-go-application.md) 
 
 ### Prerequisites
 
+1. [Go](https://go.dev/dl/)
+2. [Make](https://www.gnu.org/software/make/) - For windows you can use [cygwin](https://www.cygwin.com/), note that you'll need [MinGW](https://www.mingw-w64.org/) on the path prior to cygwin to compile the Sqlite module.
+3. [npm](https://nodejs.org/en)
+4. (optional for linting) [python](https://www.python.org/downloads/)
+
+## Working with the sample app
+
+### Clone the repository
+
+```bash
+git clone https://github.com/stlgo/grow-with-stl-go.git
+```
+
+Execute a make inside the project directory
+
+```bash
+$ make
+Executing frontend build steps...
+npm WARN deprecated @fortawesome/fontawesome-free-solid@5.0.13: This package is deprecated. See https://git.io/fNCzJ for information about upgrading.
+
+added 232 packages, and audited 233 packages in 29s
+
+36 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+Frontend build completed successfully
+Executing backend build steps...
+Backend build completed successfully
+```
+
+Start the application
+
+```bash
+$ bin/grow-with-stl-go --loglevel 6
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/configs.go:118: [ERROR] open etc/grow-with-stl-go.json: The system cannot find the path specified.
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/configs.go:119: [INFO] No configuration found building a default configuration
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/configs.go:126: [ERROR] unexpected end of JSON input
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/apiuser.go:54: [WARN] Password generated for user 'admin', password 5363839e28768ba89b5fef2c503c4885e21f7fe1bde18963351a965f3e3706b8 - DO NOT USE THIS FOR PRODUCTION
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/apiuser.go:54: [WARN] Password generated for user 'user', password d5f2bf6124cc4a35294b831266a1cf126fc82fa03c778c68378461650c5d59c5 - DO NOT USE THIS FOR PRODUCTION
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/webservice.go:35: [INFO] No webservice config found, generating ssl keys, host and port info
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/cryptography/ssl.go:40: [WARN] Generating private key C:\temp\grow-with-stl-go\etc\key.pem.  DO NOT USE THIS FOR PRODUCTION
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/cryptography/ssl.go:47: [WARN] Generating public key C:\temp\grow-with-stl-go\etc\cert.pem.  DO NOT USE THIS FOR PRODUCTION
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:57: [DEBUG] No embedded database found in the config file, generating a default configuration
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:88: [DEBUG] Using encrypted aud database in C:\temp\grow-with-stl-go\etc\grow-with-stl-go.db
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/configs.go:282: [DEBUG] Rewriting etc/grow-with-stl-go.json to ensure data is enciphered on disk
+[stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table WebSocket was created if it didn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table REST was created if it didn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table user was created if it didn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/websocket.go:74: [DEBUG] Regestering 'seeds' as a WebSocket Endpoint
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/webservice.go:53: [DEBUG] Regestering seeds as a REST Endpoint
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table seeds was created if it didn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default chive for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default bell pepper for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default serrano for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default galahad for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default plum regal for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default oreagno for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default ailsa craig for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default walla walla for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default carbon for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default basil for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default poblano for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default san marzano for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default dill for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default patterson for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default red wing for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default jalapeno for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/configs.go:282: [DEBUG] Rewriting etc/grow-with-stl-go.json to ensure data is enciphered on disk
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/seeds/seeds.go:160: [DEBUG] 4 categories in inventory cache
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/websocket.go:74: [DEBUG] Regestering 'admin' as a WebSocket Endpoint
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/server.go:57: [DEBUG] Attempting to serve static content from web
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/server.go:63: [INFO] Attempting to start webservice on localhost:10443
+```
+
+Login to the web page with the generated ids / passwords in the output above at <localhost:10443> or flex the REST and WebSocket apis via the procedures in our [documentation](docs/grow-with-stl-go-application.md).
+
 ## Special considerations for programming
 
 Programming is both an art and a science and that concept is sometimes lost in translation.  If you've read Isaac Asimov's [The Relativity of Wrong](https://www.sas.upenn.edu/~dbalmer/eportfolio/Nature%20of%20Science_Asimov.pdf) you'll understand what he put into words is that we may not always get everything 100% perfectly right every time but so long as we continue to move towards a more correct and better way to do things we'll improve.  To that end Tim Peters wrote a small blurb called the [Zen of Python](https://en.wikipedia.org/wiki/Zen_of_Python), and while it does have the word python in the title, the concepts can be applied to this or any project you may be involved in and should be considered in how you approach problem solving:
