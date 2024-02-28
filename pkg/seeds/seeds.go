@@ -213,7 +213,6 @@ func handleWebsocketRequest(sessionID *string, request *configs.WsMessage) *conf
 func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 	restURI := strings.TrimPrefix(r.RequestURI, fmt.Sprintf("/REST/v1.0.0/%s/", seeds))
 	uriParts := strings.Split(restURI, "/")
-	log.Info(uriParts)
 
 	switch uriParts[0] {
 	case getInventoryRequest:
@@ -225,7 +224,6 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		writeRESTResponse(data, w)
 	case getDetailRequest:
-
 		if len(uriParts) >= 2 {
 			data, err := getDetail(&uriParts[1], &uriParts[2])
 			if err != nil {
@@ -234,6 +232,7 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			writeRESTResponse(data, w)
+			return
 		}
 		http.Error(w, configs.BadRequestError, http.StatusBadRequest)
 	case purchaseRequest:
