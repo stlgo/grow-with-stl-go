@@ -143,7 +143,8 @@ func createRefreshToken(claim jwt.MapClaims, request *configs.WsMessage) {
 			SubComponent: &refresh,
 			RefreshToken: &refreshToken,
 		}); err != nil {
-			session.onError(err)
+			log.Error(err)
+			session.onError()
 		}
 	}
 }

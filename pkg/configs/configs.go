@@ -92,6 +92,7 @@ type Proxy struct {
 // WsMessage is a request / return structure used for websockets
 type WsMessage struct {
 	// base components of a message
+	Route        *string `json:"route,omitempty"`
 	Type         *string `json:"type,omitempty"`
 	Component    *string `json:"component,omitempty"`
 	SubComponent *string `json:"subComponent,omitempty"`

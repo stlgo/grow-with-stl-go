@@ -163,24 +163,21 @@ func Init() error {
 
 func handleWebsocketRequest(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
 	response := configs.WsMessage{
+		Route:        request.Route,
 		Type:         request.Type,
 		Component:    request.Component,
 		SubComponent: request.SubComponent,
 	}
 
-	if request.Component != nil {
+	if request.Type != nil {
 		var err error
-		switch *request.Component {
+		switch *request.Type {
 		case getInventoryRequest:
 			response.Data, err = getInventory()
 		case getDetailRequest:
-			if idData, ok := request.Data.(map[string]interface{})["id"]; ok {
-				if id, ok := idData.(string); ok {
-					response.Data, err = getDetail(request.SubComponent, &id)
-				}
-			}
+			response.Data, err = getDetail(request.Component, request.SubComponent)
 		case purchaseRequest:
-			response.Data, err = purchase(request.SubComponent, request.Data)
+			response.Data, err = purchase(request.Component, request.SubComponent, request.Data)
 			if err == nil {
 				webservice.NotifyAll(sessionID, &response)
 			}
@@ -190,17 +187,17 @@ func handleWebsocketRequest(sessionID *string, request *configs.WsMessage) *conf
 			response.Error = &err
 		}
 
+		if response.Data == nil {
+			e := "no data round"
+			log.Error(e)
+			response.Error = &e
+		}
+
 		if err != nil {
 			log.Error(err)
 			e := err.Error()
 			response.Error = &e
 			response.Data = nil
-		}
-
-		if response.Data == nil {
-			e := "no data round"
-			log.Error(e)
-			response.Error = &e
 		}
 
 		return &response
@@ -315,43 +312,44 @@ func purchaseREST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if category, ok := requestBody["category"].(string); ok {
-			data, err := purchase(&category, requestBody)
-			if err != nil {
-				log.Error(err)
-				http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			if seedID, ok := requestBody["id"].(string); ok {
+				data, err := purchase(&category, &seedID, requestBody)
+				if err != nil {
+					log.Error(err)
+					http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+					return
+				}
+
+				writeRESTResponse(data, w)
 				return
 			}
-
-			writeRESTResponse(data, w)
-			return
 		}
 	}
+
 	log.Error("bad request")
 	http.Error(w, configs.BadRequestError, http.StatusBadRequest)
 }
 
-func purchase(categoryName *string, data interface{}) (*InventoryItem, error) {
-	if categoryName != nil && data != nil {
+func purchase(categoryName, seedID *string, data interface{}) (*InventoryItem, error) {
+	if categoryName != nil && seedID != nil && data != nil {
 		if rawData, ok := data.(map[string]interface{}); ok {
 			if category, ok := inventoryCache[*categoryName]; ok && category != nil {
-				if id, ok := rawData["id"].(string); ok {
-					if item, ok := category.Items[id]; ok {
-						// TODO: (aschiefe) fix this so you can determine via reflection if it's already a number
-						if str, ok := rawData["quantity"].(string); ok {
-							quantity, err := strconv.Atoi(str)
-							if err != nil {
+				if item, ok := category.Items[*seedID]; ok {
+					// TODO: (aschiefe) fix this so you can determine via reflection if it's already a number
+					if str, ok := rawData["quantity"].(string); ok {
+						quantity, err := strconv.Atoi(str)
+						if err != nil {
+							return nil, err
+						}
+						if *item.Packets > quantity {
+							remainder := *item.Packets - quantity
+							item.Packets = &remainder
+							if err := updateItemInDB(item); err != nil {
 								return nil, err
 							}
-							if *item.Packets > quantity {
-								remainder := *item.Packets - quantity
-								item.Packets = &remainder
-								if err := updateItemInDB(item); err != nil {
-									return nil, err
-								}
-								return item, nil
-							}
-							return nil, errors.New("cannot purchase more packets than what the inventory contains")
+							return item, nil
 						}
+						return nil, errors.New("cannot purchase more packets than what the inventory contains")
 					}
 				}
 			}

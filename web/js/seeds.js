@@ -18,16 +18,15 @@ class Seeds {
         this.ws = ws;
         this.log = log;
 
-        this.type = this.constructor.name.toLowerCase();
-        this.ws.registerHandlers(this.type, this);
+        this.route = this.constructor.name.toLowerCase();
+        this.ws.registerHandlers(this.route, this);
 
         document.addEventListener('seeds', () => {
             this.ws.displayHelper([ 'SeedsDiv' ], 'none');
             this.ws.displayHelper([ 'LoadingSeeds' ], '');
             this.ws.sendMessage({
-                type: this.type,
-                component: 'getInventory',
-                subComponent: 'getInventory',
+                route: this.route,
+                type: 'getInventory'
             });
         });
     }
@@ -113,12 +112,10 @@ class Seeds {
                     infoButton.classList.add('btn', 'btn-info', 'seed-button');
                     infoButton.onclick = () => {
                         this.ws.sendMessage({
-                            type: this.type,
-                            component: 'getDetail',
-                            subComponent: seed.category,
-                            data: {
-                                id: id
-                            }
+                            route: this.route,
+                            type: 'getDetail',
+                            component: seed.category,
+                            subComponent: id,
                         });
                     };
                     itemCell.appendChild(infoButton);
@@ -130,9 +127,10 @@ class Seeds {
                     purchaseButton.classList.add('btn', 'btn-danger', 'seed-button');
                     purchaseButton.onclick = () => {
                         this.ws.sendMessage({
-                            type: this.type,
-                            component: 'purchase',
-                            subComponent: seed.category,
+                            route: this.route,
+                            type: 'purchase',
+                            component: seed.category,
+                            subComponent: seed.id,
                             data: {
                                 id: seed.id,
                                 quantity: input.value
@@ -239,7 +237,7 @@ class Seeds {
             this.log.error(json.error);
             alert(json.error); // eslint-disable-line no-alert
         } else {
-            switch(json.component) {
+            switch(json.type) {
             case 'getDetail':
                 this.showDetail(json.data);
                 break;

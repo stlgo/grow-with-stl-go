@@ -104,7 +104,8 @@ func (session *session) onMessage() {
 		var request configs.WsMessage
 		err := session.ws.ReadJSON(&request)
 		if err != nil {
-			session.onError(err)
+			log.Error(err)
+			session.onError()
 			break
 		}
 
@@ -113,8 +114,8 @@ func (session *session) onMessage() {
 			transaction := audit.NewWSTransaction(session.requestHost, session.user, &request)
 			request.IsAdmin = session.isAdmin
 			// test the auth token for request validity on non auth requests
-			if request.Type != nil && !strings.EqualFold(*request.Type, configs.WebsocketClient) &&
-				request.Component != nil && !strings.EqualFold(*request.Type, configs.Auth) &&
+			if request.Route != nil && !strings.EqualFold(*request.Route, configs.WebsocketClient) &&
+				request.Type != nil && !strings.EqualFold(*request.Type, configs.Auth) &&
 				request.Token != nil {
 				err = session.validateWSToken(&request)
 			}
@@ -134,7 +135,8 @@ func (session *session) onMessage() {
 					Error:        &e,
 				}
 				if err = session.webSocketSend(&response); err != nil {
-					session.onError(err)
+					log.Error(err)
+					session.onError()
 				}
 				defer session.onClose()
 				transactionHelper(transaction, false)
@@ -166,39 +168,41 @@ func (session *session) onClose() {
 }
 
 // common websocket error handling with logging
-func (session *session) onError(err error) {
-	if err != nil {
-		log.Error(err)
-	}
+func (session *session) onError() {
 	session.onClose()
 }
 
 func (session *session) handleRequest(request *configs.WsMessage, transaction *audit.WSTransaction) {
-	if request.Type != nil && request.Component != nil {
-		if handleMessageFunc, ok := websocketFuncMap[*request.Type]; ok {
+	if request.Route != nil && request.Type != nil {
+		if handleMessageFunc, ok := websocketFuncMap[*request.Route]; ok {
 			// reset the idle timer if it's appropriate
 			go session.resetIdleTimer(request)
 
-			if strings.EqualFold(*request.Component, configs.GetPagelet) {
+			if strings.EqualFold(*request.Type, configs.GetPagelet) {
 				transaction.Recordable = utils.BoolPointer(false)
 			}
 
 			// do the rest
 			response := handleMessageFunc(session.sessionID, request)
 			if err := session.webSocketSend(response); err != nil {
-				session.onError(err)
+				log.Error(err)
+				session.onError()
 			}
 			return
 		}
 
-		typeNotFound := fmt.Sprintf("requested type: %s is not found", *request.Type)
-		log.Error(typeNotFound)
-		if err := session.webSocketSend(requestErrorHelper(&typeNotFound, request)); err != nil {
-			session.onError(err)
+		routeNotFound := fmt.Sprintf("requested route: %s is not found", *request.Route)
+		log.Error(routeNotFound)
+		if err := session.webSocketSend(requestErrorHelper(&routeNotFound, request)); err != nil {
+			log.Error(err)
+			session.onError()
 		}
 		return
 	}
-	session.onError(errors.New("invalid request type"))
+	log.Info(request.Route)
+	log.Info(request.Type)
+	log.Error("invalid request route")
+	session.onError()
 }
 
 func (session *session) resetIdleTimer(request *configs.WsMessage) {
@@ -252,8 +256,8 @@ func (session *session) sendInit() {
 	wsClient := configs.WebsocketClient
 	initialize := configs.Initialize
 	if err := session.webSocketSend(&configs.WsMessage{
-		Type:      &wsClient,
-		Component: &initialize,
+		Route: &wsClient,
+		Type:  &initialize,
 	}); err != nil {
 		log.Errorf("error receiving / sending init to session %s: %s\n", *session.sessionID, err)
 	}
@@ -278,7 +282,7 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 	denied := configs.Denied
 	response.SubComponent = &denied
 
-	if request.SubComponent != nil && strings.EqualFold(*request.SubComponent, configs.Authenticate) && request.SessionID != nil &&
+	if request.Component != nil && strings.EqualFold(*request.Component, configs.Authenticate) && request.SessionID != nil &&
 		request.Authentication != nil && request.Authentication.ID != nil && request.Authentication.Password != nil {
 		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok && user.Active != nil && *user.Active {
 			if err := user.Authentication.ValidateAuthentication(request.Authentication.Password); err != nil {
@@ -313,13 +317,14 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 
 func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
 	response := configs.WsMessage{
+		Route:        request.Route,
 		Type:         request.Type,
 		Component:    request.Component,
 		SubComponent: request.SubComponent,
 	}
 
-	if request.Component != nil {
-		switch *request.Component {
+	if request.Type != nil {
+		switch *request.Type {
 		case configs.GetPagelet:
 			getPagelet(request, &response)
 		case configs.Keepalive:
@@ -332,7 +337,8 @@ func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMes
 					if err != nil {
 						log.Error(err)
 						if err := session.webSocketSend(&response); err != nil {
-							session.onError(err)
+							log.Error(err)
+							session.onError()
 						}
 						session.onClose()
 					}
@@ -355,14 +361,14 @@ func getPagelet(request, response *configs.WsMessage) {
 	err := errors.New(configs.NotFoundError).Error()
 	response.Error = &err
 
-	if request.SubComponent != nil {
+	if request.Component != nil {
 		// ignore pages non admins shouldn't see
-		if strings.EqualFold(*request.SubComponent, "admin") && (request.IsAdmin == nil || !*request.IsAdmin) {
+		if strings.EqualFold(*request.Component, "admin") && (request.IsAdmin == nil || !*request.IsAdmin) {
 			log.Errorf("attempt to access the admin page by non admin user")
 			return
 		}
 		// everyone else is free to move about the cabin
-		fileName := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, "pagelets", fmt.Sprintf("%s.html", *request.SubComponent))
+		fileName := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, "pagelets", fmt.Sprintf("%s.html", *request.Component))
 		_, err := os.Stat(fileName)
 		if err == nil {
 			bytes, err := os.ReadFile(fileName)
@@ -411,6 +417,7 @@ func idleHandsTester() {
 func requestErrorHelper(err *string, request *configs.WsMessage) *configs.WsMessage {
 	if err != nil {
 		return &configs.WsMessage{
+			Route:     request.Route,
 			Type:      request.Type,
 			Component: request.Component,
 			Error:     err,

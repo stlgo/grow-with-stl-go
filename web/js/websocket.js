@@ -21,7 +21,7 @@ class WebSocketClient {
         this.refreshToken = null;
         this.sessionID = null;
         this.validUser = null;
-        this.type = this.constructor.name.toLocaleLowerCase();
+        this.route = this.constructor.name.toLocaleLowerCase();
 
         this.log = log;
 
@@ -56,7 +56,7 @@ class WebSocketClient {
 
         this.ws = new WebSocket(`wss://${window.location.host}/ws/v1.0.0`);
 
-        this.registerHandlers(this.type, this);
+        this.registerHandlers(this.route, this);
 
         this.ws.onmessage = (event) => {
             this.handleMessages(event);
@@ -79,16 +79,16 @@ class WebSocketClient {
 
     handleMessages(message) {
         const json = JSON.parse(message.data);
-        const type = json.type;
-        if (Object.prototype.hasOwnProperty.call(this.functionMap, type)) {
-            this.functionMap[type].handleMessage(json);
+        const route = json.route;
+        if (Object.prototype.hasOwnProperty.call(this.functionMap, route)) {
+            this.functionMap[route].handleMessage(json);
         } else {
-            this.log.error(`Received invalid message type ${type}`);
+            this.log.error(`Received invalid message route ${route}`);
         }
     }
 
     handleMessage(json) {
-        switch(json.component) {
+        switch(json.type) {
         case 'auth':
             this.handleAuth(json);
             break;
@@ -100,9 +100,9 @@ class WebSocketClient {
             } else {
                 document.getElementById('RouterDiv').innerHTML = json.data;
                 this.displayHelper([ 'RouterDiv', 'NavbarDiv' ], '');
-                window.history.replaceState(null, null, `/${json.subComponent}`);
+                window.history.replaceState(null, null, `/${json.component}`);
                 window.sessionStorage.setItem('grow-with-stlgo', JSON.stringify({ timestamp: new Date().getTime(), pageType: location.pathname.substring(1) }));
-                document.dispatchEvent(new CustomEvent(`${json.subComponent}`));
+                document.dispatchEvent(new CustomEvent(`${json.component}`));
             }
             break;
         case 'initialize':
@@ -200,9 +200,9 @@ class WebSocketClient {
 
     login(id, password) {
         this.sendMessage({
-            type: this.type,
-            component: 'auth',
-            subComponent: 'authenticate',
+            route: this.route,
+            type: 'auth',
+            component: 'authenticate',
             authentication: {
                 id: id,
                 password: password
@@ -212,9 +212,9 @@ class WebSocketClient {
 
     getPagelet(page) {
         this.sendMessage({
-            type: this.type,
-            component: 'getPagelet',
-            subComponent: page,
+            route: this.route,
+            type: 'getPagelet',
+            component: page
         });
     }
 
@@ -239,8 +239,9 @@ class WebSocketClient {
                 window.clearTimeout(this.timeout);
                 window.clearInterval(this.timeout);
                 const json = {
-                    type: this.type,
-                    component: 'keepalive'
+                    route: this.route,
+                    type: 'keepalive',
+                    component: 'active'
                 };
                 this.sendMessage(json);
             }

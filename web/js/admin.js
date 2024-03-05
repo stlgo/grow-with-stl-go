@@ -18,14 +18,14 @@ class Admin {
         this.ws = ws;
         this.log = log;
 
-        this.type = this.constructor.name.toLowerCase();
-        this.ws.registerHandlers(this.type, this);
+        this.route = this.constructor.name.toLowerCase();
+        this.ws.registerHandlers(this.route, this);
 
         document.addEventListener('admin', () => {
             this.ws.sendMessage({
-                type: this.type,
+                route: this.route,
+                type: 'pageLoad',
                 component: 'pageLoad',
-                subComponent: 'pageLoad',
             });
         });
     }
@@ -50,9 +50,9 @@ class Admin {
         let passwordInput = document.getElementById('GeneratedPasswd');
         if (userIDInput.validity.valid && passwordInput.value.length >= 10) {
             this.ws.sendMessage({
-                type: this.type,
-                component: 'addUser',
-                subComponent: userIDInput.value,
+                route: this.route,
+                type: 'addUser',
+                component: userIDInput.value,
                 data: {
                     id: userIDInput.value,
                     password: passwordInput.value
@@ -67,9 +67,9 @@ class Admin {
         let passwordInput = document.getElementById(`${userID}-GeneratedPasswd`);
         if (passwordInput.value.length >= 10) {
             this.ws.sendMessage({
-                type: this.type,
-                component: 'updateUser',
-                subComponent: userID,
+                route: this.route,
+                type: 'updateUser',
+                component: userID,
                 data: {
                     id: userID,
                     password: passwordInput.value
@@ -81,9 +81,9 @@ class Admin {
 
     generatePassword(uesrType) {
         this.ws.sendMessage({
-            type: this.type,
-            component: 'generatePassword',
-            subComponent: uesrType,
+            route: this.route,
+            type: 'generatePassword',
+            component: uesrType,
         });
     }
 
@@ -242,13 +242,10 @@ class Admin {
                 let confirm = window.confirm(`Confirm toggle of user "${userID}" active to ${active}`); // eslint-disable-line no-alert
                 if (confirm === true) {
                     this.ws.sendMessage({
-                        type: this.type,
-                        component: 'updateActive',
-                        subComponent: userID,
-                        data: {
-                            enabled: active
-                        }
-
+                        route: this.route,
+                        type: 'updateActive',
+                        component: userID,
+                        subComponent: `${active}`
                     });
                 }
             };
@@ -267,12 +264,10 @@ class Admin {
                 let confirm = window.confirm(`Confirm toggle of user "${userID}" admin to ${admin}`); // eslint-disable-line no-alert
                 if (confirm === true) {
                     this.ws.sendMessage({
-                        type: this.type,
-                        component: 'updateAdmin',
-                        subComponent: userID,
-                        data: {
-                            enabled: admin
-                        }
+                        route: this.route,
+                        type: 'updateAdmin',
+                        component: userID,
+                        subComponent: `${admin}`
                     });
                 }
             };
@@ -286,9 +281,9 @@ class Admin {
                 const userID = row.data()[1];
                 if (window.confirm(`Confirm removal of user "${userID}"`)) { // eslint-disable-line no-alert
                     this.ws.sendMessage({
-                        type: this.type,
-                        component: 'removeUser',
-                        subComponent: userID,
+                        route: this.route,
+                        type: 'removeUser',
+                        component: userID,
                     });
                 }
             };
@@ -300,7 +295,7 @@ class Admin {
             this.log.error(json.error);
             alert(json.error); // eslint-disable-line no-alert
         } else {
-            switch(json.component) {
+            switch(json.type) {
             case 'addUser':
             case 'updateUser':
             case 'updateActive':
@@ -311,10 +306,10 @@ class Admin {
                 this.bindButtons();
                 break;
             case 'generatePassword':
-                this.populatePassword(json.subComponent, json.data);
+                this.populatePassword(json.component, json.data);
                 break;
             default:
-                this.log.error(`Cannot handle component '${json.component}' for ${this.type}`);
+                this.log.error(`Cannot handle type '${json.type}' for ${this.route}`);
                 break;
             }
         }

@@ -15,9 +15,9 @@
 package admin
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -36,10 +36,6 @@ const (
 	generatePassword = "generatePassword"
 )
 
-type checboxEnabled struct {
-	Enabled *bool `json:"enabled,omitempty"`
-}
-
 // Init is different than the standard init because it is called outside of the object load
 func Init() {
 	webservice.AppendToWebsocketFunctionMap("admin", handleMessage)
@@ -51,33 +47,40 @@ func Init() {
 
 func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 	response := configs.WsMessage{
+		Route:        request.Route,
 		Type:         request.Type,
 		Component:    request.Component,
 		SubComponent: request.SubComponent,
 	}
 
-	if request.Component != nil || (request.IsAdmin == nil || !*request.IsAdmin) {
-		switch *request.Component {
+	if request.Type != nil || (request.IsAdmin == nil || !*request.IsAdmin) {
+		var err error
+		switch *request.Type {
 		case pageLoad:
-			data, err := getUserInfo()
-			if err != nil {
-				log.Error(err)
-				e := "Unable to retrieve user information"
-				response.Error = &e
-				return &response
-			}
-			response.Data = data
+			response.Data, err = getUserInfo()
 		case generatePassword:
 			response.Data = map[string]*string{
 				"password": configs.GeneratePassword(),
 			}
 		case addUser, updateUser, updateActive, updateAdmin, removeUser:
-			userAction(request.Component, request, &response)
+			userAction(request, &response)
 		default:
-			err := fmt.Sprintf("component %s not implemented", *request.Component)
-			log.Error(err)
-			response.Error = &err
+			err = fmt.Errorf("type %s not implemented", *request.Component)
 		}
+
+		if response.Data == nil {
+			e := "no data round"
+			log.Error(e)
+			response.Error = &e
+		}
+
+		if err != nil {
+			log.Error(err)
+			e := err.Error()
+			response.Error = &e
+			response.Data = nil
+		}
+
 		return &response
 	}
 	err := fmt.Errorf("bad request").Error()
@@ -85,53 +88,46 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 	return &response
 }
 
-func updateUserActive(userID *string, data interface{}) error {
-	if userID != nil {
-		if bytes, err := json.Marshal(data); err == nil {
-			var activeData checboxEnabled
-			if err := json.Unmarshal(bytes, &activeData); err == nil && activeData.Enabled != nil {
-				if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
-					return apiUser.ToggleActive(activeData.Enabled)
-				}
-			}
+func updateUserActive(userID, active *string) error {
+	if userID != nil && active != nil {
+		b, err := strconv.ParseBool(*active)
+		if err != nil {
+			return err
+		}
+		if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
+			return apiUser.ToggleActive(&b)
 		}
 	}
 	return errors.New("cannot update user active flag")
 }
 
-func updateUserAdmin(userID *string, data interface{}) error {
-	if userID != nil {
-		if bytes, err := json.Marshal(data); err == nil {
-			var activeData checboxEnabled
-			if err := json.Unmarshal(bytes, &activeData); err == nil && activeData.Enabled != nil {
-				if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
-					return apiUser.ToggleAdmin(activeData.Enabled)
-				}
-			}
+func updateUserAdmin(userID, admin *string) error {
+	if userID != nil && admin != nil {
+		b, err := strconv.ParseBool(*admin)
+		if err != nil {
+			return err
+		}
+		if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
+			return apiUser.ToggleAdmin(&b)
 		}
 	}
 	return errors.New("cannot update user admin flag")
 }
 
-func userAction(component *string, request, response *configs.WsMessage) *configs.WsMessage {
-	if component != nil && request != nil && response != nil {
+func userAction(request, response *configs.WsMessage) *configs.WsMessage {
+	if request != nil && request.Type != nil && response != nil {
 		var err error
-		switch *component {
+		switch *request.Type {
 		case addUser:
-			err = configs.AddUser(request.SubComponent, request.Data)
-
+			err = configs.AddUser(request.Component, request.Data)
 		case updateUser:
-			err = configs.UpdateUser(request.SubComponent, request.Data)
-
+			err = configs.UpdateUser(request.Component, request.Data)
 		case updateActive:
-			err = updateUserActive(request.SubComponent, request.Data)
-
+			err = updateUserActive(request.Component, request.SubComponent)
 		case updateAdmin:
-			err = updateUserAdmin(request.SubComponent, request.Data)
-
+			err = updateUserAdmin(request.Component, request.SubComponent)
 		case removeUser:
-			err = configs.RemoveUser(request.SubComponent)
-
+			err = configs.RemoveUser(request.Component)
 		default:
 			err = fmt.Errorf("component %s not implemented", *request.Component)
 		}
