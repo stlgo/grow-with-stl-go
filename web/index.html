@@ -16,30 +16,31 @@
     <link rel="stylesheet" href="/node_modules/datatables.net-dt/css/dataTables.dataTables.min.css">
     <link rel="stylesheet" href="/node_modules/datatables.net-select-dt/css/select.dataTables.min.css">
     <link rel="stylesheet" href="/styles/styles.css">
-</head>
-<script type='module'>
-    import { GrowWithSTLGO } from './js/main.js';
 
-    var gwsg = null;
+    <script type='module'>
+        import { GrowWithSTLGO } from './js/main.js';
 
-    function login() {
-        if (gwsg === null) {
-                gwsg = new GrowWithSTLGO()
-            }
-            gwsg.login()
-    }
+        var gwsg = null;
 
-    document.getElementById("LoginButton").onclick = () => {
-        login()
-    }
-
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.onclick = (event) => {
-            event.preventDefault();
-            gwsg.load(new URL(link.href).pathname.substring(1));
+        function login() {
+            if (gwsg === null) {
+                    gwsg = new GrowWithSTLGO()
+                }
+                gwsg.login()
         }
-    });
-</script>
+
+        document.getElementById("LoginButton").onclick = () => {
+            login()
+        }
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.onclick = (event) => {
+                event.preventDefault();
+                gwsg.load(new URL(link.href).pathname.substring(1));
+            }
+        });
+    </script>
+</head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light navbar-shadow" style="background-color: #47b53f;">
         <div class="container-fluid">

@@ -202,7 +202,7 @@ Login to the web page with the generated ids / passwords in the output above at 
 
 ## Special considerations for programming
 
-Programming is both an art and a science and that concept is sometimes lost in translation.  If you've read Isaac Asimov's [The Relativity of Wrong](https://www.sas.upenn.edu/~dbalmer/eportfolio/Nature%20of%20Science_Asimov.pdf) you'll understand what he put into words is that we may not always get everything 100% perfectly right every time but so long as we continue to move towards a more correct and better way to do things we'll improve.  To that end Tim Peters wrote a small blurb called the [Zen of Python](https://en.wikipedia.org/wiki/Zen_of_Python), and while it does have the word python in the title, the concepts can be applied to this or any project you may be involved in and should be considered in how you approach problem solving:
+Programming is both an art and a science and that concept is sometimes lost in translation.  If you've read Isaac Asimov's [The Relativity of Wrong](https://www.sas.upenn.edu/~dbalmer/eportfolio/Nature%20of%20Science_Asimov.pdf) you'll understand that we may not always get everything 100% perfectly right every time but so long as we continue to move towards a more correct and better way to do things we'll improve.  To that end Tim Peters wrote a small blurb called the [Zen of Python](https://en.wikipedia.org/wiki/Zen_of_Python), and while it does have the word python in the title, the concepts can be applied to this or any project you may be involved in and should be considered in how you approach problem solving:
 
 ```text
     Beautiful is better than ugly.

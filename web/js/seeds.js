@@ -84,20 +84,21 @@ class Seeds {
                     itemTable.classList.add('seed-info-table');
                     let itemBody = itemTable.createTBody();
 
+                    let columns = {
+                        '<b>Seeds Per Packet</b>': seed.perPacketCount,
+                        '<b>Price Per Packet</b>': `$${seed.price}`
+                    };
+
+                    Object.keys(columns).forEach((key) => {
+                        let itemTR = itemBody.insertRow(-1);
+                        let itemCell = itemTR.insertCell(-1);
+                        itemCell.colSpan = '2';
+                        itemCell.innerHTML = key;
+                        itemTR.insertCell(-1).innerHTML = columns[key];
+                    });
+
                     let itemTR = itemBody.insertRow(-1);
                     let itemCell = itemTR.insertCell(-1);
-                    itemCell.colSpan = '2';
-                    itemCell.innerHTML = '<b>Seeds Per Packet</b>';
-                    itemTR.insertCell(-1).innerHTML = seed.perPacketCount;
-
-                    itemTR = itemBody.insertRow(-1);
-                    itemCell = itemTR.insertCell(-1);
-                    itemCell.colSpan = '2';
-                    itemCell.innerHTML = '<b>Price Per Packet</b>';
-                    itemTR.insertCell(-1).innerHTML = `$${seed.price}`;
-
-                    itemTR = itemBody.insertRow(-1);
-                    itemCell = itemTR.insertCell(-1);
                     itemCell.colSpan = '2';
                     itemCell.innerHTML = '<b>Packets Available</b>';
                     let availableDiv = document.createElement('div');
@@ -170,28 +171,24 @@ class Seeds {
         let detailTable = document.createElement('table');
         detailTable.classList.add('seed-info-table');
         let dtb = detailTable.createTBody();
+
+        let columns = {
+            '<b>Category</b>': data.category,
+            '<b>Genus</b>': data.genus,
+            '<b>Species</b>': data.species,
+            '<b>Cultivar</b>': data.cultivar === undefined ? 'N/A' : data.cultivar,
+            '<b>Common Name</b>': data.commonName,
+            '<b>Description</b>': data.description,
+            '<b>Seeds Per Packet</b>': data.perPacketCount,
+        };
+
+        Object.keys(columns).forEach((key) => {
+            let dtr = dtb.insertRow(-1);
+            dtr.insertCell(-1).innerHTML = key;
+            dtr.insertCell(-1).innerHTML = columns[key];
+        });
+
         let dtr = dtb.insertRow(-1);
-        dtr.insertCell(-1).innerHTML = '<b>Category</b>';
-        dtr.insertCell(-1).innerHTML = data.category;
-        dtr = dtb.insertRow(-1);
-        dtr.insertCell(-1).innerHTML = '<b>Genus</b>';
-        dtr.insertCell(-1).innerHTML = data.genus;
-        dtr = dtb.insertRow(-1);
-        dtr.insertCell(-1).innerHTML = '<b>Species</b>';
-        dtr.insertCell(-1).innerHTML = data.species;
-        dtr = dtb.insertRow(-1);
-        dtr.insertCell(-1).innerHTML = '<b>Cultivar</b>';
-        dtr.insertCell(-1).innerHTML = data.cultivar === undefined ? 'N/A' : data.cultivar;
-        dtr = dtb.insertRow(-1);
-        dtr.insertCell(-1).innerHTML = '<b>Common Name</b>';
-        dtr.insertCell(-1).innerHTML = data.commonName;
-        dtr = dtb.insertRow(-1);
-        dtr.insertCell(-1).innerHTML = '<b>Description</b>';
-        dtr.insertCell(-1).innerHTML = data.description;
-        dtr = dtb.insertRow(-1);
-        dtr.insertCell(-1).innerHTML = '<b>Seeds Per Packet</b>';
-        dtr.insertCell(-1).innerHTML = data.perPacketCount;
-        dtr = dtb.insertRow(-1);
         dtr.insertCell(-1).innerHTML = '<b>Packets Available</b>';
         let availableDiv = document.createElement('div');
         availableDiv.id = `${data.id}-available`;
