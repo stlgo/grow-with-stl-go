@@ -132,9 +132,10 @@ func generateCSR() x509.Certificate {
 	return x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			CommonName:   cn,
-			Organization: []string{o},
+			CommonName:   "localhost",
+			Organization: []string{"grow-with-stl-go"},
 		},
+		DNSNames:              []string{"localhost", "grow-with-stlgo.localdev.org", "grow-with-stlgo.api.localdev.org"},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(1, 0, 0),
 		BasicConstraintsValid: true,

@@ -32,10 +32,6 @@ const (
 	privateKeyType = "RSA PRIVATE KEY"
 	publicKeyType  = "CERTIFICATE"
 
-	// certificate request details
-	cn = "localhost" // common name
-	o  = "stl-go"    // organization
-
 	// ObfuscatedPrefix encrypted key prefix
 	ObfuscatedPrefix string = "obf::"
 )
