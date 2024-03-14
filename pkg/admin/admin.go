@@ -45,15 +45,8 @@ func Init() {
 	}
 }
 
-func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
-	response := configs.WsMessage{
-		Route:        request.Route,
-		Type:         request.Type,
-		Component:    request.Component,
-		SubComponent: request.SubComponent,
-	}
-
-	if request.Type != nil || (request.IsAdmin == nil || !*request.IsAdmin) {
+func handleMessage(_ *string, request, response *configs.WsMessage) {
+	if request.Type != nil && response != nil && (request.IsAdmin != nil && *request.IsAdmin) {
 		var err error
 		switch *request.Type {
 		case pageLoad:
@@ -63,7 +56,7 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 				"password": configs.GeneratePassword(),
 			}
 		case addUser, updateUser, updateActive, updateAdmin, removeUser:
-			userAction(request, &response)
+			userAction(request, response)
 		default:
 			err = fmt.Errorf("type %s not implemented", *request.Component)
 		}
@@ -80,12 +73,9 @@ func handleMessage(_ *string, request *configs.WsMessage) *configs.WsMessage {
 			response.Error = &e
 			response.Data = nil
 		}
-
-		return &response
+		return
 	}
-	err := fmt.Errorf("bad request").Error()
-	response.Error = &err
-	return &response
+	log.Error("bad request, nothing can be done")
 }
 
 func updateUserActive(userID, active *string) error {

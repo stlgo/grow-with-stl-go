@@ -153,23 +153,17 @@ func Init() error {
 		}
 	}
 
-	// precache the inventory
+	// warm up the inventory cache
 	if _, err := getInventory(); err != nil {
 		return err
 	}
+
 	log.Debugf("%d categories in inventory cache", len(inventoryCache))
 	return nil
 }
 
-func handleWebsocketRequest(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
-	response := configs.WsMessage{
-		Route:        request.Route,
-		Type:         request.Type,
-		Component:    request.Component,
-		SubComponent: request.SubComponent,
-	}
-
-	if request.Type != nil {
+func handleWebsocketRequest(sessionID *string, request, response *configs.WsMessage) {
+	if request.Type != nil && response != nil {
 		var err error
 		switch *request.Type {
 		case getInventoryRequest:
@@ -179,16 +173,14 @@ func handleWebsocketRequest(sessionID *string, request *configs.WsMessage) *conf
 		case purchaseRequest:
 			response.Data, err = purchase(request.Component, request.SubComponent, request.Data)
 			if err == nil {
-				webservice.NotifyAll(sessionID, &response)
+				webservice.NotifyAll(sessionID, response)
 			}
 		default:
-			err := fmt.Sprintf("component %s not implemented", *request.Component)
-			log.Error(err)
-			response.Error = &err
+			err = fmt.Errorf("type %s not implemented", *request.Type)
 		}
 
 		if response.Data == nil {
-			e := "no data round"
+			e := "no data found"
 			log.Error(e)
 			response.Error = &e
 		}
@@ -199,12 +191,9 @@ func handleWebsocketRequest(sessionID *string, request *configs.WsMessage) *conf
 			response.Error = &e
 			response.Data = nil
 		}
-
-		return &response
+		return
 	}
-	err := fmt.Errorf("bad request").Error()
-	response.Error = &err
-	return &response
+	log.Error("bad request, nothing can be done")
 }
 
 func handleRESTRequest(w http.ResponseWriter, r *http.Request) {

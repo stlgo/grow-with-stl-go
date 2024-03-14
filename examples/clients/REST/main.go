@@ -27,6 +27,8 @@ import (
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/log"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -34,7 +36,83 @@ var (
 	baseURL    = "https://localhost:10443"
 	proxy      *string
 	extraCerts *string
+	client     *http.Client
+
+	user     string
+	password string
+
+	version = "(dev-version)"
+
+	rootCmd = &cobra.Command{
+		Use:     "grow-with-stl-go",
+		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes",
+		Run:     runAutomatedProcess,
+		Version: Version(),
+	}
 )
+
+func init() {
+	// pull the file version if it's available
+	if fileVersion, err := os.ReadFile("../../../version"); err == nil {
+		version = string(fileVersion)
+	}
+
+	// Add a 'version' command, in addition to the '--version' option that is auto created
+	rootCmd.AddCommand(versionCmd())
+
+	// Add the user
+	rootCmd.Flags().StringVarP(
+		&user,
+		"user",
+		"u",
+		"username",
+		"The user used for the REST request",
+	)
+
+	// Add the user
+	rootCmd.Flags().StringVarP(
+		&password,
+		"passwd",
+		"p",
+		"user",
+		"The password for the user specified for the REST request",
+	)
+}
+
+func versionCmd() *cobra.Command {
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Show version",
+		Long:  "Version for grow with stl-go binary",
+		Run: func(cmd *cobra.Command, _ []string) {
+			out := cmd.OutOrStdout()
+
+			fmt.Fprintln(out, "grow with stl-go version", Version())
+		},
+	}
+	return versionCmd
+}
+
+// Version returns application version
+func Version() string {
+	return version
+}
+
+func runAutomatedProcess(_ *cobra.Command, _ []string) {
+	log.Info("Start automated requests")
+	cert := "etc/cert.pem"
+	extraCerts = &cert
+	fullURL, err := url.JoinPath(baseURL, "index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("%s had status code of %d", fullURL, httpStatusCode)
+	log.Info(*txt)
+}
 
 func httpRequest(requestedURL, method string, payload *string) (responseText *string, httpStatusCode int, err error) {
 	startTime := time.Now()
@@ -57,12 +135,12 @@ func httpRequest(requestedURL, method string, payload *string) (responseText *st
 		}
 	}
 
-	client, err := getClient()
+	c, err := getClient()
 	if err != nil {
 		return nil, 503, err
 	}
 
-	response, err := client.Do(request)
+	response, err := c.Do(request)
 	if err != nil || response == nil || response.Body == nil {
 		log.Errorf("%s returned error %s in %dms", requestedURL, err, time.Since(startTime).Abs().Milliseconds())
 		return nil, 503, err
@@ -84,52 +162,54 @@ func httpRequest(requestedURL, method string, payload *string) (responseText *st
 }
 
 func getClient() (*http.Client, error) {
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
+	if client == nil {
+		client = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					MinVersion: tls.VersionTLS12,
+				},
 			},
-		},
-	}
-
-	var certPool *x509.CertPool
-	var err error
-	if extraCerts != nil {
-		certPool, err = getCertPool()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if proxy != nil {
-		proxyURL, err := url.Parse(*proxy)
-		if err != nil {
-			return nil, err
 		}
 
+		var certPool *x509.CertPool
+		var err error
 		if extraCerts != nil {
+			certPool, err = getCertPool()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if proxy != nil {
+			proxyURL, err := url.Parse(*proxy)
+			if err != nil {
+				return nil, err
+			}
+
+			if extraCerts != nil {
+				client = &http.Client{Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{
+						MinVersion: tls.VersionTLS12,
+						RootCAs:    certPool,
+					},
+					Proxy: http.ProxyURL(proxyURL),
+				}}
+			} else {
+				client = &http.Client{Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{
+						MinVersion: tls.VersionTLS12,
+					},
+					Proxy: http.ProxyURL(proxyURL),
+				}}
+			}
+		} else if certPool != nil {
 			client = &http.Client{Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
 					MinVersion: tls.VersionTLS12,
 					RootCAs:    certPool,
 				},
-				Proxy: http.ProxyURL(proxyURL),
-			}}
-		} else {
-			client = &http.Client{Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					MinVersion: tls.VersionTLS12,
-				},
-				Proxy: http.ProxyURL(proxyURL),
 			}}
 		}
-	} else if certPool != nil {
-		client = &http.Client{Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
-				RootCAs:    certPool,
-			},
-		}}
 	}
 
 	return client, nil
@@ -146,16 +226,8 @@ func getCertPool() (*x509.CertPool, error) {
 }
 
 func main() {
-	cert := "etc/cert.pem"
-	extraCerts = &cert
-	fullURL, err := url.JoinPath(baseURL, "index.html")
-	if err != nil {
-		log.Fatal(err)
+	if err := rootCmd.Execute(); err != nil {
+		log.Error(err)
+		os.Exit(1)
 	}
-	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Infof("%s had status code of %d", fullURL, httpStatusCode)
-	log.Info(*txt)
 }

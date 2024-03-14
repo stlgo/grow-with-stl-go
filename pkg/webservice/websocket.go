@@ -63,14 +63,14 @@ func init() {
 
 // this is a way to allow for arbitrary messages to be processed by the backend
 // the message of a specifc component is shunted to that subsystem for further processing
-var websocketFuncMap = map[string]func(*string, *configs.WsMessage) *configs.WsMessage{
+var websocketFuncMap = map[string]func(*string, *configs.WsMessage, *configs.WsMessage){
 	configs.WebsocketClient: handleMessage,
 }
 
 // AppendToWebsocketFunctionMap allows us to break up the circular reference from the other packages
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
-func AppendToWebsocketFunctionMap(requestType string, function func(*string, *configs.WsMessage) *configs.WsMessage) {
+func AppendToWebsocketFunctionMap(requestType string, function func(*string, *configs.WsMessage, *configs.WsMessage)) {
 	log.Debugf("Regestering '%s' as a WebSocket Endpoint", requestType)
 	websocketFuncMap[requestType] = function
 }
@@ -183,7 +183,14 @@ func (session *session) handleRequest(request *configs.WsMessage, transaction *a
 			}
 
 			// do the rest
-			response := handleMessageFunc(session.sessionID, request)
+			response := &configs.WsMessage{
+				Route:        request.Route,
+				Type:         request.Type,
+				Component:    request.Component,
+				SubComponent: request.SubComponent,
+			}
+
+			handleMessageFunc(session.sessionID, request, response)
 			if err := session.webSocketSend(response); err != nil {
 				log.Error(err)
 				session.onError()
@@ -199,9 +206,6 @@ func (session *session) handleRequest(request *configs.WsMessage, transaction *a
 		}
 		return
 	}
-	log.Info(request.Route)
-	log.Info(request.Type)
-	log.Error("invalid request route")
 	session.onError()
 }
 
@@ -315,28 +319,21 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 	return nil, errors.New("unable to process authentication request")
 }
 
-func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMessage {
-	response := configs.WsMessage{
-		Route:        request.Route,
-		Type:         request.Type,
-		Component:    request.Component,
-		SubComponent: request.SubComponent,
-	}
-
+func handleMessage(sessionID *string, request, response *configs.WsMessage) {
 	if request.Type != nil {
 		switch *request.Type {
 		case configs.GetPagelet:
-			getPagelet(request, &response)
+			getPagelet(request, response)
 		case configs.Keepalive:
 			log.Trace(fmt.Sprintf("keepalive received for session %s", *sessionID))
 		case configs.Auth:
 			if sessionID != nil {
 				if session, ok := sessions[*sessionID]; ok {
-					user, err := handleWebSocketAuth(request, &response)
+					user, err := handleWebSocketAuth(request, response)
 					session.user = user
 					if err != nil {
 						log.Error(err)
-						if err := session.webSocketSend(&response); err != nil {
+						if err := session.webSocketSend(response); err != nil {
 							log.Error(err)
 							session.onError()
 						}
@@ -349,11 +346,10 @@ func handleMessage(sessionID *string, request *configs.WsMessage) *configs.WsMes
 			log.Error(err)
 			response.Error = &err
 		}
-		return &response
+		return
 	}
 	err := fmt.Errorf("bad request").Error()
 	response.Error = &err
-	return &response
 }
 
 func getPagelet(request, response *configs.WsMessage) {
