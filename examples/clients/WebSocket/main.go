@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
@@ -98,8 +99,8 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	}
 
 	onMessage := make(chan string)
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
+	onClose := make(chan os.Signal, 1)
+	signal.Notify(onClose, os.Interrupt)
 
 	u := url.URL{Scheme: "wss", Host: host, Path: "/ws/v1.0.0"}
 	log.Infof("connecting to %s", u.String())
@@ -117,14 +118,12 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	}
 	defer ws.Close()
 
-	done := make(chan struct{})
-
 	go func() {
-		defer close(done)
 		for {
 			_, message, err := ws.ReadMessage()
 			if err != nil {
-				log.Error("read:", err)
+				log.Error(err)
+				onClose <- syscall.SIGINT
 				return
 			}
 			onMessage <- string(message)
@@ -135,7 +134,7 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 		select {
 		case m := <-onMessage:
 			log.Info(m)
-		case <-interrupt:
+		case <-onClose:
 			log.Info("interrupt")
 			ws.Close()
 			return
