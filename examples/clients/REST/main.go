@@ -44,7 +44,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:     "grow-with-stl-go",
-		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes",
+		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
 		Run:     runAutomatedProcess,
 		Version: version(),
 	}
@@ -55,10 +55,10 @@ func init() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Show version",
-		Long:  "Version for grow with stl-go binary",
+		Long:  "Version for grow with stl-go REST client binary",
 		Run: func(cmd *cobra.Command, _ []string) {
 			out := cmd.OutOrStdout()
-			fmt.Fprintln(out, "grow with stl-go version", version())
+			fmt.Fprintln(out, "grow with stl-go REST client version", version())
 		},
 	})
 
@@ -105,7 +105,15 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 			"Authorization": fmt.Sprintf("Bearer %s", *token),
 			"sessionID":     *sessinID,
 		}
-		getInventory(headers)
+		inventory := getInventory(headers)
+		category := "Herb"
+		commonName := "Basil"
+		seedID := getHerbID(&category, &commonName, inventory)
+		if seedID != nil {
+			getDetail(&category, seedID, headers)
+			purchaseSeed(&category, seedID, 1, headers)
+			getDetail(&category, seedID, headers)
+		}
 	}
 }
 
@@ -153,7 +161,7 @@ func login() (token, sessionID *string) {
 	return &tokenStr, &sessionIDStr
 }
 
-func getInventory(headers map[string]string) {
+func getInventory(headers map[string]string) map[string]interface{} {
 	fullURL, err := url.JoinPath(baseURL, "/REST/v1.0.0/seeds/getInventory")
 	if err != nil {
 		log.Fatal(err)
@@ -164,7 +172,101 @@ func getInventory(headers map[string]string) {
 		log.Fatal(err)
 	}
 
-	log.Infof("%s had status code of %d with the text of %s", fullURL, httpStatusCode, *txt)
+	var jo map[string]interface{}
+	err = json.Unmarshal([]byte(*txt), &jo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	jsonBytes, err := json.MarshalIndent(jo, "", "\t")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Infof("%s had status code of %d with the data:\n%s", fullURL, httpStatusCode, string(jsonBytes))
+	return jo
+}
+
+func getHerbID(category, commonName *string, jo map[string]any) *string {
+	if herb, ok := jo[*category]; ok {
+		if items, ok := herb.(map[string]interface{})["items"]; ok {
+			for seedID, details := range items.(map[string]interface{}) {
+				if herbName, ok := details.(map[string]interface{})["commonName"]; ok {
+					if herbStr, ok := herbName.(string); ok {
+						if strings.EqualFold(herbStr, *commonName) {
+							return &seedID
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func getDetail(category, seedID *string, headers map[string]string) {
+	fullURL, err := url.JoinPath(baseURL, fmt.Sprintf("/REST/v1.0.0/seeds/getDetail/%s/%s", *category, *seedID))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, headers, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var jo map[string]interface{}
+	err = json.Unmarshal([]byte(*txt), &jo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	jsonBytes, err := json.MarshalIndent(jo, "", "\t")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Infof("%s had status code of %d with the data:\n%s", fullURL, httpStatusCode, string(jsonBytes))
+}
+
+func purchaseSeed(category, seedID *string, quantity int, headers map[string]string) {
+	fullURL, err := url.JoinPath(baseURL, "/REST/v1.0.0/seeds/purchase")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	loginStruct := map[string]any{
+		"id":       *seedID,
+		"category": *category,
+		"quantity": quantity,
+	}
+
+	// marshall the StructJSON object to a byte array
+	payloadBytes, err := json.Marshal(loginStruct)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	payload := string(payloadBytes)
+	log.Info(payload)
+
+	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, headers, &payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var jo map[string]interface{}
+	err = json.Unmarshal([]byte(*txt), &jo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	jsonBytes, err := json.MarshalIndent(jo, "", "\t")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Infof("%s had status code of %d with the data:\n%s", fullURL, httpStatusCode, string(jsonBytes))
 }
 
 func httpRequest(requestedURL, method string, headers map[string]string, payload *string) (responseText *string, httpStatusCode int, err error) {

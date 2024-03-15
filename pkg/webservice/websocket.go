@@ -63,14 +63,14 @@ func init() {
 
 // this is a way to allow for arbitrary messages to be processed by the backend
 // the message of a specifc component is shunted to that subsystem for further processing
-var websocketFuncMap = map[string]func(*string, *configs.WsMessage, *configs.WsMessage){
+var websocketFuncMap = map[string]func(*configs.WsMessage, *configs.WsMessage){
 	configs.WebsocketClient: handleMessage,
 }
 
 // AppendToWebsocketFunctionMap allows us to break up the circular reference from the other packages
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
-func AppendToWebsocketFunctionMap(requestType string, function func(*string, *configs.WsMessage, *configs.WsMessage)) {
+func AppendToWebsocketFunctionMap(requestType string, function func(*configs.WsMessage, *configs.WsMessage)) {
 	log.Debugf("Regestering '%s' as a WebSocket Endpoint", requestType)
 	websocketFuncMap[requestType] = function
 }
@@ -190,7 +190,7 @@ func (session *session) handleRequest(request *configs.WsMessage, transaction *a
 				SubComponent: request.SubComponent,
 			}
 
-			handleMessageFunc(session.sessionID, request, response)
+			handleMessageFunc(request, response)
 			if err := session.webSocketSend(response); err != nil {
 				log.Error(err)
 				session.onError()
@@ -319,26 +319,24 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 	return nil, errors.New("unable to process authentication request")
 }
 
-func handleMessage(sessionID *string, request, response *configs.WsMessage) {
-	if request.Type != nil {
+func handleMessage(request, response *configs.WsMessage) {
+	if request.Type != nil && request.SessionID != nil {
 		switch *request.Type {
 		case configs.GetPagelet:
 			getPagelet(request, response)
 		case configs.Keepalive:
-			log.Trace(fmt.Sprintf("keepalive received for session %s", *sessionID))
+			log.Trace(fmt.Sprintf("keepalive received for session %s", *request.SessionID))
 		case configs.Auth:
-			if sessionID != nil {
-				if session, ok := sessions[*sessionID]; ok {
-					user, err := handleWebSocketAuth(request, response)
-					session.user = user
-					if err != nil {
+			if session, ok := sessions[*request.SessionID]; ok {
+				user, err := handleWebSocketAuth(request, response)
+				session.user = user
+				if err != nil {
+					log.Error(err)
+					if err := session.webSocketSend(response); err != nil {
 						log.Error(err)
-						if err := session.webSocketSend(response); err != nil {
-							log.Error(err)
-							session.onError()
-						}
-						session.onClose()
+						session.onError()
 					}
+					session.onClose()
 				}
 			}
 		default:

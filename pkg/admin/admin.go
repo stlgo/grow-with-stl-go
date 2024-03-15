@@ -45,7 +45,7 @@ func Init() {
 	}
 }
 
-func handleMessage(_ *string, request, response *configs.WsMessage) {
+func handleMessage(request, response *configs.WsMessage) {
 	if request.Type != nil && response != nil && (request.IsAdmin != nil && *request.IsAdmin) {
 		var err error
 		switch *request.Type {

@@ -17,14 +17,13 @@ package seeds
 import (
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 )
 
-func initSeedsTest() {
+func initInventoryTest() {
 	configFile := "../../etc/grow-with-stl-go.json"
 	configs.ConfigFile = &configFile
 	if err := configs.SetGrowSTLGoConfig(); err != nil {
@@ -32,21 +31,12 @@ func initSeedsTest() {
 	}
 }
 
-func TestSeedFunctions(t *testing.T) {
-	initSeedsTest()
-	t.Run("Test the websocket", func(t *testing.T) {
-		seeds := "seeds"
-		getInventoryRequest := "getInventory"
-		sessionID := uuid.New().String()
-		request := &configs.WsMessage{
-			Route:     &seeds,
-			Type:      &getInventoryRequest,
-			SessionID: &sessionID,
-		}
-		response := request
-
-		handleWebsocketRequest(request, response)
-		require.NotNil(t, response.Data)
-		log.Info(response.Data)
+func TestInventoryFunctions(t *testing.T) {
+	initInventoryTest()
+	t.Run("Test grabbing the inventory", func(t *testing.T) {
+		data, err := getInventory()
+		require.NoError(t, err)
+		require.NotNil(t, data)
+		log.Info(data)
 	})
 }
