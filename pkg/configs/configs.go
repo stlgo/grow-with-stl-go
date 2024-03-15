@@ -69,6 +69,7 @@ const (
 
 	// http error message "json" to return on errors as a const
 	NotFoundError       = `{"error": "Not Found", "status": 404}`
+	NotImplementedError = `{"error": "Not Implemented", "status": 501}`
 	BadRequestError     = `{"error": "Bad Request", "status": 400}`
 	IntenralServerError = `{"error": "Internal Server Error", "status": 500}`
 	UnauthorizedError   = `{"error": "Unauthorized", "status": 401}`

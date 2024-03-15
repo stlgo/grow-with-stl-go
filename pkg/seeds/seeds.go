@@ -202,13 +202,17 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 
 	switch uriParts[0] {
 	case getInventoryRequest:
-		data, err := getInventory()
-		if err != nil {
-			log.Error(err)
-			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+		if strings.EqualFold(r.Method, http.MethodGet) {
+			data, err := getInventory()
+			if err != nil {
+				log.Error(err)
+				http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+				return
+			}
+			writeRESTResponse(data, w, http.StatusOK)
 			return
 		}
-		writeRESTResponse(data, w)
+		log.Info(r.Method)
 	case getDetailRequest:
 		if len(uriParts) >= 2 {
 			data, err := getDetail(&uriParts[1], &uriParts[2])
@@ -217,7 +221,7 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
 				return
 			}
-			writeRESTResponse(data, w)
+			writeRESTResponse(data, w, http.StatusOK)
 			return
 		}
 		http.Error(w, configs.BadRequestError, http.StatusBadRequest)
@@ -229,9 +233,11 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, configs.NotFoundError, http.StatusNotFound)
 		return
 	}
+	log.Errorf("%s URI with Method %s not possible", restURI, r.Method)
+	http.Error(w, configs.NotImplementedError, http.StatusNotImplemented)
 }
 
-func writeRESTResponse(data interface{}, w http.ResponseWriter) {
+func writeRESTResponse(data interface{}, w http.ResponseWriter, httpStatus int) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		log.Error(err)
@@ -239,7 +245,7 @@ func writeRESTResponse(data interface{}, w http.ResponseWriter) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(httpStatus)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Error(err)
@@ -309,7 +315,7 @@ func purchaseREST(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				writeRESTResponse(data, w)
+				writeRESTResponse(data, w, http.StatusCreated)
 				return
 			}
 		}

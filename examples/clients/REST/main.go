@@ -101,11 +101,16 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	token, sessinID := login()
 	if token != nil && sessinID != nil {
 		log.Infof("%s %s", *token, *sessinID)
+		headers := map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", *token),
+			"sessionID":     *sessinID,
+		}
+		getInventory(headers)
 	}
 }
 
 func login() (token, sessionID *string) {
-	fullURL, err := url.JoinPath(baseURL, "REST/v1.0.0/token")
+	fullURL, err := url.JoinPath(baseURL, "/REST/v1.0.0/token")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,7 +129,7 @@ func login() (token, sessionID *string) {
 	payload := string(payloadBytes)
 	log.Info(payload)
 
-	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, &payload)
+	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, nil, &payload)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -148,7 +153,21 @@ func login() (token, sessionID *string) {
 	return &tokenStr, &sessionIDStr
 }
 
-func httpRequest(requestedURL, method string, payload *string) (responseText *string, httpStatusCode int, err error) {
+func getInventory(headers map[string]string) {
+	fullURL, err := url.JoinPath(baseURL, "/REST/v1.0.0/seeds/getInventory")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, headers, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Infof("%s had status code of %d with the text of %s", fullURL, httpStatusCode, *txt)
+}
+
+func httpRequest(requestedURL, method string, headers map[string]string, payload *string) (responseText *string, httpStatusCode int, err error) {
 	startTime := time.Now()
 	_, ok := methods[method]
 	if !ok {
@@ -156,7 +175,7 @@ func httpRequest(requestedURL, method string, payload *string) (responseText *st
 	}
 
 	var request *http.Request
-	if payload != nil {
+	if payload != nil && strings.EqualFold(method, http.MethodPost) {
 		request, err = http.NewRequest(method, requestedURL, strings.NewReader(*payload))
 		if err != nil {
 			return nil, 503, err
@@ -166,6 +185,12 @@ func httpRequest(requestedURL, method string, payload *string) (responseText *st
 		request, err = http.NewRequest(method, requestedURL, http.NoBody)
 		if err != nil {
 			return nil, 503, err
+		}
+	}
+
+	if headers != nil {
+		for key, value := range headers {
+			request.Header.Add(key, value)
 		}
 	}
 
