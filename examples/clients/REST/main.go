@@ -17,6 +17,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -38,31 +39,34 @@ var (
 	extraCerts *string
 	client     *http.Client
 
-	user     string
-	password string
-
-	version = "(dev-version)"
+	user     *string
+	password *string
 
 	rootCmd = &cobra.Command{
 		Use:     "grow-with-stl-go",
 		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes",
 		Run:     runAutomatedProcess,
-		Version: Version(),
+		Version: version(),
 	}
 )
 
 func init() {
-	// pull the file version if it's available
-	if fileVersion, err := os.ReadFile("../../../version"); err == nil {
-		version = string(fileVersion)
-	}
-
 	// Add a 'version' command, in addition to the '--version' option that is auto created
-	rootCmd.AddCommand(versionCmd())
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Show version",
+		Long:  "Version for grow with stl-go binary",
+		Run: func(cmd *cobra.Command, _ []string) {
+			out := cmd.OutOrStdout()
+			fmt.Fprintln(out, "grow with stl-go version", version())
+		},
+	})
 
 	// Add the user
+	u := ""
+	user = &u
 	rootCmd.Flags().StringVarP(
-		&user,
+		user,
 		"user",
 		"u",
 		"username",
@@ -70,48 +74,78 @@ func init() {
 	)
 
 	// Add the user
+	p := ""
+	password = &p
 	rootCmd.Flags().StringVarP(
-		&password,
+		password,
 		"passwd",
 		"p",
-		"user",
+		"password",
 		"The password for the user specified for the REST request",
 	)
 }
 
-func versionCmd() *cobra.Command {
-	versionCmd := &cobra.Command{
-		Use:   "version",
-		Short: "Show version",
-		Long:  "Version for grow with stl-go binary",
-		Run: func(cmd *cobra.Command, _ []string) {
-			out := cmd.OutOrStdout()
-
-			fmt.Fprintln(out, "grow with stl-go version", Version())
-		},
-	}
-	return versionCmd
-}
-
 // Version returns application version
-func Version() string {
-	return version
+func version() string {
+	// pull the file version if it's available
+	if fileVersion, err := os.ReadFile("version"); err == nil {
+		return string(fileVersion)
+	}
+	return "dev-version"
 }
 
 func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	log.Info("Start automated requests")
 	cert := "etc/cert.pem"
 	extraCerts = &cert
-	fullURL, err := url.JoinPath(baseURL, "index.html")
+	token, sessinID := login()
+	if token != nil && sessinID != nil {
+		log.Infof("%s %s", *token, *sessinID)
+	}
+}
+
+func login() (token, sessionID *string) {
+	fullURL, err := url.JoinPath(baseURL, "REST/v1.0.0/token")
 	if err != nil {
 		log.Fatal(err)
 	}
-	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, nil)
+
+	loginStruct := map[string]string{
+		"id":       *user,
+		"password": *password,
+	}
+
+	// marshall the StructJSON object to a byte array
+	payloadBytes, err := json.Marshal(loginStruct)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("%s had status code of %d", fullURL, httpStatusCode)
-	log.Info(*txt)
+
+	payload := string(payloadBytes)
+	log.Info(payload)
+
+	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, &payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Infof("%s had status code of %d with the text of %s", fullURL, httpStatusCode, *txt)
+
+	var jo map[string]string
+	if err = json.Unmarshal([]byte(*txt), &jo); err != nil {
+		log.Fatal(err)
+	}
+
+	tokenStr, ok := jo["token"]
+	if !ok {
+		log.Fatal("no token in server response")
+	}
+
+	sessionIDStr, ok := jo["sessionID"]
+	if !ok {
+		log.Fatal("no sessionID in server response")
+	}
+	return &tokenStr, &sessionIDStr
 }
 
 func httpRequest(requestedURL, method string, payload *string) (responseText *string, httpStatusCode int, err error) {
