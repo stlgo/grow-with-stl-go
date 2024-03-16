@@ -17,16 +17,20 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
 
 	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/utils"
 )
 
 var (
@@ -39,6 +43,15 @@ var (
 	user     *string
 	password *string
 
+	// WebSocket constructs
+	onError    = make(chan error)
+	onClose    = make(chan os.Signal, 1)
+	writeMutex sync.Mutex
+
+	// Things used in WebSocket messages
+	sessionID *string
+	token     *string
+
 	rootCmd = &cobra.Command{
 		Use:     "grow-with-stl-go",
 		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
@@ -46,6 +59,30 @@ var (
 		Version: version(),
 	}
 )
+
+type wsMessage struct {
+	// base components of a message
+	Route        *string `json:"route,omitempty"`
+	Type         *string `json:"type,omitempty"`
+	Component    *string `json:"component,omitempty"`
+	SubComponent *string `json:"subComponent,omitempty"`
+	SessionID    *string `json:"sessionID,omitempty"`
+	Timestamp    *int64  `json:"timestamp,omitempty"`
+
+	// additional conditional components that may or may not be involved in the request / response
+	Data  interface{} `json:"data,omitempty"`
+	Error *string     `json:"error,omitempty"`
+
+	// used for authentication
+	Authentication *authentication `json:"authentication,omitempty"`
+	Token          *string         `json:"token,omitempty"`
+	RefreshToken   *string         `json:"refreshToken,omitempty"`
+}
+
+type authentication struct {
+	ID       *string `json:"id,omitempty"`
+	Password *string `json:"password,omitempty"`
+}
 
 func init() {
 	// Add a 'version' command, in addition to the '--version' option that is auto created
@@ -98,8 +135,6 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 		log.Fatalf("ssl cert error %s", err)
 	}
 
-	onMessage := make(chan string)
-	onClose := make(chan os.Signal, 1)
 	signal.Notify(onClose, os.Interrupt)
 
 	u := url.URL{Scheme: "wss", Host: host, Path: "/ws/v1.0.0"}
@@ -118,26 +153,125 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	}
 	defer ws.Close()
 
-	go func() {
-		for {
-			_, message, err := ws.ReadMessage()
-			if err != nil {
-				log.Error(err)
-				onClose <- syscall.SIGINT
-				return
-			}
-			onMessage <- string(message)
-		}
-	}()
+	go onOpen()
 
 	for {
 		select {
-		case m := <-onMessage:
-			log.Info(m)
+		case err := <-onError:
+			log.Error(err)
+			onClose <- syscall.SIGINT
 		case <-onClose:
-			log.Info("interrupt")
+			log.Info("CLosing the websocket connection ane exiting")
 			ws.Close()
 			return
+		}
+	}
+}
+
+func onOpen() {
+	for {
+		var message *wsMessage
+		err := ws.ReadJSON(&message)
+		if err != nil {
+			onError <- err
+			break
+		}
+		go onMessage(message)
+	}
+}
+
+func onMessage(message *wsMessage) {
+	if message != nil && message.Route != nil {
+		switch *message.Route {
+		case "websocketclient":
+			handleClientMessages(message)
+		case "seeds":
+			displayJSON(message.Data)
+		default:
+			onError <- fmt.Errorf("unable to determine what to do with %s route", *message.Route)
+		}
+	}
+}
+
+func webSocketSend(message *wsMessage) error {
+	writeMutex.Lock()
+	defer writeMutex.Unlock()
+	message.Timestamp = utils.CurrentTimeInMillis()
+	message.SessionID = sessionID
+	message.Token = token
+
+	return ws.WriteJSON(message)
+}
+
+func handleClientMessages(message *wsMessage) {
+	if message != nil && message.Type != nil {
+		switch *message.Type {
+		case "initialize":
+			if message.SessionID != nil {
+				sessionID = message.SessionID
+				login()
+				return
+			}
+			onError <- errors.New("no session id on initialize")
+		case "auth":
+			log.Infof("Authentication was %s", *message.SubComponent)
+			if message.Token != nil {
+				token = message.Token
+				getInventory()
+				return
+			}
+			onError <- errors.New("no toke on auth response")
+		default:
+			onError <- fmt.Errorf("unable to determine what to do with client type %s", *message.Type)
+		}
+	}
+}
+
+func login() {
+	log.Info("Attempting to authenticate")
+
+	route := "websocketclient"
+	wsType := "auth"
+	component := "authenticate"
+
+	if err := webSocketSend(&wsMessage{
+		Route:     &route,
+		Type:      &wsType,
+		Component: &component,
+		Authentication: &authentication{
+			ID:       user,
+			Password: password,
+		},
+	}); err != nil {
+		onError <- err
+	}
+}
+
+func getInventory() {
+	log.Info("Attempting to get Inventory")
+
+	route := "seeds"
+	wsType := "getInventory"
+	component := "getInventory"
+
+	if err := webSocketSend(&wsMessage{
+		Route:     &route,
+		Type:      &wsType,
+		Component: &component,
+	}); err != nil {
+		onError <- err
+	}
+}
+
+func displayJSON(data interface{}) {
+	if data != nil {
+		if jo, ok := data.(map[string]interface{}); ok {
+			jsonBytes, err := json.MarshalIndent(jo, "", "\t")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Infof("\n%s", string(jsonBytes))
 		}
 	}
 }
