@@ -108,11 +108,10 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 		inventory := getInventory(headers)
 		category := "Herb"
 		commonName := "Basil"
-		seedID := getHerbID(&category, &commonName, inventory)
+		seedID := getSeedID(&category, &commonName, inventory)
 		if seedID != nil {
 			getDetail(&category, seedID, headers)
 			purchaseSeed(&category, seedID, 1, headers)
-			getDetail(&category, seedID, headers)
 		}
 	}
 }
@@ -187,9 +186,9 @@ func getInventory(headers map[string]string) map[string]interface{} {
 	return jo
 }
 
-func getHerbID(category, commonName *string, jo map[string]any) *string {
-	if herb, ok := jo[*category]; ok {
-		if items, ok := herb.(map[string]interface{})["items"]; ok {
+func getSeedID(categoryName, commonName *string, jo map[string]any) *string {
+	if category, ok := jo[*categoryName]; ok {
+		if items, ok := category.(map[string]interface{})["items"]; ok {
 			for seedID, details := range items.(map[string]interface{}) {
 				if herbName, ok := details.(map[string]interface{})["commonName"]; ok {
 					if herbStr, ok := herbName.(string); ok {

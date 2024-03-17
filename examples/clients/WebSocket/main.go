@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -43,9 +44,9 @@ var (
 	user     *string
 	password *string
 
-	// WebSocket constructs
-	onError    = make(chan error)
-	onClose    = make(chan os.Signal, 1)
+	osInterrupt = make(chan os.Signal, 1)
+
+	// WebSocket send message mutex
 	writeMutex sync.Mutex
 
 	// Things used in WebSocket messages
@@ -54,7 +55,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:     "grow-with-stl-go",
-		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
+		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its WebSocket example client",
 		Run:     runAutomatedProcess,
 		Version: version(),
 	}
@@ -128,6 +129,24 @@ func version() string {
 	return "dev-version"
 }
 
+func getCertPool() (*x509.CertPool, error) {
+	caCert, err := os.ReadFile("etc/cert.pem")
+	if err != nil {
+		return nil, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	return caCertPool, nil
+}
+
+func handleOsInterrupt() {
+	<-osInterrupt
+	log.Info("Closing active session")
+	onClose()
+	log.Info("Exiting the websocket client")
+	os.Exit(0)
+}
+
 func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	log.Info("Start automated requests")
 	caCerts, err := getCertPool()
@@ -135,7 +154,8 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 		log.Fatalf("ssl cert error %s", err)
 	}
 
-	signal.Notify(onClose, os.Interrupt)
+	signal.Notify(osInterrupt, os.Interrupt, syscall.SIGTERM)
+	go handleOsInterrupt()
 
 	u := url.URL{Scheme: "wss", Host: host, Path: "/ws/v1.0.0"}
 	log.Infof("connecting to %s", u.String())
@@ -154,18 +174,7 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	defer ws.Close()
 
 	go onOpen()
-
-	for {
-		select {
-		case err := <-onError:
-			log.Error(err)
-			onClose <- syscall.SIGINT
-		case <-onClose:
-			log.Info("CLosing the websocket connection ane exiting")
-			ws.Close()
-			return
-		}
-	}
+	<-osInterrupt
 }
 
 func onOpen() {
@@ -173,7 +182,7 @@ func onOpen() {
 		var message *wsMessage
 		err := ws.ReadJSON(&message)
 		if err != nil {
-			onError <- err
+			onError(err)
 			break
 		}
 		go onMessage(message)
@@ -186,11 +195,22 @@ func onMessage(message *wsMessage) {
 		case "websocketclient":
 			handleClientMessages(message)
 		case "seeds":
-			displayJSON(message.Data)
+			handleSeedMessages(message)
 		default:
-			onError <- fmt.Errorf("unable to determine what to do with %s route", *message.Route)
+			onError(fmt.Errorf("unable to determine what to do with %s route", *message.Route))
 		}
 	}
+}
+
+func onError(err error) {
+	log.Error(err)
+	onClose()
+}
+
+func onClose() {
+	log.Info("CLosing the websocket connection and exiting")
+	ws.Close()
+	osInterrupt <- syscall.SIGINT
 }
 
 func webSocketSend(message *wsMessage) error {
@@ -212,7 +232,7 @@ func handleClientMessages(message *wsMessage) {
 				login()
 				return
 			}
-			onError <- errors.New("no session id on initialize")
+			onError(errors.New("no session id on initialize"))
 		case "auth":
 			log.Infof("Authentication was %s", *message.SubComponent)
 			if message.Token != nil {
@@ -220,9 +240,34 @@ func handleClientMessages(message *wsMessage) {
 				getInventory()
 				return
 			}
-			onError <- errors.New("no toke on auth response")
+			onError(errors.New("no toke on auth response"))
 		default:
-			onError <- fmt.Errorf("unable to determine what to do with client type %s", *message.Type)
+			onError(fmt.Errorf("unable to determine what to do with client type %s", *message.Type))
+		}
+	}
+}
+
+func handleSeedMessages(message *wsMessage) {
+	if message != nil && message.Type != nil {
+		switch *message.Type {
+		case "getInventory":
+			if message.Data != nil {
+				inventory := displayJSON(message.Data)
+				category := "Herb"
+				commonName := "Basil"
+				getSeedDetail(getSeedID(&category, &commonName, inventory))
+				return
+			}
+			onError(errors.New("no session id on initialize"))
+		case "getDetail":
+			displayJSON(message.Data)
+			purchaseSeed(message.Component, message.SubComponent)
+		case "purchase":
+			displayJSON(message.Data)
+			log.Info("Purchase completed exiting the client")
+			onClose()
+		default:
+			onError(fmt.Errorf("unable to determine what to do with client type %s", *message.Type))
 		}
 	}
 }
@@ -243,7 +288,7 @@ func login() {
 			Password: password,
 		},
 	}); err != nil {
-		onError <- err
+		onError(err)
 	}
 }
 
@@ -259,31 +304,83 @@ func getInventory() {
 		Type:      &wsType,
 		Component: &component,
 	}); err != nil {
-		onError <- err
+		onError(err)
 	}
 }
 
-func displayJSON(data interface{}) {
+func getSeedDetail(seedID *string) {
+	if seedID != nil {
+		log.Infof("Attempting to get detail for seed ID %s", *seedID)
+
+		route := "seeds"
+		wsType := "getDetail"
+		component := "Herb"
+
+		if err := webSocketSend(&wsMessage{
+			Route:        &route,
+			Type:         &wsType,
+			Component:    &component,
+			SubComponent: seedID,
+		}); err != nil {
+			onError(err)
+		}
+		return
+	}
+	onError(errors.New("cannot get detail from nil seed id"))
+}
+
+func purchaseSeed(seedType, seedID *string) {
+	if seedID != nil {
+		log.Infof("Attempting to purchase seed ID %s", *seedID)
+
+		route := "seeds"
+		wsType := "purchase"
+
+		if err := webSocketSend(&wsMessage{
+			Route:        &route,
+			Type:         &wsType,
+			Component:    seedType,
+			SubComponent: seedID,
+			Data: &map[string]any{
+				"id":       seedID,
+				"quantity": 1,
+			},
+		}); err != nil {
+			onError(err)
+		}
+	}
+}
+
+func getSeedID(categoryName, commonName *string, jo map[string]any) *string {
+	if category, ok := jo[*categoryName]; ok {
+		if items, ok := category.(map[string]interface{})["items"]; ok {
+			for seedID, details := range items.(map[string]interface{}) {
+				if herbName, ok := details.(map[string]interface{})["commonName"]; ok {
+					if herbStr, ok := herbName.(string); ok {
+						if strings.EqualFold(herbStr, *commonName) {
+							return &seedID
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func displayJSON(data interface{}) map[string]any {
 	if data != nil {
-		if jo, ok := data.(map[string]interface{}); ok {
+		if jo, ok := data.(map[string]any); ok {
 			jsonBytes, err := json.MarshalIndent(jo, "", "\t")
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			log.Infof("\n%s", string(jsonBytes))
+			return jo
 		}
 	}
-}
-
-func getCertPool() (*x509.CertPool, error) {
-	caCert, err := os.ReadFile("etc/cert.pem")
-	if err != nil {
-		return nil, err
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	return caCertPool, nil
+	return nil
 }
 
 func main() {
