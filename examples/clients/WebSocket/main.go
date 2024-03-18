@@ -109,7 +109,7 @@ func init() {
 		"The user used for the REST request",
 	)
 
-	// Add the user
+	// Add the password
 	p := ""
 	password = &p
 	rootCmd.Flags().StringVarP(
@@ -120,6 +120,7 @@ func init() {
 		"The password for the user specified for the REST request",
 	)
 
+	// add the wait flag
 	rootCmd.Flags().BoolVarP(
 		&wait,
 		"wait",
