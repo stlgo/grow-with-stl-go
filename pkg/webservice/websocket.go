@@ -377,13 +377,14 @@ func getPagelet(request, response *configs.WsMessage) {
 
 // NotifyAll will broadcast a user event to all websocket clients currently attached
 func NotifyAll(sessionID *string, message *configs.WsMessage) {
-	if sessionID != nil && message != nil {
+	if message != nil {
 		for _, session := range sessions {
 			// don't send a notification to the user that requested the action
-			if session != nil && session.sessionID != nil && !strings.EqualFold(*sessionID, *session.sessionID) {
-				if err := session.webSocketSend(message); err != nil {
-					log.Error(err)
-				}
+			if session != nil && session.sessionID != nil && sessionID != nil && strings.EqualFold(*sessionID, *session.sessionID) {
+				continue
+			}
+			if err := session.webSocketSend(message); err != nil {
+				log.Error(err)
 			}
 		}
 	}

@@ -64,10 +64,7 @@ func handleWebsocketRequest(request, response *configs.WsMessage) {
 		case getDetailRequest:
 			response.Data, err = getDetail(request.Component, request.SubComponent)
 		case purchaseRequest:
-			response.Data, err = purchase(request.Component, request.SubComponent, request.Data)
-			if err == nil {
-				webservice.NotifyAll(request.SessionID, response)
-			}
+			response.Data, err = purchase(request.Component, request.SubComponent, request.SessionID, request.Data)
 		default:
 			err = fmt.Errorf("type %s not implemented", *request.Type)
 		}
@@ -180,7 +177,7 @@ func purchaseREST(w http.ResponseWriter, r *http.Request) {
 
 		if category, ok := requestBody["category"].(string); ok {
 			if seedID, ok := requestBody["id"].(string); ok {
-				data, err := purchase(&category, &seedID, requestBody)
+				data, err := purchase(&category, &seedID, nil, requestBody)
 				if err != nil {
 					log.Error(err)
 					http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
@@ -197,7 +194,7 @@ func purchaseREST(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, configs.BadRequestError, http.StatusBadRequest)
 }
 
-func purchase(categoryName, seedID *string, data interface{}) (*InventoryItem, error) {
+func purchase(categoryName, seedID, sessionID *string, data interface{}) (*InventoryItem, error) {
 	if categoryName != nil && seedID != nil && data != nil {
 		if rawData, ok := data.(map[string]interface{}); ok {
 			if category, ok := inventoryCache[*categoryName]; ok && category != nil {
@@ -212,6 +209,7 @@ func purchase(categoryName, seedID *string, data interface{}) (*InventoryItem, e
 						if err := updateItemInDB(item); err != nil {
 							return nil, err
 						}
+						go notifyAll(categoryName, seedID, sessionID, item)
 						return item, nil
 					}
 					return nil, errors.New("cannot purchase more packets than what the inventory contains")
@@ -220,6 +218,19 @@ func purchase(categoryName, seedID *string, data interface{}) (*InventoryItem, e
 		}
 	}
 	return nil, fmt.Errorf("item not found")
+}
+
+func notifyAll(categoryName, seedID, sessionID *string, item *InventoryItem) {
+	route := seeds
+	requestType := "purchase"
+	response := &configs.WsMessage{
+		Route:        &route,
+		Type:         &requestType,
+		Component:    categoryName,
+		SubComponent: seedID,
+		Data:         item,
+	}
+	webservice.NotifyAll(sessionID, response)
 }
 
 func determineQuantity(data interface{}) (*int, error) {

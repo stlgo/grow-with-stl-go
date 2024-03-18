@@ -43,6 +43,7 @@ var (
 
 	user     *string
 	password *string
+	wait     = false
 
 	osInterrupt = make(chan os.Signal, 1)
 
@@ -117,6 +118,14 @@ func init() {
 		"p",
 		"password",
 		"The password for the user specified for the REST request",
+	)
+
+	rootCmd.Flags().BoolVarP(
+		&wait,
+		"wait",
+		"w",
+		false,
+		"wait after the auto transactions",
 	)
 }
 
@@ -264,8 +273,11 @@ func handleSeedMessages(message *wsMessage) {
 			purchaseSeed(message.Component, message.SubComponent)
 		case "purchase":
 			displayJSON(message.Data)
-			log.Info("Purchase completed exiting the client")
-			onClose()
+			if !wait {
+				log.Info("Purchase completed exiting the client")
+				onClose()
+			}
+			log.Info("Waiting for other messages from the server")
 		default:
 			onError(fmt.Errorf("unable to determine what to do with client type %s", *message.Type))
 		}
