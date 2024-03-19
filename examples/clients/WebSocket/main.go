@@ -250,7 +250,7 @@ func handleClientMessages(message *wsMessage) {
 				getInventory()
 				return
 			}
-			onError(errors.New("no toke on auth response"))
+			onError(errors.New("no token on auth response"))
 		default:
 			onError(fmt.Errorf("unable to determine what to do with client type %s", *message.Type))
 		}
@@ -262,7 +262,7 @@ func handleSeedMessages(message *wsMessage) {
 		switch *message.Type {
 		case "getInventory":
 			if message.Data != nil {
-				inventory := displayJSON(message.Data)
+				inventory := displayJSON(message)
 				category := "Herb"
 				commonName := "Basil"
 				getSeedDetail(getSeedID(&category, &commonName, inventory))
@@ -270,10 +270,10 @@ func handleSeedMessages(message *wsMessage) {
 			}
 			onError(errors.New("no session id on initialize"))
 		case "getDetail":
-			displayJSON(message.Data)
+			displayJSON(message)
 			purchaseSeed(message.Component, message.SubComponent)
 		case "purchase":
-			displayJSON(message.Data)
+			displayJSON(message)
 			if !wait {
 				log.Info("Purchase completed exiting the client")
 				onClose()
@@ -381,15 +381,16 @@ func getSeedID(categoryName, commonName *string, jo map[string]any) *string {
 	return nil
 }
 
-func displayJSON(data interface{}) map[string]any {
-	if data != nil {
-		if jo, ok := data.(map[string]any); ok {
-			jsonBytes, err := json.MarshalIndent(jo, "", "\t")
-			if err != nil {
-				log.Fatal(err)
-			}
+func displayJSON(message *wsMessage) map[string]any {
+	if message != nil && message.Data != nil {
+		jsonBytes, err := json.MarshalIndent(message, "", "\t")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-			log.Infof("\n%s", string(jsonBytes))
+		log.Infof("\n%s", string(jsonBytes))
+
+		if jo, ok := message.Data.(map[string]any); ok {
 			return jo
 		}
 	}

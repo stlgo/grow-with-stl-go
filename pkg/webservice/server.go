@@ -74,7 +74,7 @@ func WebServer() {
 			InsecureSkipVerify: false,
 			ServerName:         *configs.GrowSTLGo.WebService.Host,
 			Certificates:       *certs,
-			MinVersion:         tls.VersionTLS12,
+			MinVersion:         tls.VersionTLS13,
 		},
 		Handler:      webServerMux,
 		ErrorLog:     log.Logger(),

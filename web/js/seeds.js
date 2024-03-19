@@ -243,6 +243,7 @@ class Seeds {
                 break;
             case 'purchase':
                 this.updateSeed(json.data);
+                this.log.info(JSON.stringify(json));
                 break;
             default:
                 this.log.error(`Cannot handle component '${json.component}' for ${this.type}`);
