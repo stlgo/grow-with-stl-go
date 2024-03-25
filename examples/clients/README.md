@@ -17,3 +17,10 @@ REST (representational state transfer) first appeared in Roy Fielding's 2000 PhD
 ## WebSocket
 
 WebSockets first emerged around 2010 and later became [RFC 6455](https://datatracker.ietf.org/doc/html/rfc6455).  WebSocket handshake uses the HTTP Upgrade header to change from the HTTP protocol to the WebSocket protocol.  WebSockets are fully duplexed meaning it can both send and receive messages at the same time.  With REST you must poll to get updates, with WebSockets you can get information when it is available and while REST is a great protocol, WebSockets has advantages and while not as ubiquitous as REST it certainly should be used whenever real time communication and processing is a must in an API setting.
+
+## Grow With STL-Go Examples
+
+Because the Grow With STL-Go application implements both a REST web service and WebSocket we can flex the most common APIs today and one that enables real time interaction.
+
+- [REST](REST/README.md) client example
+- [WebSocket](WebSocket/README.md) client example

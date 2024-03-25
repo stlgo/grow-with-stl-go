@@ -159,6 +159,7 @@ func handleOsInterrupt() {
 
 func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	log.Info("Start automated requests")
+	closeWait := make(chan byte, 1)
 	caCerts, err := getCertPool()
 	if err != nil || caCerts == nil {
 		log.Fatalf("ssl cert error %s", err)
@@ -184,7 +185,7 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	defer ws.Close()
 
 	go onOpen()
-	<-osInterrupt
+	<-closeWait
 }
 
 func onOpen() {

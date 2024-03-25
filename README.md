@@ -100,14 +100,24 @@ We have some examples and some documentation on how to go from "hello world" to 
 4. [Logging](examples/logging/README.md)
 5. [Files](examples/files/README.md)
 6. [JSON](examples/json/README.md)
-7. [Goroutines](examples/goroutines/README.md)
+7. [Go routines](examples/goroutines/README.md)
 8. [Channels](exmaples/channels/README.go)
+9. [Timed Tasks](docs/timed_tasks.md)
+10. [Logging](examples/logging/README.md)
+
+### Getting things going
+
+1. Configurations
+2. Database access
+3. Static web hosting
+4. WebService hosting
+5. [WebService clients](examples/clients/README.md)
 
 ### Whelp, you came this far, may as well go a bit further
 
 Sometimes seeing things in context helps.  The next set of examples is included in the "Grow with stl-go" application example.  It is a fully functioning webservice with a UI and REST / WebSocket apis
 
-1. [Logging](examples/logging/README.md)
+1. Makefile
 2. [Linting](docs/linting.md)
 
 ## The "Grow with stl-go" example application
