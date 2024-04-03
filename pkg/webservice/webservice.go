@@ -118,7 +118,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		sessionID := uuid.New().String()
-		token, err := createJWTToken(id, &sessionID)
+		token, validTill, err := createJWTToken(id, &sessionID)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
@@ -126,7 +126,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		b, err := json.Marshal(map[string]interface{}{"sessionID": sessionID, "token": token})
+		b, err := json.Marshal(map[string]interface{}{"sessionID": sessionID, "token": token, "validTill": validTill})
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)

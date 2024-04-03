@@ -84,13 +84,15 @@ func validateJWTClaim(token *jwt.Token, requestSessionID *string, request *confi
 }
 
 // create a JWT (JSON Web Token)
-func createJWTToken(userid, sessionid *string) (*string, error) {
+func createJWTToken(userid, sessionid *string) (token *string, validTill *int64, err error) {
 	if userid != nil && sessionid != nil {
 		// set some claims
+		validTill := time.Now().Add(time.Hour * 1).UnixMilli()
+
 		claims := make(jwt.MapClaims)
 		claims[username] = *userid
 		claims[sessionID] = *sessionid
-		claims[expiration] = time.Now().Add(time.Hour * 1).Unix()
+		claims[expiration] = validTill
 
 		// create the token
 		jwtClaim := jwt.New(jwt.SigningMethodHS256)
@@ -98,9 +100,9 @@ func createJWTToken(userid, sessionid *string) (*string, error) {
 
 		// Sign and get the complete encoded token as string
 		token, err := jwtClaim.SignedString(jwtKey)
-		return &token, err
+		return &token, &validTill, err
 	}
-	return nil, errors.New("nil user id of session id, cannot create JWT")
+	return nil, nil, errors.New("nil user id of session id, cannot create JWT")
 }
 
 // from time to time we might want to send a refresh token to the UI.  The UI should not be in charge of requesting it

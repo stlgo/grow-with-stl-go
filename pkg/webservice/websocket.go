@@ -294,7 +294,7 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 				return user.Authentication.ID, fmt.Errorf("bad password attempt for user %s.  Error: %s", *request.Authentication.ID, err)
 			}
 
-			token, err := createJWTToken(request.Authentication.ID, request.SessionID)
+			token, validTill, err := createJWTToken(request.Authentication.ID, request.SessionID)
 			if err != nil || token == nil {
 				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
 				return user.Authentication.ID, err
@@ -307,6 +307,7 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 
 			approved := configs.Approved
 			response.SubComponent = &approved
+			response.ValidTill = validTill
 			response.Token = token
 			response.IsAdmin = user.Admin
 			response.Error = nil

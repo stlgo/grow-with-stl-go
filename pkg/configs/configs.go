@@ -107,6 +107,7 @@ type WsMessage struct {
 	// used for authentication
 	Authentication *Authentication `json:"authentication,omitempty"`
 	Token          *string         `json:"token,omitempty"`
+	ValidTill      *int64          `json:"validTill,omitempty"`
 	RefreshToken   *string         `json:"refreshToken,omitempty"`
 	IsAdmin        *bool           `json:"isAdmin,omitempty"`
 }
