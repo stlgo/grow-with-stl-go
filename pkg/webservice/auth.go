@@ -87,7 +87,7 @@ func validateJWTClaim(token *jwt.Token, requestSessionID *string, request *confi
 func createJWTToken(userid, sessionid *string) (token *string, validTill *int64, err error) {
 	if userid != nil && sessionid != nil {
 		// set some claims
-		validTill := time.Now().Add(time.Hour * 1).UnixMilli()
+		validTill := time.Now().Add(time.Hour * 1).Unix()
 
 		claims := make(jwt.MapClaims)
 		claims[username] = *userid
@@ -98,9 +98,12 @@ func createJWTToken(userid, sessionid *string) (token *string, validTill *int64,
 		jwtClaim := jwt.New(jwt.SigningMethodHS256)
 		jwtClaim.Claims = claims
 
+		// the JWT requires epoch seconds, we prefer milliseconds
+		validTillMilli := validTill * 1000
+
 		// Sign and get the complete encoded token as string
 		token, err := jwtClaim.SignedString(jwtKey)
-		return &token, &validTill, err
+		return &token, &validTillMilli, err
 	}
 	return nil, nil, errors.New("nil user id of session id, cannot create JWT")
 }
@@ -121,7 +124,8 @@ func createRefreshToken(claim jwt.MapClaims, request *configs.WsMessage) {
 	// test to see if the session is still in existence before firing off a refresh
 	if session, ok := sessions[*request.SessionID]; ok {
 		// add the new expiration to the claim
-		claim[expiration] = time.Now().Add(time.Hour * 1).Unix()
+		validTill := time.Now().Add(time.Hour * 1).Unix()
+		claim[expiration] = validTill
 
 		// create the token
 		jwtClaim := jwt.New(jwt.SigningMethodHS256)
@@ -138,11 +142,15 @@ func createRefreshToken(claim jwt.MapClaims, request *configs.WsMessage) {
 		auth := configs.Auth
 		refresh := configs.Refresh
 
+		// the JWT requires epoch seconds, we prefer milliseconds
+		validTillMilli := validTill * 1000
+
 		// test to see if the session is still in existence before firing off a message
 		if err = session.webSocketSend(&configs.WsMessage{
 			Type:         &wsClient,
 			Component:    &auth,
 			SubComponent: &refresh,
+			ValidTill:    &validTillMilli,
 			RefreshToken: &refreshToken,
 		}); err != nil {
 			log.Error(err)
