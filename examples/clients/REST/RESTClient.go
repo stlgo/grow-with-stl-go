@@ -143,17 +143,17 @@ func login() (token, sessionID *string) {
 
 	log.Infof("%s had status code of %d with the text of %s", fullURL, httpStatusCode, *txt)
 
-	var jo map[string]string
+	var jo map[string]interface{}
 	if err = json.Unmarshal([]byte(*txt), &jo); err != nil {
 		log.Fatal(err)
 	}
 
-	tokenStr, ok := jo["token"]
+	tokenStr, ok := jo["token"].(string)
 	if !ok {
 		log.Fatal("no token in server response")
 	}
 
-	sessionIDStr, ok := jo["sessionID"]
+	sessionIDStr, ok := jo["sessionID"].(string)
 	if !ok {
 		log.Fatal("no sessionID in server response")
 	}
