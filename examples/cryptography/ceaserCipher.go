@@ -186,6 +186,7 @@ func version() string {
 }
 
 func bruteForceDecipher() {
+	defer log.FunctionTimer()()
 	parts := strings.Split(input, " ")
 	attempts := 0
 	// first try 1 letter words
