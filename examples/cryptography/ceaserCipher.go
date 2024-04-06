@@ -26,14 +26,107 @@ import (
 )
 
 var (
-	shift   int
-	input   string
-	decrypt = false
-	rootCmd = &cobra.Command{
+	shift      int
+	input      string
+	decrypt    = false
+	bruteForce = false
+	rootCmd    = &cobra.Command{
 		Use:     "grow-with-stl-go",
 		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
 		Run:     runCeaserCipher,
 		Version: version(),
+	}
+
+	oneLetterWords = map[string]struct{}{
+		"a": {},
+		"i": {},
+	}
+
+	twoLetterWords = map[string]struct{}{
+		"of": {},
+		"to": {},
+		"in": {},
+		"it": {},
+		"is": {},
+		"be": {},
+		"as": {},
+		"at": {},
+		"so": {},
+		"we": {},
+		"he": {},
+		"by": {},
+		"or": {},
+		"on": {},
+		"do": {},
+		"if": {},
+		"me": {},
+		"my": {},
+		"up": {},
+		"an": {},
+		"go": {},
+		"no": {},
+		"us": {},
+		"am": {},
+	}
+
+	threeLetterWords = map[string]struct{}{
+		"the": {},
+		"and": {},
+		"for": {},
+		"are": {},
+		"but": {},
+		"not": {},
+		"you": {},
+		"all": {},
+		"any": {},
+		"can": {},
+		"had": {},
+		"her": {},
+		"was": {},
+		"one": {},
+		"our": {},
+		"out": {},
+		"day": {},
+		"get": {},
+		"has": {},
+		"him": {},
+		"his": {},
+		"how": {},
+		"man": {},
+		"new": {},
+		"now": {},
+		"old": {},
+		"see": {},
+		"two": {},
+		"way": {},
+		"who": {},
+		"boy": {},
+		"did": {},
+		"its": {},
+		"let": {},
+		"put": {},
+		"say": {},
+		"she": {},
+		"too": {},
+		"use": {},
+	}
+
+	fourLetterWords = map[string]struct{}{
+		"that": {},
+		"with": {},
+		"have": {},
+		"this": {},
+		"will": {},
+		"your": {},
+		"from": {},
+		"they": {},
+		"know": {},
+		"want": {},
+		"been": {},
+		"good": {},
+		"much": {},
+		"some": {},
+		"time": {},
 	}
 )
 
@@ -54,7 +147,7 @@ func init() {
 		&shift,
 		"shift",
 		4,
-		"The shift used in the ceaser cipher",
+		"The shift used in the ceaser cipher, must be between 1 and 25",
 	)
 
 	// Add the string to encipher / decipher
@@ -73,6 +166,14 @@ func init() {
 		false,
 		"decipher the input",
 	)
+
+	rootCmd.Flags().BoolVarP(
+		&bruteForce,
+		"bruteForce",
+		"b",
+		false,
+		"brute force decipher the input cipher text",
+	)
 }
 
 // Version returns application version
@@ -84,11 +185,66 @@ func version() string {
 	return "dev-version"
 }
 
+func bruteForceDecipher() {
+	parts := strings.Split(input, " ")
+	attempts := 0
+	// first try 1 letter words
+	for _, length := range []int{1, 2, 3, 4} {
+		for _, word := range parts {
+			if len(word) != length {
+				continue
+			}
+			var foundWord *string
+			var testShift *int
+			switch length {
+			case 1:
+				foundWord, testShift = bruteForcewWord(word, oneLetterWords)
+			case 2:
+				foundWord, testShift = bruteForcewWord(word, twoLetterWords)
+			case 3:
+				foundWord, testShift = bruteForcewWord(word, threeLetterWords)
+			case 4:
+				foundWord, testShift = bruteForcewWord(word, fourLetterWords)
+			}
+			if foundWord != nil && testShift != nil {
+				shift = *testShift
+				log.Infof("shift found %d, cracked by %d letter word '%s' in %d attempts", shift, length, *foundWord, attempts+shift)
+				break
+			}
+			attempts++
+		}
+	}
+	log.Infof("Ciphertext: '%s'", input)
+	log.Infof("Deciphered text: '%s'", decipher(input, shift))
+}
+
+func bruteForcewWord(word string, lookup map[string]struct{}) (foundWord *string, foundShift *int) {
+	for i := range 25 {
+		txt := decipher(word, i+1)
+		if _, ok := lookup[txt]; ok {
+			i++
+			return &txt, &i
+		}
+	}
+	return nil, nil
+}
+
 func runCeaserCipher(_ *cobra.Command, _ []string) {
-	log.Infof("Enciphering: '%s'", input)
-	cipherText := encipher(input, shift)
-	log.Infof("Ciphertext: '%s'", cipherText)
-	log.Infof("Deciphered text: '%s'", decipher(cipherText, shift))
+	if shift <= 25 {
+		if decrypt {
+			log.Infof("Deciphered text: '%s'", decipher(input, shift))
+			return
+		} else if bruteForce {
+			bruteForceDecipher()
+			return
+		}
+		log.Infof("Enciphering: '%s'", input)
+		cipherText := encipher(input, shift)
+		log.Infof("Ciphertext: '%s'", cipherText)
+		log.Infof("Deciphered text: '%s'", decipher(cipherText, shift))
+		return
+	}
+	log.Errorf("input shift %d is bigger than 25 cannot continue", shift)
 }
 
 func encipher(text string, shift int) string {
