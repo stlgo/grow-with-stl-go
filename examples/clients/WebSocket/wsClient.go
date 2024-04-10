@@ -41,8 +41,8 @@ var (
 	// proxy      *string
 	// extraCerts *string
 
-	user     *string
-	password *string
+	user     string
+	password string
 	wait     = false
 
 	osInterrupt = make(chan os.Signal, 1)
@@ -55,9 +55,19 @@ var (
 	token     *string
 
 	rootCmd = &cobra.Command{
-		Use:     "grow-with-stl-go",
-		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its WebSocket example client",
-		Run:     runAutomatedProcess,
+		Use:   "grow-with-stl-go",
+		Short: "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its WebSocket example client",
+		Run:   runAutomatedProcess,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				log.Info("No args entered showing default help\n\n")
+				if err := cmd.Help(); err != nil {
+					log.Error(err)
+				}
+				os.Exit(0)
+			}
+			return nil
+		},
 		Version: version(),
 	}
 )
@@ -99,10 +109,8 @@ func init() {
 	})
 
 	// Add the user
-	u := ""
-	user = &u
 	rootCmd.Flags().StringVarP(
-		user,
+		&user,
 		"user",
 		"u",
 		"username",
@@ -110,10 +118,8 @@ func init() {
 	)
 
 	// Add the password
-	p := ""
-	password = &p
 	rootCmd.Flags().StringVarP(
-		password,
+		&password,
 		"passwd",
 		"p",
 		"password",
@@ -298,8 +304,8 @@ func login() {
 		Type:      &wsType,
 		Component: &component,
 		Authentication: &authentication{
-			ID:       user,
-			Password: password,
+			ID:       &user,
+			Password: &password,
 		},
 	}); err != nil {
 		onError(err)

@@ -15,6 +15,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,16 +31,30 @@ import (
 )
 
 // rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:     "grow-with-stl-go",
-	Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes",
-	Run:     launch,
-	Version: Version(),
-}
+var (
+	rootCmd = &cobra.Command{
+		Use:     "grow-with-stl-go",
+		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes",
+		Run:     launch,
+		Version: Version(),
+	}
+
+	// version will be overridden by ldflags supplied in Makefile
+	version = "(dev-version)"
+)
 
 func init() {
 	// Add a 'version' command, in addition to the '--version' option that is auto created
-	rootCmd.AddCommand(versionCmd())
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Show version",
+		Long:  "Version for grow with stl-go binary",
+		Run: func(cmd *cobra.Command, _ []string) {
+			out := cmd.OutOrStdout()
+
+			fmt.Fprintln(out, "grow with stl-go version", Version())
+		},
+	})
 
 	// Add the config file Flag
 	configFile := "../../etc/grow-with-stl-go.json"
@@ -101,6 +116,11 @@ func launch(_ *cobra.Command, _ []string) {
 	}()
 
 	webservice.WebServer()
+}
+
+// Version returns the version number for the cobra command
+func Version() string {
+	return version
 }
 
 // Execute is called from the main program and kicks this whole shindig off

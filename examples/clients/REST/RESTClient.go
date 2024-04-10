@@ -39,12 +39,22 @@ var (
 	extraCerts *string
 	client     *http.Client
 
-	user     *string
-	password *string
+	user     string
+	password string
 
 	rootCmd = &cobra.Command{
-		Use:     "grow-with-stl-go",
-		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
+		Use:   "grow-with-stl-go",
+		Short: "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				log.Info("No args entered showing default help\n\n")
+				if err := cmd.Help(); err != nil {
+					log.Error(err)
+				}
+				os.Exit(0)
+			}
+			return nil
+		},
 		Run:     runAutomatedProcess,
 		Version: version(),
 	}
@@ -63,21 +73,17 @@ func init() {
 	})
 
 	// Add the user
-	u := ""
-	user = &u
 	rootCmd.Flags().StringVarP(
-		user,
+		&user,
 		"user",
 		"u",
 		"username",
 		"The user used for the REST request",
 	)
 
-	// Add the user
-	p := ""
-	password = &p
+	// Add the password
 	rootCmd.Flags().StringVarP(
-		password,
+		&password,
 		"passwd",
 		"p",
 		"password",
@@ -123,8 +129,8 @@ func login() (token, sessionID *string) {
 	}
 
 	loginStruct := map[string]string{
-		"id":       *user,
-		"password": *password,
+		"id":       user,
+		"password": password,
 	}
 
 	// marshall the StructJSON object to a byte array
@@ -136,15 +142,15 @@ func login() (token, sessionID *string) {
 	payload := string(payloadBytes)
 	log.Info(payload)
 
-	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, nil, &payload)
-	if err != nil {
+	response, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, nil, &payload)
+	if err != nil || httpStatusCode == nil || response == nil {
 		log.Fatal(err)
 	}
 
-	log.Infof("%s had status code of %d with the text of %s", fullURL, httpStatusCode, *txt)
+	log.Infof("%s had status code of %d with the text of %s", fullURL, *httpStatusCode, *response)
 
 	var jo map[string]interface{}
-	if err = json.Unmarshal([]byte(*txt), &jo); err != nil {
+	if err = json.Unmarshal([]byte(*response), &jo); err != nil {
 		log.Fatal(err)
 	}
 
@@ -166,13 +172,13 @@ func getInventory(headers map[string]string) map[string]interface{} {
 		log.Fatal(err)
 	}
 
-	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, headers, nil)
-	if err != nil {
+	response, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, headers, nil)
+	if err != nil || httpStatusCode == nil || response == nil {
 		log.Fatal(err)
 	}
 
 	var jo map[string]interface{}
-	err = json.Unmarshal([]byte(*txt), &jo)
+	err = json.Unmarshal([]byte(*response), &jo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -182,7 +188,7 @@ func getInventory(headers map[string]string) map[string]interface{} {
 		log.Fatal(err)
 	}
 
-	log.Infof("%s had status code of %d with the data:\n%s", fullURL, httpStatusCode, string(jsonBytes))
+	log.Infof("%s had status code of %d with the data:\n%s", fullURL, *httpStatusCode, string(jsonBytes))
 	return jo
 }
 
@@ -209,13 +215,13 @@ func getDetail(category, seedID *string, headers map[string]string) {
 		log.Fatal(err)
 	}
 
-	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, headers, nil)
-	if err != nil {
+	response, httpStatusCode, err := httpRequest(fullURL, http.MethodGet, headers, nil)
+	if err != nil || httpStatusCode == nil || response == nil {
 		log.Fatal(err)
 	}
 
 	var jo map[string]interface{}
-	err = json.Unmarshal([]byte(*txt), &jo)
+	err = json.Unmarshal([]byte(*response), &jo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -225,7 +231,7 @@ func getDetail(category, seedID *string, headers map[string]string) {
 		log.Fatal(err)
 	}
 
-	log.Infof("%s had status code of %d with the data:\n%s", fullURL, httpStatusCode, string(jsonBytes))
+	log.Infof("%s had status code of %d with the data:\n%s", fullURL, *httpStatusCode, string(jsonBytes))
 }
 
 func purchaseSeed(category, seedID *string, quantity int, headers map[string]string) {
@@ -249,13 +255,13 @@ func purchaseSeed(category, seedID *string, quantity int, headers map[string]str
 	payload := string(payloadBytes)
 	log.Info(payload)
 
-	txt, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, headers, &payload)
-	if err != nil {
+	response, httpStatusCode, err := httpRequest(fullURL, http.MethodPost, headers, &payload)
+	if err != nil || httpStatusCode == nil || response == nil {
 		log.Fatal(err)
 	}
 
 	var jo map[string]interface{}
-	err = json.Unmarshal([]byte(*txt), &jo)
+	err = json.Unmarshal([]byte(*response), &jo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -265,27 +271,27 @@ func purchaseSeed(category, seedID *string, quantity int, headers map[string]str
 		log.Fatal(err)
 	}
 
-	log.Infof("%s had status code of %d with the data:\n%s", fullURL, httpStatusCode, string(jsonBytes))
+	log.Infof("%s had status code of %d with the data:\n%s", fullURL, *httpStatusCode, string(jsonBytes))
 }
 
-func httpRequest(requestedURL, method string, headers map[string]string, payload *string) (responseText *string, httpStatusCode int, err error) {
+func httpRequest(requestedURL, method string, headers map[string]string, payload *string) (responseText *string, httpStatusCode *int, err error) {
 	startTime := time.Now()
 	_, ok := methods[method]
 	if !ok {
-		return nil, 503, fmt.Errorf("invalid method requested %s", method)
+		return nil, nil, fmt.Errorf("invalid method requested %s", method)
 	}
 
 	var request *http.Request
 	if payload != nil && strings.EqualFold(method, http.MethodPost) {
 		request, err = http.NewRequest(method, requestedURL, strings.NewReader(*payload))
 		if err != nil {
-			return nil, 503, err
+			return nil, nil, err
 		}
 		request.Header.Add("content-type", "application/json")
 	} else {
 		request, err = http.NewRequest(method, requestedURL, http.NoBody)
 		if err != nil {
-			return nil, 503, err
+			return nil, nil, err
 		}
 	}
 
@@ -297,27 +303,27 @@ func httpRequest(requestedURL, method string, headers map[string]string, payload
 
 	c, err := getClient()
 	if err != nil {
-		return nil, 503, err
+		return nil, nil, err
 	}
 
 	response, err := c.Do(request)
 	if err != nil || response == nil || response.Body == nil {
 		log.Errorf("%s returned error %s in %dms", requestedURL, err, time.Since(startTime).Abs().Milliseconds())
-		return nil, 503, err
+		return nil, nil, err
 	}
 
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Errorf("%s HTTP Code %d in %dms", requestedURL, response.StatusCode, time.Since(startTime).Abs().Milliseconds())
-		return nil, 503, err
+		return nil, nil, err
 	}
 
 	responseRawText := string(body)
-	httpStatusCode = response.StatusCode
+	httpStatusCode = &response.StatusCode
 
 	log.Debugf("%s HTTP Code %d response %d bytes in %dms",
-		requestedURL, httpStatusCode, int64(uintptr(len(body))*reflect.TypeOf(body).Elem().Size()), time.Since(startTime).Abs().Milliseconds())
+		requestedURL, *httpStatusCode, int64(uintptr(len(body))*reflect.TypeOf(body).Elem().Size()), time.Since(startTime).Abs().Milliseconds())
 	return &responseRawText, httpStatusCode, nil
 }
 

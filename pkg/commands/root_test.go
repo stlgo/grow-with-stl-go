@@ -40,3 +40,22 @@ func TestRootExecuteCommand(t *testing.T) {
 
 	require.NotNil(t, out)
 }
+
+func TestVersionExecuteCommand(t *testing.T) {
+	cmd := rootCmd
+	b := bytes.NewBufferString("")
+	cmd.SetOut(b)
+	cmd.SetArgs([]string{"-v"})
+
+	err := cmd.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := io.ReadAll(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.NotNil(t, out)
+}
