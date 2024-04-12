@@ -127,6 +127,8 @@ var (
 		"much": {},
 		"some": {},
 		"time": {},
+		"here": {},
+		"hear": {},
 	}
 )
 
@@ -158,6 +160,9 @@ func init() {
 		"some text here",
 		"The string to encipher/decipher",
 	)
+	if err := rootCmd.MarkFlagRequired("input"); err != nil {
+		log.Fatal(err)
+	}
 
 	rootCmd.Flags().BoolVarP(
 		&decrypt,
@@ -187,6 +192,7 @@ func version() string {
 
 func bruteForceDecipher() {
 	defer log.FunctionTimer()()
+	shift = 0
 	parts := strings.Split(input, " ")
 	attempts := 0
 	// first try 1 letter words
@@ -199,12 +205,16 @@ func bruteForceDecipher() {
 			var testShift *int
 			switch length {
 			case 1:
+				log.Infof("Attempting 1 letter word %s", word)
 				foundWord, testShift = bruteForcewWord(word, oneLetterWords)
 			case 2:
+				log.Infof("Attempting 2 letter word %s", word)
 				foundWord, testShift = bruteForcewWord(word, twoLetterWords)
 			case 3:
+				log.Infof("Attempting 3 letter word %s", word)
 				foundWord, testShift = bruteForcewWord(word, threeLetterWords)
 			case 4:
+				log.Infof("Attempting 4 letter word %s", word)
 				foundWord, testShift = bruteForcewWord(word, fourLetterWords)
 			}
 			if foundWord != nil && testShift != nil {
@@ -220,9 +230,9 @@ func bruteForceDecipher() {
 }
 
 func bruteForcewWord(word string, lookup map[string]struct{}) (foundWord *string, foundShift *int) {
-	for i := range 25 {
+	for i := range make([]int, 25) {
 		txt := decipher(word, i+1)
-		if _, ok := lookup[txt]; ok {
+		if _, ok := lookup[strings.ToLower(txt)]; ok {
 			i++
 			return &txt, &i
 		}

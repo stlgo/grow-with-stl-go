@@ -43,18 +43,8 @@ var (
 	password string
 
 	rootCmd = &cobra.Command{
-		Use:   "grow-with-stl-go",
-		Short: "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				log.Info("No args entered showing default help\n\n")
-				if err := cmd.Help(); err != nil {
-					log.Error(err)
-				}
-				os.Exit(0)
-			}
-			return nil
-		},
+		Use:     "grow-with-stl-go",
+		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes, this is its REST example client",
 		Run:     runAutomatedProcess,
 		Version: version(),
 	}
@@ -80,6 +70,9 @@ func init() {
 		"username",
 		"The user used for the REST request",
 	)
+	if err := rootCmd.MarkFlagRequired("user"); err != nil {
+		log.Fatal(err)
+	}
 
 	// Add the password
 	rootCmd.Flags().StringVarP(
@@ -89,6 +82,9 @@ func init() {
 		"password",
 		"The password for the user specified for the REST request",
 	)
+	if err := rootCmd.MarkFlagRequired("password"); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Version returns application version

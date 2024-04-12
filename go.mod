@@ -1,6 +1,6 @@
 module stl-go/grow-with-stl-go
 
-go 1.22
+go 1.21
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
