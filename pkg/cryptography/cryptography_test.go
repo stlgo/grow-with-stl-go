@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"stl-go/grow-with-stl-go/pkg/log"
 )
 
 func TestCryptographyFunctions(t *testing.T) {
@@ -25,7 +27,7 @@ func TestCryptographyFunctions(t *testing.T) {
 		secret, err := GenerateSecret()
 		require.NoError(t, err)
 		require.NotNil(t, secret)
-		t.Logf("%s\n", *secret)
+		log.Infof("%s\n", *secret)
 	})
 
 	t.Run("Test encryption", func(t *testing.T) {
@@ -35,7 +37,7 @@ func TestCryptographyFunctions(t *testing.T) {
 		ciphertext, err := Encrypt(&plaintext, &key)
 		require.NoError(t, err)
 		require.NotNil(t, ciphertext)
-		t.Logf("%s => %s\n", plaintext, *ciphertext)
+		log.Infof("%s => %s\n", plaintext, *ciphertext)
 	})
 
 	t.Run("Test decryption", func(t *testing.T) {
@@ -45,7 +47,7 @@ func TestCryptographyFunctions(t *testing.T) {
 		plaintext, err := Decrypt(&ciphertext, &key)
 		require.NoError(t, err)
 		require.NotNil(t, ciphertext)
-		t.Logf("%s => %s\n", ciphertext, *plaintext)
+		log.Infof("%s => %s\n", ciphertext, *plaintext)
 	})
 
 	t.Run("Test password hashing", func(t *testing.T) {
@@ -54,7 +56,7 @@ func TestCryptographyFunctions(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, hash)
-		t.Logf("%s => %s\n", input, *hash)
+		log.Infof("%s => %s\n", input, *hash)
 	})
 
 	t.Run("Test hash compare", func(t *testing.T) {
@@ -63,6 +65,6 @@ func TestCryptographyFunctions(t *testing.T) {
 
 		err := HashCompare(&hash, &input)
 		require.NoError(t, err)
-		t.Logf("%s compared true to %s\n", input, hash)
+		log.Infof("%s compared true to %s\n", input, hash)
 	})
 }

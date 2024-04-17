@@ -118,7 +118,7 @@ func init() {
 		"password",
 		"The password for the user specified for the REST request",
 	)
-	if err := rootCmd.MarkFlagRequired("password"); err != nil {
+	if err := rootCmd.MarkFlagRequired("passwd"); err != nil {
 		log.Fatal(err)
 	}
 
@@ -279,7 +279,8 @@ func handleSeedMessages(message *wsMessage) {
 			displayJSON(message)
 			if !wait {
 				log.Info("Purchase completed exiting the client")
-				onClose()
+				osInterrupt <- syscall.SIGINT
+				return
 			}
 			log.Info("Waiting for other messages from the server")
 		default:

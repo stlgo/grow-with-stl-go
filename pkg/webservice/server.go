@@ -19,7 +19,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -59,7 +58,7 @@ func WebServer() {
 	}
 
 	// Calculate the address and start on the host and port specified in the config
-	addr := *configs.GrowSTLGo.WebService.Host + ":" + strconv.Itoa(*configs.GrowSTLGo.WebService.Port)
+	addr := fmt.Sprintf("%s:%d", *configs.GrowSTLGo.WebService.Host, *configs.GrowSTLGo.WebService.Port)
 	log.Infof("Attempting to start webservice on %s", addr)
 
 	certs, err := getCertificates()

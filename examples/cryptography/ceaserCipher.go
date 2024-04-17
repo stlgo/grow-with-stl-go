@@ -225,6 +225,14 @@ func bruteForceDecipher() {
 			attempts++
 		}
 	}
+
+	if shift == 0 {
+		log.Infof("No shift found so outputing all shifts for ciphertext: '%s'", input)
+		for i := 1; i <= 25; i++ {
+			log.Infof("Shift %d, deciphered text: '%s'", i, decipher(input, i))
+		}
+		return
+	}
 	log.Infof("Ciphertext: '%s'", input)
 	log.Infof("Deciphered text: '%s'", decipher(input, shift))
 }
