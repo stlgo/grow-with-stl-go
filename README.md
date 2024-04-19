@@ -104,6 +104,7 @@ We have some examples and some documentation on how to go from "hello world" to 
 8. [Channels](exmaples/channels/README.go)
 9. [Timed Tasks](docs/timed_tasks.md)
 10. [Logging](examples/logging/README.md)
+11. [Cryptography](docs/cryptography.md)
 
 ### Getting things going
 

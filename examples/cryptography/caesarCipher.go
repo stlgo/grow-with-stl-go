@@ -194,15 +194,16 @@ func bruteForceDecipher() {
 	defer log.FunctionTimer()()
 	shift = 0
 	parts := strings.Split(input, " ")
-	attempts := 0
+	attempts := 1
+	var foundWord *string
+	var testShift *int
 	// first try 1 letter words
 	for _, length := range []int{1, 2, 3, 4} {
+		attempts++
 		for _, word := range parts {
 			if len(word) != length {
 				continue
 			}
-			var foundWord *string
-			var testShift *int
 			switch length {
 			case 1:
 				log.Infof("Attempting 1 letter word %s", word)
@@ -218,11 +219,13 @@ func bruteForceDecipher() {
 				foundWord, testShift = bruteForcewWord(word, fourLetterWords)
 			}
 			if foundWord != nil && testShift != nil {
-				shift = *testShift
-				log.Infof("shift found %d, cracked by %d letter word '%s' in %d attempts", shift, length, *foundWord, attempts+shift)
 				break
 			}
-			attempts++
+		}
+		if foundWord != nil && testShift != nil {
+			shift = *testShift
+			log.Infof("shift found %d, cracked by %d letter word '%s' in %d attempts", shift, length, *foundWord, attempts)
+			break
 		}
 	}
 

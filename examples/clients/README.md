@@ -22,5 +22,5 @@ WebSockets first emerged around 2010 and later became [RFC 6455](https://datatra
 
 Because the Grow With STL-Go application implements both a REST web service and WebSocket we can flex the most common APIs today and one that enables real time interaction.
 
-- [REST](REST/README.md) client example
-- [WebSocket](WebSocket/README.md) client example
+- [REST](REST/RESTClient.go) client example
+- [WebSocket](WebSocket/wsClient.go) client example

@@ -56,7 +56,7 @@ func TestCryptographyFunctions(t *testing.T) {
 
 		require.NoError(t, err)
 		require.NotNil(t, hash)
-		log.Infof("%s => %s\n", input, *hash)
+		log.Infof("'%s' => '%s'\n", input, *hash)
 	})
 
 	t.Run("Test hash compare", func(t *testing.T) {
@@ -65,6 +65,6 @@ func TestCryptographyFunctions(t *testing.T) {
 
 		err := HashCompare(&hash, &input)
 		require.NoError(t, err)
-		log.Infof("%s compared true to %s\n", input, hash)
+		log.Infof("'%s' compared true to '%s'\n", input, hash)
 	})
 }

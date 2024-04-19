@@ -134,6 +134,10 @@ func generateCSR() x509.Certificate {
 		Subject: pkix.Name{
 			CommonName:   "localhost",
 			Organization: []string{"grow-with-stl-go"},
+			Country:      []string{"US"},
+			Province:     []string{"Missouri"},
+			Locality:     []string{"Saint Louis"},
+			PostalCode:   []string{"63101"},
 		},
 		DNSNames:              []string{"localhost", "grow-with-stlgo.localdev.org", "grow-with-stlgo.api.localdev.org"},
 		NotBefore:             time.Now(),
