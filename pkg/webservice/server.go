@@ -52,9 +52,13 @@ func WebServer() {
 	webServerMux.HandleFunc("/ws/v1.0.0", onOpen)
 
 	// establish routing to static web dir if defined in the config and handle REST endpoints
-	if configs.GrowSTLGo.WebService.StaticWebDir != nil {
-		log.Debug("Attempting to serve static content from ", *configs.GrowSTLGo.WebService.StaticWebDir)
-		webServerMux.HandleFunc("/", handleRESTRequest)
+	if configs.GrowSTLGo.WebService.Vhosts != nil {
+		for vhost, webRoot := range configs.GrowSTLGo.WebService.Vhosts {
+			if webRoot != nil {
+				log.Debugf("Attempting to serve static content for %s from %s", vhost, *webRoot)
+				webServerMux.HandleFunc(fmt.Sprintf("%s/", vhost), handleRESTRequest)
+			}
+		}
 	}
 
 	// Calculate the address and start on the host and port specified in the config

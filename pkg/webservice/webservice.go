@@ -87,11 +87,13 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 		uri = strings.Split(uri, "?")[0]
 	}
 	if !webDenialPrefixes.MatchString(uri) {
-		path := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, uri)
-		_, err := os.Stat(path)
-		if err == nil {
-			http.ServeFile(w, r, path)
-			return
+		if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[strings.Split(r.Host, ":")[0]]; ok && webRoot != nil {
+			path := filepath.Join(*webRoot, uri)
+			_, err := os.Stat(path)
+			if err == nil {
+				http.ServeFile(w, r, path)
+				return
+			}
 		}
 	}
 

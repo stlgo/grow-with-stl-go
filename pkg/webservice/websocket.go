@@ -45,6 +45,7 @@ type session struct {
 	user        *string
 	closing     *bool
 	isAdmin     *bool
+	Vhost       *string
 }
 
 // sessions keeps track of open websocket sessions
@@ -89,7 +90,8 @@ func onOpen(response http.ResponseWriter, request *http.Request) {
 	}
 
 	remoteHost := request.Host
-	session := newSession(&remoteHost, wsConn)
+	vhost := request.URL.Host
+	session := newSession(&remoteHost, &vhost, wsConn)
 	log.Debugf("WebSocket session %s established with %s\n", *session.sessionID, session.ws.RemoteAddr().String())
 
 	go session.onMessage()
@@ -363,15 +365,21 @@ func getPagelet(request, response *configs.WsMessage) {
 			return
 		}
 		// everyone else is free to move about the cabin
-		fileName := filepath.Join(*configs.GrowSTLGo.WebService.StaticWebDir, "pagelets", fmt.Sprintf("%s.html", *request.Component))
-		_, err := os.Stat(fileName)
-		if err == nil {
-			bytes, err := os.ReadFile(fileName)
-			if err != nil {
-				return
+		if request.SessionID != nil {
+			if session, ok := sessions[*request.SessionID]; ok && session.Vhost != nil {
+				if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[*session.Vhost]; ok && webRoot != nil {
+					fileName := filepath.Join(*webRoot, "pagelets", fmt.Sprintf("%s.html", *request.Component))
+					_, err := os.Stat(fileName)
+					if err == nil {
+						bytes, err := os.ReadFile(fileName)
+						if err != nil {
+							return
+						}
+						response.Data = string(bytes)
+						response.Error = nil
+					}
+				}
 			}
-			response.Data = string(bytes)
-			response.Error = nil
 		}
 	}
 }
@@ -423,7 +431,7 @@ func requestErrorHelper(err *string, request *configs.WsMessage) *configs.WsMess
 }
 
 // newSession generates a new session
-func newSession(requestHost *string, ws *websocket.Conn) *session {
+func newSession(requestHost, vhost *string, ws *websocket.Conn) *session {
 	id := uuid.New().String()
 
 	session := &session{
@@ -431,6 +439,7 @@ func newSession(requestHost *string, ws *websocket.Conn) *session {
 		sessionID:   &id,
 		ws:          ws,
 		lastUsed:    utils.CurrentTimeInMillis(),
+		Vhost:       vhost,
 	}
 
 	// keep track of the session

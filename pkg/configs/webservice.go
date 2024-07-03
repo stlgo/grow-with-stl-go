@@ -21,13 +21,19 @@ import (
 	"stl-go/grow-with-stl-go/pkg/log"
 )
 
+// Vhost holds the bits to define the virtual webroots we'll be using
+type Vhost struct {
+	Name    *string `json:"name,omitempty"`
+	WebRoot *string `json:"webRoot,omitempty"`
+}
+
 // WebService is the definition for the http/webservice/webserver
 type WebService struct {
-	Host         *string `json:"host,omitempty"`
-	Port         *int    `json:"port,omitempty"`
-	PublicKey    *string `json:"publicKey,omitempty"`
-	PrivateKey   *string `json:"privateKey,omitempty"`
-	StaticWebDir *string `json:"staticWebDir,omitempty"`
+	Host       *string            `json:"host,omitempty"`
+	Port       *int               `json:"port,omitempty"`
+	PublicKey  *string            `json:"publicKey,omitempty"`
+	PrivateKey *string            `json:"privateKey,omitempty"`
+	Vhosts     map[string]*string `json:"vhosts,omitempty"`
 }
 
 func checkWebService() error {
@@ -51,11 +57,11 @@ func checkWebService() error {
 				staticWebDir := "web"
 
 				GrowSTLGo.WebService = &WebService{
-					Host:         &host,
-					Port:         &port,
-					PublicKey:    publicKeyFile,
-					PrivateKey:   privateKeyFile,
-					StaticWebDir: &staticWebDir,
+					Host:       &host,
+					Port:       &port,
+					PublicKey:  publicKeyFile,
+					PrivateKey: privateKeyFile,
+					Vhosts:     map[string]*string{host: &staticWebDir},
 				}
 
 				err = cryptography.CheckCertValidity(publicKeyFile)
