@@ -302,7 +302,7 @@ class Admin {
             case 'updateAdmin':
             case 'removeUser':
             case 'pageLoad':
-                this.showUsers(json.data);
+                this.showUsers(json.data.users);
                 this.bindButtons();
                 break;
             case 'generatePassword':

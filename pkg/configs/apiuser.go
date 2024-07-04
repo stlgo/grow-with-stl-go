@@ -28,6 +28,7 @@ type APIUser struct {
 	Admin          *bool           `json:"admin,omitempty"`
 	Authentication *Authentication `json:"authentication,omitempty"`
 	LastLogin      *int64          `json:"lastLogin,omitempty"`
+	Vhosts         []string        `json:"vhosts,omitempty"`
 }
 
 func checkAPIUsers() {
@@ -44,10 +45,10 @@ func checkAPIUsers() {
 			user := APIUser{
 				Active: utils.BoolPointer(true),
 				Admin:  utils.BoolPointer(isAdmin),
-
 				Authentication: &Authentication{
 					ID: &localID,
 				},
+				Vhosts: []string{"localhost"},
 			}
 
 			if password, err := user.Authentication.GeneratePassword(); err == nil && password != nil {

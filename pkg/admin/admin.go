@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"golang.org/x/exp/maps"
+
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -143,24 +145,29 @@ func userAction(request, response *configs.WsMessage) *configs.WsMessage {
 }
 
 func getUserInfo() (map[string]interface{}, error) {
-	data := make(map[string]interface{})
+	users := make(map[string]interface{})
 	lastLogins, err := audit.GetLastLogins()
 	if err != nil {
 		return nil, err
 	}
 	for userID, apiUser := range configs.GrowSTLGo.APIUsers {
-		data[userID] = map[string]interface{}{
+		users[userID] = map[string]interface{}{
 			"lastLogin": nil,
 			"active":    apiUser.Active,
 			"admin":     apiUser.Admin,
 		}
 		if lastLogin, ok := lastLogins[userID]; ok {
-			data[userID] = map[string]interface{}{
+			users[userID] = map[string]interface{}{
 				"lastLogin": lastLogin,
 				"active":    apiUser.Active,
 				"admin":     apiUser.Admin,
 			}
 		}
+	}
+
+	data := map[string]interface{}{
+		"users":  users,
+		"vhosts": maps.Keys(configs.GrowSTLGo.WebService.Vhosts),
 	}
 	return data, nil
 }

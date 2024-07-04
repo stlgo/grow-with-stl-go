@@ -89,8 +89,8 @@ func onOpen(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	remoteHost := request.Host
-	vhost := request.URL.Host
+	remoteHost := request.RemoteAddr
+	vhost := strings.Split(request.Host, ":")[0]
 	session := newSession(&remoteHost, &vhost, wsConn)
 	log.Debugf("WebSocket session %s established with %s\n", *session.sessionID, session.ws.RemoteAddr().String())
 
@@ -367,6 +367,7 @@ func getPagelet(request, response *configs.WsMessage) {
 		// everyone else is free to move about the cabin
 		if request.SessionID != nil {
 			if session, ok := sessions[*request.SessionID]; ok && session.Vhost != nil {
+				log.Info(*session.Vhost)
 				if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[*session.Vhost]; ok && webRoot != nil {
 					fileName := filepath.Join(*webRoot, "pagelets", fmt.Sprintf("%s.html", *request.Component))
 					_, err := os.Stat(fileName)
@@ -433,7 +434,6 @@ func requestErrorHelper(err *string, request *configs.WsMessage) *configs.WsMess
 // newSession generates a new session
 func newSession(requestHost, vhost *string, ws *websocket.Conn) *session {
 	id := uuid.New().String()
-
 	session := &session{
 		requestHost: requestHost,
 		sessionID:   &id,
