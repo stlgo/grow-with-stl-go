@@ -113,13 +113,15 @@ backend-lint:
 .PHONY: frontend-build
 frontend-build:
 	@echo "Executing frontend build steps..."
-	@cd $(WEBDIR) && npm install && cd ..
+	@cd $(WEBDIR)/grow-with-stlgo && npm install && cd ../..
+	@cd $(WEBDIR)/grow-with-stlgo-admin && npm install && cd ../..
 	@echo "Frontend build completed successfully"
 
 .PHONY: frontend-lint
 frontend-lint:
 	@echo "Running frontend linting step..."
-	@cd $(WEBDIR) && npx eslint --fix . && cd ..
+	@cd $(WEBDIR)/grow-with-stlgo && npx eslint --fix . && cd ..
+	@cd $(WEBDIR)/grow-with-stlgo-admin && npx eslint --fix . && cd ..
 	@echo "Frontend linting completed successfully"
 
 ### Misc. Linting Commands ###

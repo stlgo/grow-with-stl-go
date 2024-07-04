@@ -54,7 +54,7 @@ func checkWebService() error {
 			if privateKeyFile != nil && publicKeyFile != nil {
 				port := 10443
 				host := "localhost"
-				staticWebDir := "web"
+				staticWebDir := "web/grow-with-stlgo-admin"
 
 				GrowSTLGo.WebService = &WebService{
 					Host:       &host,

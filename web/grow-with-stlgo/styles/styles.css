@@ -1,0 +1,91 @@
+.rounded {
+    border-radius: 1rem !important;
+    width: 300px;
+    height: 300px;
+    overflow: hidden;
+}
+
+.rounded-lg {
+    border-radius: 1rem !important;
+    overflow: hidden;
+}
+
+.seeds th,
+td {
+    padding: 15px;
+}
+
+.pictures td {
+    text-align: center;
+}
+
+.pictures-img {
+    object-fit: contain;
+    width: 100%;
+}
+
+.navbar-shadow {
+    -webkit-box-shadow: 0 8px 6px -6px #999;
+    -moz-box-shadow: 0 8px 6px -6px #999;
+    box-shadow: 0 8px 6px -6px #999;
+}
+
+@media only screen and (max-width: 1200px) {
+    .responsive-xl tr td {
+        display: block;
+        width: 25%;
+        box-sizing: border-box;
+        padding-right: 30px;
+        float: left;
+    }
+}
+
+@media only screen and (max-width: 1000px) {
+    .responsive-lg tr td {
+        display: block;
+        width: 30%;
+        box-sizing: border-box;
+        padding-right: 30px;
+        float: left;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .responsive tr td {
+        display: block;
+        width: 50%;
+        box-sizing: border-box;
+        padding-right: 30px;
+        float: left;
+    }
+}
+
+@media only screen and (max-width: 550px) {
+    .responsive tr td {
+        width: 100%;
+    }
+}
+
+fieldset {
+    margin: 5px;
+    padding: 0 10px 10px;
+    border: 1px solid black;
+    border-radius: 4px;
+}
+
+.seed-input {
+    width: 4em;
+}
+
+.seed-button {
+    width: 6em;
+}
+
+.seed-info-table>thead>tr>th,
+.seed-info-table>tbody>tr>th,
+.seed-info-table>tfoot>tr>th,
+.seed-info-table>thead>tr>td,
+.seed-info-table>tbody>tr>td,
+.seed-info-table>tfoot>tr>td {
+    padding: 5px;
+}

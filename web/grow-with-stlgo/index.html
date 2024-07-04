@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Grow With STL-Go</title>
+    <link rel="icon" href="data:;base64,=">
+
+    <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/node_modules/jquery/dist/jquery.slim.min.js"></script>
+    <link rel="stylesheet" href="/node_modules/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/styles/styles.css">
+
+    <script type='module'>
+        import { GrowWithSTLGO } from './js/main.js';
+
+        var gwsg = null;
+
+        function login() {
+            if (gwsg === null) {
+                    gwsg = new GrowWithSTLGO()
+                }
+                gwsg.login()
+        }
+
+        document.getElementById("LoginButton").onclick = () => {
+            login()
+        }
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.onclick = (event) => {
+                event.preventDefault();
+                gwsg.load(new URL(link.href).pathname.substring(1));
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light navbar-shadow" style="background-color: #3f5eb5;">
+        <div class="container-fluid">
+            <div class="navbar-brand">Grow With STL-GO</div>
+            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <span class="navbar-toggler-icon" id="navbarIcon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <div class="navbar-nav" id="NavbarDiv" style="display: none">
+                    <a href="about" class="nav-item nav-link">About</a>
+                    <a href="seeds" class="nav-item nav-link">Seeds</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div id="LoginDiv">
+            <br>
+            <center>
+                <br>
+                <label for="uname"><b>ID</b></label>
+                <input type="text" placeholder="Enter ID" name="uname" id="IDInput" required>
+
+                <label for="psw"><b>Password</b></label>
+                <input type="password" placeholder="Enter Password" name="psw" id="PasswordInput" required>
+
+                <button type="submit" class="btn btn-outline-success" id="LoginButton">Login</button>
+            </center>
+        </div>
+        <div id="RouterDiv" class="container" style="display: none"><center><h2>Loading please wait...</h2></center></div>
+        <footer>
+            <br><center><small>Copyright &copy;<script>document.write(new Date().getFullYear());</script> Grow With STL-GO</small></center>
+        </footer>
+    </div>
+</body>
+
+</html>
