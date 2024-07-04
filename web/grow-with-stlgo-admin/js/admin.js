@@ -290,6 +290,14 @@ class Admin {
         });
     }
 
+    showVhosts(vhosts) {
+        const select = document.createElement('select');
+        vhosts.forEach((vhost) => {
+            select.options.add(new Option(vhost, vhost));
+        });
+        document.getElementById('VhostDiv').appendChild(select);
+    }
+
     handleMessage(json) {
         if (Object.prototype.hasOwnProperty.call(json, 'error')) {
             this.log.error(json.error);
@@ -303,6 +311,7 @@ class Admin {
             case 'removeUser':
             case 'pageLoad':
                 this.showUsers(json.data.users);
+                this.showVhosts(json.data.vhosts);
                 this.bindButtons();
                 break;
             case 'generatePassword':
