@@ -12,7 +12,6 @@
 # limitations under the License.
 */
 
-import { Admin } from './admin.js';
 import { Seeds } from './seeds.js';
 import { Log } from './log.js';
 import { WebSocketClient } from './websocket.js';
@@ -24,7 +23,7 @@ class GrowWithSTLGO {
         this.type = this.constructor.name.toLowerCase();
 
         document.addEventListener('WebSocketClosed', () => {
-            this.ws.displayHelper([ 'RouterDiv', 'NavbarDiv', 'AdminNavLink' ], 'none');
+            this.ws.displayHelper([ 'RouterDiv', 'NavbarDiv' ], 'none');
             this.ws.displayHelper([ 'LoginDiv' ], '');
         });
 
@@ -51,7 +50,6 @@ class GrowWithSTLGO {
         if (id.length > 0 && password.length > 0) {
             if (this.ws === null) {
                 this.ws = new WebSocketClient(this.log);
-                const admin = new Admin(this.ws, this.log);
                 const seeds = new Seeds(this.ws, this.log);
             }
 
