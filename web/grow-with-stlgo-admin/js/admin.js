@@ -173,60 +173,58 @@ class Admin {
     }
 
     bindSlideOut(table) {
-        document.querySelectorAll('.details-control').forEach((slideButton) => {
-            slideButton.onclick = () => {
-                const row = table.row(slideButton.parentNode.parentNode);
-                const userID = row.data()[1];
-                const details = document.getElementById(`${userID}-details`);
+        table.on('click', '.details-control', (e) => {
+            let tr = e.target.closest('tr');
+            let row = table.row(tr);
+            const userID = row.data()[1];
+            const details = document.getElementById(`${userID}-details`);
 
-                if (details.innerHTML.includes('color:maroon')) {
-                    row.child.hide();
-                    details.innerHTML = '<i class="fa fa-plus-circle fa-lg details-control" style="color:green"></i>';
-                } else {
-                    const clone = document.getElementById('NewUserFieldset').cloneNode(true);
-                    clone.id = `${userID}-details`;
+            if (details.innerHTML.includes('color:maroon')) {
+                row.child.hide();
+                details.innerHTML = '<i class="fa fa-plus-circle fa-lg details-control" style="color:green"></i>';
+            } else {
+                const clone = document.getElementById('NewUserFieldset').cloneNode(true);
+                clone.id = `${userID}-details`;
 
-                    const elementTypes = [ 'button', 'input', 'fieldset', 'legend', 'table' ];
-                    elementTypes.forEach((element) => {
-                        Array.from(clone.getElementsByTagName(element)).forEach((tagElement) => {
-                            const id = tagElement.id;
-                            if (id.length > 0) {
-                                tagElement.id = `${userID}-${id}`;
-                            }
+                const elementTypes = [ 'button', 'input', 'fieldset', 'legend', 'table' ];
+                elementTypes.forEach((element) => {
+                    Array.from(clone.getElementsByTagName(element)).forEach((tagElement) => {
+                        const id = tagElement.id;
+                        if (id.length > 0) {
+                            tagElement.id = `${userID}-${id}`;
+                        }
 
-                            switch (tagElement.id) {
-                            case `${userID}-UserIDInput`:
-                                tagElement.value = userID;
-                                tagElement.disabled = true;
-                                break;
-                            case `${userID}-AddUserButton`:
-                                tagElement.innerHTML = 'Update User';
-                                tagElement.onclick = () => {
-                                    this.updateUser(userID);
-                                };
-                                break;
-                            case `${userID}-RefreshPassword`:
-                                tagElement.value = '';
-                                tagElement.onclick = () => {
-                                    this.generatePassword(userID);
-                                };
-                                break;
-                            }
+                        switch (tagElement.id) {
+                        case `${userID}-UserIDInput`:
+                            tagElement.value = userID;
+                            tagElement.disabled = true;
+                            break;
+                        case `${userID}-AddUserButton`:
+                            tagElement.innerHTML = 'Update User';
+                            tagElement.onclick = () => {
+                                this.updateUser(userID);
+                            };
+                            break;
+                        case `${userID}-RefreshPassword`:
+                            tagElement.value = '';
+                            tagElement.onclick = () => {
+                                this.generatePassword(userID);
+                            };
+                            break;
+                        default:
+                            this.log.info(`cannot decision ${tagElement.id}`);
+                        }
 
-                            const name = tagElement.name;
-                            if (name !== undefined && name.length > 0) {
-                                tagElement.name = `${userID}-${name}`;
-                            }
-                        });
+                        const name = tagElement.name;
+                        if (name !== undefined && name.length > 0) {
+                            tagElement.name = `${userID}-${name}`;
+                        }
                     });
+                });
 
-                    row.child(clone).show();
-                    details.innerHTML = '<i class="fa fa-times-circle fa-lg details-control" style="color:maroon"></i>';
-
-                    // rebind click
-                    this.bindSlideOut(table);
-                }
-            };
+                row.child(clone).show();
+                details.innerHTML = '<i class="fa fa-times-circle fa-lg details-control" style="color:maroon"></i>';
+            }
         });
     }
 
