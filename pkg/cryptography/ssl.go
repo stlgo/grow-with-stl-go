@@ -139,7 +139,7 @@ func generateCSR() x509.Certificate {
 			Locality:     []string{"Saint Louis"},
 			PostalCode:   []string{"63101"},
 		},
-		DNSNames:              []string{"localhost", "grow-with-stlgo.localdev.org", "grow-with-stlgo.api.localdev.org"},
+		DNSNames:              []string{"localhost", "grow-with-stlgo.localdev.org", "grow-with-stlgo-admin.localdev.org"},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(1, 0, 0),
 		BasicConstraintsValid: true,

@@ -110,6 +110,7 @@ type WsMessage struct {
 	ValidTill      *int64          `json:"validTill,omitempty"`
 	RefreshToken   *string         `json:"refreshToken,omitempty"`
 	IsAdmin        *bool           `json:"isAdmin,omitempty"`
+	Vhost          *string
 }
 
 // SetGrowSTLGoConfig sets the config for the application
