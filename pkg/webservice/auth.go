@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -36,7 +37,7 @@ const (
 	expiration = "exp"
 )
 
-func validateAPIUser(body []byte) (*string, error) {
+func validateAPIUser(vhost string, body []byte) (*string, error) {
 	var authRequest configs.Authentication
 	if err := json.Unmarshal(body, &authRequest); err != nil {
 		log.Errorf("bad request body: %s", body)
@@ -51,6 +52,11 @@ func validateAPIUser(body []byte) (*string, error) {
 	apiUser, ok := configs.GrowSTLGo.APIUsers[*authRequest.ID]
 	if !ok || apiUser == nil || apiUser.Active == nil || !*apiUser.Active {
 		log.Errorf("User %s not found or is inactive", *authRequest.ID)
+		return nil, errors.New("Unauthorized")
+	}
+
+	if apiUser.Vhosts != nil && !slices.Contains(apiUser.Vhosts, vhost) {
+		log.Errorf("User %s is not authorized for vhost %s", *authRequest.ID, vhost)
 		return nil, errors.New("Unauthorized")
 	}
 

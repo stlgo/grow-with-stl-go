@@ -111,7 +111,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		id, err := validateAPIUser(body)
+		id, err := validateAPIUser(r.Host, body)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.UnauthorizedError, http.StatusUnauthorized)

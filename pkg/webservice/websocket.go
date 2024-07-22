@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -85,7 +86,6 @@ func onOpen(response http.ResponseWriter, request *http.Request) {
 	wsConn, err := upgrader.Upgrade(response, request, nil)
 	if err != nil {
 		log.Errorf("Could not open websocket connection from: %s\n", request.Host)
-		http.Error(response, "Could not open websocket connection", http.StatusBadRequest)
 		return
 	}
 
@@ -176,6 +176,7 @@ func (session *session) onError() {
 
 func (session *session) handleRequest(request *configs.WsMessage, transaction *audit.WSTransaction) {
 	if request.Route != nil && request.Type != nil {
+		request.Vhost = session.Vhost
 		if handleMessageFunc, ok := websocketFuncMap[*request.Route]; ok {
 			// reset the idle timer if it's appropriate
 			go session.resetIdleTimer(request)
@@ -290,7 +291,12 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 
 	if request.Component != nil && strings.EqualFold(*request.Component, configs.Authenticate) && request.SessionID != nil &&
 		request.Authentication != nil && request.Authentication.ID != nil && request.Authentication.Password != nil {
-		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok && user.Active != nil && *user.Active {
+		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok && user.Active != nil && *user.Active && request.Vhost != nil {
+			if !slices.Contains(user.Vhosts, *request.Vhost) {
+				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
+				return user.Authentication.ID, fmt.Errorf("user %s not authorized for vhost %s", *request.Authentication.ID, *request.Vhost)
+			}
+
 			if err := user.Authentication.ValidateAuthentication(request.Authentication.Password); err != nil {
 				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
 				return user.Authentication.ID, fmt.Errorf("bad password attempt for user %s.  Error: %s", *request.Authentication.ID, err)
