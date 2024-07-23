@@ -31,6 +31,12 @@ type APIUser struct {
 	Vhosts         []string        `json:"vhosts,omitempty"`
 }
 
+type userModifier struct {
+	// include struct
+	Authentication
+	Vhosts []string `json:"vhosts,omitempty"`
+}
+
 func checkAPIUsers() {
 	if GrowSTLGo.APIUsers == nil {
 		ids := map[string]bool{
@@ -48,7 +54,11 @@ func checkAPIUsers() {
 				Authentication: &Authentication{
 					ID: &localID,
 				},
-				Vhosts: []string{"localhost"},
+				Vhosts: []string{"localhost", "grow-with-stlgo.localdev.org"},
+			}
+
+			if isAdmin {
+				user.Vhosts = append(user.Vhosts, "grow-with-stlgo-admin.localdev.org")
 			}
 
 			if password, err := user.Authentication.GeneratePassword(); err == nil && password != nil {
@@ -65,14 +75,24 @@ func checkAPIUsers() {
 func AddUser(userID *string, data interface{}) error {
 	if userID != nil && data != nil {
 		if bytes, err := json.Marshal(data); err == nil {
-			var authentication Authentication
-			if err := json.Unmarshal(bytes, &authentication); err == nil && authentication.ID != nil && authentication.Password != nil {
-				if err := authentication.hashAuthentication(); err == nil {
+			var user userModifier
+			if err := json.Unmarshal(bytes, &user); err == nil && user.ID != nil && user.Password != nil {
+				if err := user.hashAuthentication(); err == nil {
 					if _, ok := GrowSTLGo.APIUsers[*userID]; !ok {
-						GrowSTLGo.APIUsers[*userID] = &APIUser{
+						apiUser := &APIUser{
 							Active:         utils.BoolPointer(true),
-							Authentication: &authentication,
+							Authentication: &user.Authentication,
 						}
+
+						if user.Vhosts != nil {
+							for _, vhost := range user.Vhosts {
+								if _, ok := GrowSTLGo.WebService.Vhosts[vhost]; ok {
+									apiUser.Vhosts = append(apiUser.Vhosts, vhost)
+								}
+							}
+						}
+
+						GrowSTLGo.APIUsers[*userID] = apiUser
 						return GrowSTLGo.persist()
 					}
 				}
@@ -86,11 +106,21 @@ func AddUser(userID *string, data interface{}) error {
 func UpdateUser(userID *string, data interface{}) error {
 	if userID != nil && data != nil {
 		if bytes, err := json.Marshal(data); err == nil {
-			var authentication Authentication
-			if err := json.Unmarshal(bytes, &authentication); err == nil && authentication.ID != nil && authentication.Password != nil {
-				if err := authentication.hashAuthentication(); err == nil {
+			var user userModifier
+			if err := json.Unmarshal(bytes, &user); err == nil && user.ID != nil && user.Password != nil {
+				if err := user.hashAuthentication(); err == nil {
 					if apiUser, ok := GrowSTLGo.APIUsers[*userID]; ok {
-						apiUser.Authentication = &authentication
+						apiUser.Authentication = &user.Authentication
+
+						if user.Vhosts != nil {
+							apiUser.Vhosts = []string{}
+							for _, vhost := range user.Vhosts {
+								if _, ok := GrowSTLGo.WebService.Vhosts[vhost]; ok {
+									apiUser.Vhosts = append(apiUser.Vhosts, vhost)
+								}
+							}
+						}
+
 						return GrowSTLGo.persist()
 					}
 				}

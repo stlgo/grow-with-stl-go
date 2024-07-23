@@ -36,6 +36,7 @@ const (
 	removeUser       = "removeUser"
 	pageLoad         = "pageLoad"
 	generatePassword = "generatePassword"
+	getUserDetails   = "getUserDetails"
 )
 
 // Init is different than the standard init because it is called outside of the object load
@@ -59,6 +60,12 @@ func handleMessage(request, response *configs.WsMessage) {
 			}
 		case addUser, updateUser, updateActive, updateAdmin, removeUser:
 			userAction(request, response)
+		case getUserDetails:
+			if request.Component != nil {
+				if apiUser, ok := configs.GrowSTLGo.APIUsers[*request.Component]; ok {
+					response.Data = apiUser.Vhosts
+				}
+			}
 		default:
 			err = fmt.Errorf("type %s not implemented", *request.Component)
 		}

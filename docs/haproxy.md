@@ -2,6 +2,10 @@
 
 ## What is HAProxy?
 
+HAProxy is a free, very fast and reliable reverse-proxy offering high availability, load balancing, and proxying for TCP and HTTP-based applications. It is particularly suited for very high traffic web sites and powers a significant portion of the world's most visited ones. Over the years it has become the de-facto standard opensource load balancer, is now shipped with most mainstream Linux distributions, and is often deployed by default in cloud platforms.
+
+https://www.haproxy.org/
+
 ## Basic config for the grow-with-stlgo sample application
 
 ```bash

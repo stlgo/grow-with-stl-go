@@ -111,7 +111,7 @@ We have some examples and some documentation on how to go from "hello world" to 
 1. Configurations
 2. Database access
 3. Static web hosting
-4. WebService hosting
+4. [Virtual hosting](docs/vhosting.md)
 5. [WebService clients](examples/clients/README.md)
 
 ### Whelp, you came this far, may as well go a bit further

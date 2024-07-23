@@ -54,14 +54,19 @@ func checkWebService() error {
 			if privateKeyFile != nil && publicKeyFile != nil {
 				port := 10443
 				host := "localhost"
-				staticWebDir := "web/grow-with-stlgo-admin"
+				webDir := "web/grow-with-stlgo"
+				adminWebDir := "web/grow-with-stlgo-admin"
 
 				GrowSTLGo.WebService = &WebService{
 					Host:       &host,
 					Port:       &port,
 					PublicKey:  publicKeyFile,
 					PrivateKey: privateKeyFile,
-					Vhosts:     map[string]*string{host: &staticWebDir},
+					Vhosts: map[string]*string{
+						"localhost":                          &adminWebDir,
+						"grow-with-stlgo.localdev.org":       &webDir,
+						"grow-with-stlgo-admin.localdev.org": &adminWebDir,
+					},
 				}
 
 				err = cryptography.CheckCertValidity(publicKeyFile)

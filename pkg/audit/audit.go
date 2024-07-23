@@ -202,7 +202,7 @@ func NewRESTTransaction(host, uri, method *string) *RESTTransaction {
 // Complete is a WSTransaction receiver function to record it to the DB if applicable
 func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && configs.SqliteDB != nil &&
-		transaction.Component != nil && !strings.EqualFold(*transaction.Component, "keepalive") {
+		transaction.Component != nil && transaction.Type != nil && !strings.EqualFold(*transaction.Type, "keepalive") {
 		if table, ok := auditTables["WebSocket"]; ok && table != nil {
 			stmt, err := configs.SqliteDB.Prepare(table.InsertSQL)
 			if err != nil {

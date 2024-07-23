@@ -48,6 +48,15 @@ class Admin {
     addUser() {
         let userIDInput = document.getElementById('UserIDInput');
         let passwordInput = document.getElementById('GeneratedPasswd');
+
+        const vhosts = [];
+        for (const row of document.getElementById('VhostTable').rows) {
+            const cell = row.cells[1].children[0];
+            if (cell.checked) {
+                vhosts.push(cell.value);
+            }
+        }
+
         if (userIDInput.validity.valid && passwordInput.value.length >= 10) {
             this.ws.sendMessage({
                 route: this.route,
@@ -55,7 +64,8 @@ class Admin {
                 component: userIDInput.value,
                 data: {
                     id: userIDInput.value,
-                    password: passwordInput.value
+                    password: passwordInput.value,
+                    vhosts: vhosts
                 }
             });
             userIDInput.value = '';
@@ -65,6 +75,15 @@ class Admin {
 
     updateUser(userID) {
         let passwordInput = document.getElementById(`${userID}-GeneratedPasswd`);
+
+        const vhosts = [];
+        for (const row of document.getElementById(`${userID}-VhostTable`).rows) {
+            const cell = row.cells[1].children[0];
+            if (cell.checked) {
+                vhosts.push(cell.value);
+            }
+        }
+
         if (passwordInput.value.length >= 10) {
             this.ws.sendMessage({
                 route: this.route,
@@ -72,7 +91,8 @@ class Admin {
                 component: userID,
                 data: {
                     id: userID,
-                    password: passwordInput.value
+                    password: passwordInput.value,
+                    vhosts: vhosts
                 }
             });
             passwordInput.value = '';
@@ -158,10 +178,7 @@ class Admin {
             deferRender: true,
             orderClasses: false,
             columnDefs: [ {
-                targets: 0,
-                orderable: false,
-            }, {
-                targets: 4,
+                targets: [ 0, 4 ],
                 orderable: false,
             } ]
         });
@@ -178,6 +195,12 @@ class Admin {
             let row = table.row(tr);
             const userID = row.data()[1];
             const details = document.getElementById(`${userID}-details`);
+
+            this.ws.sendMessage({
+                route: this.route,
+                type: 'getUserDetails',
+                component: userID,
+            });
 
             if (details.innerHTML.includes('color:maroon')) {
                 row.child.hide();
@@ -212,7 +235,7 @@ class Admin {
                             };
                             break;
                         default:
-                            this.log.info(`cannot decision ${tagElement.id}`);
+                            this.log.trace(`cannot decision ${tagElement.id}`);
                         }
 
                         const name = tagElement.name;
@@ -289,11 +312,47 @@ class Admin {
     }
 
     showVhosts(vhosts) {
-        const select = document.createElement('select');
+        const table = document.createElement('table');
+        table.setAttribute('width', '99%');
+        table.id = 'VhostTable';
+        table.classList.add('display', 'responsive');
+        let th = table.createTHead();
+        let tr = th.insertRow(-1);
+        tr.insertCell(-1).innerHTML = 'Vhost';
+        tr.insertCell(-1).innerHTML = 'Enabled';
+        let tb = table.createTBody();
         vhosts.forEach((vhost) => {
-            select.options.add(new Option(vhost, vhost));
+            tr = tb.insertRow(-1);
+            tr.insertCell(-1).innerHTML = vhost;
+            let checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = vhost;
+            checkbox.value = vhost;
+            checkbox.id = vhost;
+            tr.insertCell(-1).appendChild(checkbox);
         });
-        document.getElementById('VhostDiv').appendChild(select);
+
+        let div = document.getElementById('VhostDiv');
+        div.innerHTML = '';
+        div.appendChild(table);
+
+        $('#VhostTable').DataTable({
+            deferRender: true,
+            orderClasses: false,
+            columnDefs: [ {
+                targets: 1,
+                orderable: false,
+            } ]
+        });
+    }
+
+    showUserVhosts(user, vhosts) {
+        vhosts.forEach((vhost) => {
+            let element = document.getElementById(`${user}-${vhost}`);
+            if (typeof element !== 'undefined' && element !== null) {
+                element.checked = true;
+            }
+        });
     }
 
     handleMessage(json) {
@@ -314,6 +373,9 @@ class Admin {
                 break;
             case 'generatePassword':
                 this.populatePassword(json.component, json.data);
+                break;
+            case 'getUserDetails':
+                this.showUserVhosts(json.component, json.data);
                 break;
             default:
                 this.log.error(`Cannot handle type '${json.type}' for ${this.route}`);
