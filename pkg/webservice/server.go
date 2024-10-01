@@ -52,7 +52,7 @@ func WebServer() {
 	if configs.GrowSTLGo.WebService.Vhosts != nil {
 		for vhost, webRoot := range configs.GrowSTLGo.WebService.Vhosts {
 			if webRoot != nil {
-				log.Debugf("Attempting to serve static content for %s from %s", vhost, *webRoot)
+				log.Infof("Attempting to serve static content for %s from %s", vhost, *webRoot)
 				// handle WebSocket endpoints
 				webServerMux.HandleFunc(fmt.Sprintf("%s/ws/v1.0.0", vhost), onOpen)
 				webServerMux.HandleFunc(fmt.Sprintf("%s/", vhost), handleRESTRequest)

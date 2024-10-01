@@ -13,6 +13,9 @@ TOOLBINDIR    := tools/bin
 WEBDIR        := web
 LINTER        := golangci-lint
 LINTER_CONFIG := .golangci.yaml
+SCRIPT_DIR    := scripts
+TMP_DIR       := /tmp
+DIST_DIR      := $(TMP_DIR)/gwstlg-$(COMPILED_VERSION)
 
 # docker
 DOCKER_MAKE_TARGET  := build
@@ -80,6 +83,10 @@ verify: build
 verify: coverage
 verify: lint
 
+.PHONY: dist
+dist: build
+dist: build-distribution
+
 ### Backend (Go) Make Commands ###
 
 .PHONY: backend-build
@@ -108,7 +115,7 @@ backend-lint:
 	@$(LINTER) run --config $(LINTER_CONFIG)
 	@echo "Backend linting completed successfully"
 
-### Frontend (Angular) Make Commands ###
+### Frontend npm Make Commands ###
 
 .PHONY: frontend-build
 frontend-build:
@@ -123,6 +130,19 @@ frontend-lint:
 	@cd $(WEBDIR)/grow-with-stlgo && npx eslint --fix . && cd ..
 	@cd $(WEBDIR)/grow-with-stlgo-admin && npx eslint --fix . && cd ..
 	@echo "Frontend linting completed successfully"
+
+### Distribution Build ###
+.PHONY: build-distribution
+build-distribution:
+	@echo "Executing distribution build steps..."
+	@mkdir -p $(DIST_DIR)
+	@mkdir -p $(DIST_DIR)/bin
+	@cp $(SCRIPT_DIR)/gwstlg.sh $(DIST_DIR)/bin/
+	@cp $(SCRIPT_DIR)/.gwstlg.service $(DIST_DIR)/bin/
+	@cp $(MAIN)$(EXTENSION) $(DIST_DIR)/bin/
+	@cp -R $(WEBDIR) $(DIST_DIR)
+	@cd $(TMP_DIR) && tar cf - $(DIST_DIR) | gzip -9 > gwstlg-$(COMPILED_VERSION).tar.gz
+	@echo "Distribution build completed successfully"
 
 ### Misc. Linting Commands ###
 
