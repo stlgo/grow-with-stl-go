@@ -67,7 +67,11 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 	if restFunction, ok := webServiceFunctionMap[uriParts[0]]; ok {
 		id, err := handleRESTAuth(r)
 		if err != nil {
-			log.Error(err)
+			if id != nil {
+				log.Infof("User '%s' authentication failed for %s on %s from %s.  Error: %s", *id, r.Method, uri, r.RemoteAddr, err)
+			} else {
+				log.Infof("User '%s' authentication failed on %s from %s.  Error: %s", r.Method, uri, r.RemoteAddr, err)
+			}
 			http.Error(w, configs.BadRequestError, http.StatusBadRequest)
 			return
 		}
