@@ -137,6 +137,7 @@ build-distribution:
 	@mkdir -p $(DIST_DIR)
 	@mkdir -p $(DIST_DIR)/bin
 	@cp $(SCRIPT_DIR)/gwstlg.sh $(DIST_DIR)/bin/
+	@chmod 755 $(DIST_DIR)/bin/gwstlg.sh
 	@cp $(SCRIPT_DIR)/.gwstlg.service $(DIST_DIR)/bin/
 	@cp $(MAIN)$(EXTENSION) $(DIST_DIR)/bin/
 	@cp -R $(WEB_DIR) $(DIST_DIR)

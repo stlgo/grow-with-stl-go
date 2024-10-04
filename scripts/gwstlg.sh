@@ -68,7 +68,7 @@ startServer() {
     # Get rid of old stuff, per whatever retention period you define
     find ${GWSTLG_LOG} -mindepth 1 -mtime +30 -name 'SystemOut.log.*' -exec rm {} \;
 
-    nohup ${GWSTLG_HOME}/bin/gwstlg --loglevel ${LOG_LEVEL} -c ${GWSTLG_ETC}/grow-with-stlg-go.json >> ${GWSTLG_LOG}/SystemOut.log $! > ${GWSTLG_LOG}/gwstlg.pid 2>&1 &
+    nohup ${GWSTLG_HOME}/bin/grow-with-stl-go --loglevel ${LOG_LEVEL} -c ${GWSTLG_ETC}/grow-with-stlg-go.json >> ${GWSTLG_LOG}/SystemOut.log & echo $! > ${GWSTLG_LOG}/gwstlg.pid 2>&1 &
     checkStart
 }
 
@@ -81,6 +81,7 @@ checkStart() {
         if [ -r ${GWSTLG_LOG}/SystemOut.log ]; then
             if [ `tail ${GWSTLG_LOG}/SystemOut.log | grep "${SUCCESS_MESSAGE}" | wc -l` != 0 ]; then
                 echo -e "${0} STATUS: Grow With STL Go has started: \t\t\t\t\t[ ${GREEN}OK ${NORMAL}]"
+                break
             else
                 if [[ ${MAX_WAITS} -le 1 ]]; then
                     echo -e "${0} ERROR: Grow With STL Go start: \t\t\t\t\t[ ${RED}FAILED ${NORMAL}]"
@@ -95,7 +96,7 @@ checkStart() {
     done
 }
 
-stopServer {
+stopServer() {
     STATUS_INTERVAL="10"
     if [ -r ${GWSTLG_LOG}/gwstlg.pid ]; then
         PID=`cat ${GWSTLG_LOG}/gwstlg.pid`
