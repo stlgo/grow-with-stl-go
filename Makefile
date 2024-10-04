@@ -5,17 +5,16 @@
 # this has to be done before the shell invocation
 SHELL=/bin/bash
 
-# Obtain the version and git commit info
-VERSION_FILE=version
-COMPILED_VERSION=`cat $(VERSION_FILE)`
+# Obtain the version
+COMPILED_VERSION=$(shell cat version)
 
 TOOLBINDIR    := tools/bin
-WEBDIR        := web
 LINTER        := golangci-lint
 LINTER_CONFIG := .golangci.yaml
 SCRIPT_DIR    := scripts
 TMP_DIR       := /tmp
 DIST_DIR      := $(TMP_DIR)/gwstlg-$(COMPILED_VERSION)
+WEB_DIR        := web
 
 # docker
 DOCKER_MAKE_TARGET  := build
@@ -120,15 +119,15 @@ backend-lint:
 .PHONY: frontend-build
 frontend-build:
 	@echo "Executing frontend build steps..."
-	@cd $(WEBDIR)/grow-with-stlgo && npm install && cd ../..
-	@cd $(WEBDIR)/grow-with-stlgo-admin && npm install && cd ../..
+	@cd $(WEB_DIR)/grow-with-stlgo && npm install && cd ../..
+	@cd $(WEB_DIR)/grow-with-stlgo-admin && npm install && cd ../..
 	@echo "Frontend build completed successfully"
 
 .PHONY: frontend-lint
 frontend-lint:
 	@echo "Running frontend linting step..."
-	@cd $(WEBDIR)/grow-with-stlgo && npx eslint --fix . && cd ..
-	@cd $(WEBDIR)/grow-with-stlgo-admin && npx eslint --fix . && cd ..
+	@cd $(WEB_DIR)/grow-with-stlgo && npx eslint --fix . && cd ..
+	@cd $(WEB_DIR)/grow-with-stlgo-admin && npx eslint --fix . && cd ..
 	@echo "Frontend linting completed successfully"
 
 ### Distribution Build ###
@@ -140,8 +139,8 @@ build-distribution:
 	@cp $(SCRIPT_DIR)/gwstlg.sh $(DIST_DIR)/bin/
 	@cp $(SCRIPT_DIR)/.gwstlg.service $(DIST_DIR)/bin/
 	@cp $(MAIN)$(EXTENSION) $(DIST_DIR)/bin/
-	@cp -R $(WEBDIR) $(DIST_DIR)
-	@cd $(TMP_DIR) && tar cf - $(DIST_DIR) | gzip -9 > gwstlg-$(COMPILED_VERSION).tar.gz
+	@cp -R $(WEB_DIR) $(DIST_DIR)
+	@cd $(TMP_DIR) && tar cf - gwstlg-$(COMPILED_VERSION) | gzip -9 > gwstlg-$(COMPILED_VERSION).tar.gz
 	@echo "Distribution build completed successfully"
 
 ### Misc. Linting Commands ###
