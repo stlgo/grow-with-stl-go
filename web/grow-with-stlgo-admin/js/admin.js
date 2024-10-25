@@ -118,7 +118,7 @@ class Admin {
                 break;
             }
             navigator.clipboard.writeText(data.password);
-            alert('Password has been copied to your clipboard'); // eslint-disable-line no-alert
+            this.ws.showSnackbarMessage('Password has been copied to your clipboard');
         }
     }
 
@@ -183,8 +183,8 @@ class Admin {
             } ]
         });
 
-        this.bindActiveToggle();
-        this.bindAdminToggle();
+        this.bindActiveToggle(userTable);
+        this.bindAdminToggle(userTable);
         this.bindSlideOut(userTable);
         this.bindRemoveUser(userTable);
     }
@@ -251,63 +251,110 @@ class Admin {
         });
     }
 
-    bindActiveToggle() {
-        document.querySelectorAll('.user-active-chk').forEach((chkBox) => {
-            chkBox.onclick = (event) => {
-                event.preventDefault();
-                const userID = chkBox.name;
-                let active = false;
-                if (chkBox.checked) {
-                    active = true;
-                }
-                let confirm = window.confirm(`Confirm toggle of user "${userID}" active to ${active}`); // eslint-disable-line no-alert
-                if (confirm === true) {
-                    this.ws.sendMessage({
-                        route: this.route,
-                        type: 'updateActive',
-                        component: userID,
-                        subComponent: `${active}`
-                    });
-                }
+    bindActiveToggle(userTable) {
+        userTable.on('click', 'td:nth-child(4)', (event) => {
+            let row = userTable.row(event.target.closest('tr'));
+            const userID = row.data()[1];
+            let chkBox = document.getElementById(`${userID}_active_chk`);
+            let dialog = document.createElement('dialog');
+            dialog.appendChild(document.createTextNode(`Confirm toggle of user "${userID}" active to ${chkBox.checked}`));
+            let dialogTable = document.createElement('table');
+            dialogTable.createTBody();
+            let tr = dialogTable.getElementsByTagName('tbody')[0].insertRow(-1);
+            let button = document.createElement('button');
+            button.classList.add('btn', 'btn-outline-success');
+            button.innerText = 'Confirm';
+            button.onclick = () => {
+                this.ws.sendMessage({
+                    route: this.route,
+                    type: 'updateActive',
+                    component: userID,
+                    subComponent: chkBox.checked ? 'true' : 'false'
+                });
+                dialog.close();
             };
+            tr.insertCell(-1).appendChild(button);
+            button = document.createElement('button');
+            button.classList.add('btn', 'btn-outline-secondary');
+            button.innerText = 'Cancel ';
+            button.onclick = () => {
+                dialog.close();
+            };
+            tr.insertCell(-1).appendChild(button);
+            dialog.appendChild(dialogTable);
+            document.body.appendChild(dialog);
+            dialog.showModal();
         });
     }
 
-    bindAdminToggle() {
-        document.querySelectorAll('.user-admin-chk').forEach((chkBox) => {
-            chkBox.onclick = (event) => {
-                event.preventDefault();
-                const userID = chkBox.name;
-                let admin = false;
-                if (chkBox.checked) {
-                    admin = true;
-                }
-                let confirm = window.confirm(`Confirm toggle of user "${userID}" admin to ${admin}`); // eslint-disable-line no-alert
-                if (confirm === true) {
-                    this.ws.sendMessage({
-                        route: this.route,
-                        type: 'updateAdmin',
-                        component: userID,
-                        subComponent: `${admin}`
-                    });
-                }
+    bindAdminToggle(userTable) {
+        userTable.on('click', 'td:nth-child(5)', (event) => {
+            let row = userTable.row(event.target.closest('tr'));
+            const userID = row.data()[1];
+            let chkBox = document.getElementById(`${userID}_admin_chk`);
+
+            let dialog = document.createElement('dialog');
+            dialog.appendChild(document.createTextNode(`Confirm toggle of user "${userID}" admin to ${chkBox.checked}`));
+            let dialogTable = document.createElement('table');
+            dialogTable.createTBody();
+            let tr = dialogTable.getElementsByTagName('tbody')[0].insertRow(-1);
+            let button = document.createElement('button');
+            button.classList.add('btn', 'btn-outline-success');
+            button.innerText = 'Confirm';
+            button.onclick = () => {
+                this.ws.sendMessage({
+                    route: this.route,
+                    type: 'updateAdmin',
+                    component: userID,
+                    subComponent: chkBox.checked ? 'true' : 'false'
+                });
+                dialog.close();
             };
+            tr.insertCell(-1).appendChild(button);
+            button = document.createElement('button');
+            button.classList.add('btn', 'btn-outline-secondary');
+            button.innerText = 'Cancel ';
+            button.onclick = () => {
+                dialog.close();
+            };
+            tr.insertCell(-1).appendChild(button);
+            dialog.appendChild(dialogTable);
+            document.body.appendChild(dialog);
+            dialog.showModal();
         });
     }
 
-    bindRemoveUser(table) {
-        document.querySelectorAll('.remove-user').forEach((removeButton) => {
-            removeButton.onclick = () => {
-                const row = table.row(removeButton.parentNode.parentNode);
-                const userID = row.data()[1];
-                if (window.confirm(`Confirm removal of user "${userID}"`)) { // eslint-disable-line no-alert
-                    this.ws.sendMessage({
-                        route: this.route,
-                        type: 'removeUser',
-                        component: userID,
-                    });
-                }
+    bindRemoveUser(userTable) {
+        userTable.on('click', 'td:nth-child(6)', (event) => {
+            let row = userTable.row(event.target.closest('tr'));
+            const userID = row.data()[1];
+            let dialog = document.createElement('dialog');
+            dialog.appendChild(document.createTextNode(`Confirm removal of user "${userID}"`));
+            let dialogTable = document.createElement('table');
+            dialogTable.createTBody();
+            let tr = dialogTable.getElementsByTagName('tbody')[0].insertRow(-1);
+            let button = document.createElement('button');
+            button.classList.add('btn', 'btn-outline-success');
+            button.innerText = 'Confirm';
+            button.onclick = () => {
+                this.ws.sendMessage({
+                    route: this.route,
+                    type: 'removeUser',
+                    component: userID,
+                });
+                dialog.close();
             };
+            tr.insertCell(-1).appendChild(button);
+            button = document.createElement('button');
+            button.classList.add('btn', 'btn-outline-secondary');
+            button.innerText = 'Cancel ';
+            button.onclick = () => {
+                dialog.close();
+            };
+            tr.insertCell(-1).appendChild(button);
+            dialog.appendChild(dialogTable);
+            document.body.appendChild(dialog);
+            dialog.showModal();
         });
     }
 
@@ -358,7 +405,7 @@ class Admin {
     handleMessage(json) {
         if (Object.prototype.hasOwnProperty.call(json, 'error')) {
             this.log.error(json.error);
-            alert(json.error); // eslint-disable-line no-alert
+            this.ws.showSnackbarMessage(json.error);
         } else {
             switch(json.type) {
             case 'addUser':
