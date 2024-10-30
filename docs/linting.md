@@ -20,6 +20,19 @@ go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
 go install golang.org/x/lint/golint
 ```
 
+**NOTE:**
+If you're seeing net/http: TLS handshake timeout you may need to set the GOPROXY="direct"
+
+Linux:
+```bash
+export GPOPROXY="direct"
+```
+
+Windows:
+```bash
+set GPOPROXY="direct"
+```
+
 ## pre-commit
 
 [pre-commit](https://pre-commit.com/) can be used as a git hook to test your code prior to committal.  This allows us to execute our linters, [cyclomatic complexity tests](https://en.wikipedia.org/wiki/Cyclomatic_complexity) style guides, automated test and whatever we can think of automatically prior to committing code to the repository.  Working with pre-commit is fairly easy but it does require python to be available on the system
