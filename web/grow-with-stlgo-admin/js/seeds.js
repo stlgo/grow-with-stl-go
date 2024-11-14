@@ -225,8 +225,12 @@ class Seeds {
     }
 
     updateSeed(data) {
-        document.getElementById(`${data.id}-available`).innerHTML = data.packets;
-        document.getElementById(`${data.id}-quantity`).max = data.packets;
+        // don't try to update if not present on page
+        let available = document.getElementById(`${data.id}-available`);
+        if (typeof available !== 'undefined' && available !== null) {
+            available.innerHTML = data.packets;
+            document.getElementById(`${data.id}-quantity`).max = data.packets;
+        }
     }
 
     handleMessage(json) {
