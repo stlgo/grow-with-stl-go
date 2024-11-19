@@ -20,7 +20,6 @@
     "datatables.net-responsive": "^3.0.0",
     "datatables.net-select-dt": "^2.0.0",
     "font-awesome": "^4.7.0",
-    "font-awesome-icons": "^1.6.0",
     "jquery": "^3.7.1"
   }
 }
