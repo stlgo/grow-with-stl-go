@@ -82,7 +82,20 @@ Go can be downloaded and installed from here: <https://go.dev/dl/>
 5. You can now run your executable without the need to invoke go commands
 
     ```bash
-    $ main
+    $ ./main
+    Hello world from the St. Louis Go learning Series
+    ```
+
+6. You can build the project by running "go build" this will create a go-learning-series (or go-learning-series.exe if you're on windows) binary
+
+    ```bash
+    go build
+    ```
+
+7. You can now run your executable without the need to invoke go commands
+
+    ```bash
+    $ ./go-learning-series
     Hello world from the St. Louis Go learning Series
     ```
 
