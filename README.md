@@ -66,10 +66,10 @@ Go can be downloaded and installed from here: <https://go.dev/dl/>
     }
     ```
 
-3. Run your program by executing "go run hello-world"
+3. Run your program by executing "go run main.go"
 
     ```bash
-    $ go run hello-world.go
+    $ go run main.go
     Hello world from the St. Louis Go learning Series
     ```
 
