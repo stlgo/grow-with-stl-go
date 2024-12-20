@@ -1,9 +1,10 @@
 FROM ubuntu:latest
+EXPOSE 10443
 # Set working directory
 WORKDIR /opt/app
 
 # Pull the distribution over
-COPY /tmp/gwstlg-1.0.2.tar.gz /opt/app/gwstlg-1.0.2.tar.gz
+COPY gwstlg-1.0.2.tar.gz /tmp/gwstlg-1.0.2.tar.gz
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/etc
 RUN mkdir -p /opt/app/logs

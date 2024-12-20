@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 [UNIT]
-Description=Grow with STL Go sample program conrol script
+Description=Grow with STL Go sample program control script
 
 [Service]
 Type=forking
