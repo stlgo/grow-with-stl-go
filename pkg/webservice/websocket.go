@@ -334,7 +334,7 @@ func handleMessage(request, response *configs.WsMessage) {
 		case configs.GetPagelet:
 			getPagelet(request, response)
 		case configs.Keepalive:
-			log.Trace(fmt.Sprintf("keepalive received for session %s", *request.SessionID))
+			log.Tracef("keepalive received for session %s", *request.SessionID)
 		case configs.Auth:
 			if session, ok := sessions[*request.SessionID]; ok {
 				user, err := handleWebSocketAuth(request, response)
@@ -355,7 +355,7 @@ func handleMessage(request, response *configs.WsMessage) {
 		}
 		return
 	}
-	err := fmt.Errorf("bad request").Error()
+	err := errors.New("bad request").Error()
 	response.Error = &err
 }
 

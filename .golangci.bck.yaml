@@ -1,0 +1,235 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This file contains all available configuration options
+# with their documentation
+
+
+# all available settings of specific linters
+linters-settings:
+
+  errcheck:
+    # report about not checking of errors in type assertions: `a := b.(MyStruct)`;
+    # default is false: such cases aren't reported by default.
+    check-type-assertions: true
+
+    # report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`;
+    # default is false: such cases aren't reported by default.
+    check-blank: true
+
+    # path to a file containing a list of functions to exclude from checking
+    # see https://github.com/kisielk/errcheck#excluding-functions for details
+    # exclude: /path/to/file.txt
+
+  goconst:
+    # minimal length of string constant, 3 by default
+    min-len: 4
+    # minimal occurrences count to trigger, 3 by default
+    min-occurrences: 5
+
+  gocritic:
+    # Which checks should be enabled; can't be combined with 'disabled-checks';
+    # See https://go-critic.github.io/overview#checks-overview
+    # To check which checks are enabled run `GL_DEBUG=gocritic golangci-lint run`
+    # By default list of stable checks is used.
+    # enabled-checks:
+    #   # - appendcombine
+    #   # - argorder
+    #   # - assignop
+    #   - badcall
+    #   - badcond
+    #   - badlock
+    #   - badregexp
+    #   - badsorting
+    #   - boolexprsimplify
+    #   - builtinshadow
+    #   - builtinshadowdecl
+    #   - captlocal
+    #   - caseorder
+    #   - codegencomment
+    #   - commentedoutcode
+    #   - commentedoutimport
+    #   - commentformatting
+    #   - defaultcaseorder
+    #   - deferinloop
+    #   - deferunlambda
+    #   - deprecatedcomment
+    #   - docstub
+    #   - duparg
+    #   - dupbranchbody
+    #   - dupcase
+    #   - dupimport
+    #   - dupsubexpr
+    #   - dynamicfmtstring
+    #   # - elseif
+    #   - emptydecl
+    #   - emptyfallthrough
+    #   - emptystringtest
+    #   - equalfold
+    #   - evalorder
+    #   - exitafterdefer
+    #   - exposedsyncmutex
+    #   - externalerrorreassign
+    #   - filepathjoin
+    #   - flagderef
+    #   - flagname
+    #   - hexliteral
+    #   - httpnobody
+    #   - hugeparam
+    #   - ifelsechain
+    #   - importshadow
+    #   - indexalloc
+    #   - initclause
+    #   - mapkey
+    #   - methodexprcall
+    #   - nestingreduce
+    #   - newderef
+    #   - nilvalreturn
+    #   - octalliteral
+    #   - offby1
+    #   - paramtypecombine
+    #   - preferdecoderune
+    #   - preferfilepathjoin
+    #   - preferfprint
+    #   - preferstringwriter
+    #   - preferwritebyte
+    #   - ptrtorefparam
+    #   - rangeexprcopy
+    #   - rangevalcopy
+    #   - redundantsprint
+    #   - regexpmust
+    #   - regexppattern
+    #   - regexpsimplify
+    #   - returnafterhttperror
+    #   - ruleguard
+    #   - singlecaseswitch
+    #   - sliceclear
+    #   - sloppylen
+    #   - sloppyreassign
+    #   #- sloppytestfuncname
+    #   - sloppytypeassert
+    #   - sortslice
+    #   - sprintfquotedstring
+    #   - sqlquery
+    #   - stringconcatsimplify
+    #   - stringscompare
+    #   - stringxbytes
+    #   - switchtrue
+    #   - syncmaploadanddelete
+    #   - timecmpsimplify
+    #   - timeexprsimplify
+    #   - todocommentwithoutdetail
+    #   - toomanyresultschecker
+    #   - truncatecmp
+    #   - typeassertchain
+    #   - typedeffirst
+    #   - typeswitchvar
+    #   - typeunparen
+    #   - uncheckedinlineerr
+    #   # - underef
+    #   - unlabelstmt
+    #   # - unlambda
+    #   - unnamedresult
+    #   - unnecessaryblock
+    #   - unnecessarydefer
+    #   # - unslice
+    #   - valswap
+    #   - weakcond
+    #   - whynolint
+    #   - wrapperfunc
+    #   - yodastyleexpr
+
+    # Which checks should be disabled; can't be combined with 'enabled-checks'; default is empty
+    # disabled-checks:
+    #   - regexpMust
+
+    # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
+    # Empty list by default. See https://github.com/go-critic/go-critic#usage -> section "Tags".
+    # enabled-tags:
+    #   - performance
+
+    settings: # settings passed to gocritic
+      captLocal:
+        paramsOnly: false
+
+  gocyclo:
+    # minimal code complexity to report, 30 by default (but we recommend 10-20)
+    min-complexity: 20
+
+  cyclop:
+    # the maximal code complexity to report
+    max-complexity: 20
+
+  gofmt:
+    # simplify code: gofmt with `-s` option, true by default
+    simplify: true
+
+  goimports:
+  #  # put imports beginning with prefix after 3rd-party packages;
+  #  # it's a comma-separated list of prefixes
+    local-prefixes: stl-go/grow-with-stl-go
+
+  misspell:
+    # Correct spellings using locale preferences for US or UK.
+    # Default is to use a neutral variety of English.
+    # Setting locale to US will correct the British spelling of 'colour' to 'color'.
+    locale: US
+    # ignore-words:
+    #   - someword
+
+  nakedret:
+    # make an issue if func has more lines of code than this setting and it has naked returns; default is 30
+    max-func-lines: 10
+
+  lll:
+    # max line length, lines longer will be reported. Default is 120.
+    # '\t' is counted as 1 character by default, and can be changed with the tab-width option
+    line-length: 160
+    # tab width in spaces. Default to 1.
+    tab-width: 1
+
+  unparam:
+    # Inspect exported functions, default is false. Set to true if no external program/library imports your code.
+    # XXX: if you enable this setting, unparam will report a lot of false-positives in text editors:
+    # if it's called for subdir of a project it can't find external interfaces. All text editor integrations
+    # with golangci-lint call it on a directory with the changed file.
+    check-exported: false
+
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck             # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
+    - goconst              # Finds repeated strings that could be replaced by a constant
+    - gocritic             # The most opinionated Go source code linter
+    - gocyclo              # Computes and checks the cyclomatic complexity of functions
+    - gofmt                # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
+    - goimports            # Goimports does everything that gofmt does. Additionally it checks unused imports
+    #- golint               # Finds all coding style mistakes
+    - gosec                # Inspects source code for security problems
+    - govet                # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+    - ineffassign          # Detects when assignments to existing variables are not used
+    #- interfacer           # Linter that suggests narrower interface types
+    - lll                  # Reports long lines
+    - misspell             # Finds commonly misspelled English words in comments
+    - nakedret             # Finds naked returns in functions greater than a specified function length
+    - prealloc             # Finds slice declarations that could potentially be preallocated
+    - unconvert            # Remove unnecessary type conversions
+    - unparam              # Reports unused function parameters
+    - unused               # Checks Go code for unused constants, variables, functions and types
+    #- varcheck             # Finds unused global variables and constants
+    - whitespace           # Tool for detection of leading and trailing whitespace NOTE(howell): This linter does _not_ check for trailing whitespace in multiline strings
+    - revive               # Finds all coding style mistakes
+    - asciicheck           # Simple linter to check that your code does not contain non-ASCII identifiers
+    - typecheck            # Like the front-end of a Go compiler, parses and type-checks Go code
+    - bidichk              # Checks for dangerous unicode character sequences
+    - cyclop               # Checks function and package cyclomatic complexity

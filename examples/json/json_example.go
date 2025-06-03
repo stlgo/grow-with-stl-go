@@ -153,19 +153,21 @@ func readSimpleJSONFile(fileName *string) (map[string]any, error) {
 
 // scan a generic JSON object for specific keys
 func scanJSON(jo any) error {
-	for key, value := range jo.(map[string]interface{}) {
-		switch value.(type) {
-		case map[string]interface{}:
-			if err := scanJSON(value); err != nil {
-				return err
-			}
-		case []interface{}:
-			if err := scanJSONArray(value); err != nil {
-				return err
-			}
-		default:
-			if strings.EqualFold(key, "foo") {
-				fmt.Printf("key %s found with value %v\n", key, value)
+	if jm, ok := jo.(map[string]interface{}); ok {
+		for key, value := range jm {
+			switch value.(type) {
+			case map[string]interface{}:
+				if err := scanJSON(value); err != nil {
+					return err
+				}
+			case []interface{}:
+				if err := scanJSONArray(value); err != nil {
+					return err
+				}
+			default:
+				if strings.EqualFold(key, "foo") {
+					fmt.Printf("key %s found with value %v\n", key, value)
+				}
 			}
 		}
 	}
@@ -174,15 +176,17 @@ func scanJSON(jo any) error {
 
 // scan a generic JSON array for specific keys (utilized by scanJSON)
 func scanJSONArray(anArray any) error {
-	for _, value := range anArray.([]interface{}) {
-		switch value.(type) {
-		case map[string]interface{}:
-			if err := scanJSON(value); err != nil {
-				return err
-			}
-		case []interface{}:
-			if err := scanJSONArray(value); err != nil {
-				return err
+	if a, ok := anArray.([]interface{}); ok {
+		for _, value := range a {
+			switch value.(type) {
+			case map[string]interface{}:
+				if err := scanJSON(value); err != nil {
+					return err
+				}
+			case []interface{}:
+				if err := scanJSONArray(value); err != nil {
+					return err
+				}
 			}
 		}
 	}

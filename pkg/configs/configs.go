@@ -175,20 +175,22 @@ func getSecret(jo map[string]interface{}) error {
 
 // scan a generic JSON object for specific keys
 func scanJSON(jo any) error {
-	for key, value := range jo.(map[string]interface{}) {
-		switch value.(type) {
-		case map[string]interface{}:
-			if err := scanJSON(value); err != nil {
-				return err
-			}
-		case []interface{}:
-			if err := scanJSONArray(value); err != nil {
-				return err
-			}
-		default:
-			if keysToEncrypt.MatchString(strings.ToLower(key)) {
-				if err := scanJSONHelper(jo, value, key); err != nil {
+	if m, t := jo.(map[string]interface{}); t {
+		for key, value := range m {
+			switch value.(type) {
+			case map[string]interface{}:
+				if err := scanJSON(value); err != nil {
 					return err
+				}
+			case []interface{}:
+				if err := scanJSONArray(value); err != nil {
+					return err
+				}
+			default:
+				if keysToEncrypt.MatchString(strings.ToLower(key)) {
+					if err := scanJSONHelper(jo, value, key); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -198,15 +200,17 @@ func scanJSON(jo any) error {
 
 // scan a generic JSON array for specific keys (utilized by scanJSON)
 func scanJSONArray(anArray any) error {
-	for _, value := range anArray.([]interface{}) {
-		switch value.(type) {
-		case map[string]interface{}:
-			if err := scanJSON(value); err != nil {
-				return err
-			}
-		case []interface{}:
-			if err := scanJSONArray(value); err != nil {
-				return err
+	if a, t := anArray.([]interface{}); t {
+		for _, value := range a {
+			switch value.(type) {
+			case map[string]interface{}:
+				if err := scanJSON(value); err != nil {
+					return err
+				}
+			case []interface{}:
+				if err := scanJSONArray(value); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -223,8 +227,10 @@ func scanJSONHelper(jo any, value interface{}, key string) error {
 		if err != nil {
 			return fmt.Errorf("unable to encrypt data for key %s", key)
 		}
-		jo.(map[string]interface{})[key] = *cipherText
-		rewriteConfig = true
+		if m, t := jo.(map[string]interface{}); t {
+			m[key] = *cipherText
+			rewriteConfig = true
+		}
 	}
 	return nil
 }

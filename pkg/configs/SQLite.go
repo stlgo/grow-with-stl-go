@@ -103,7 +103,7 @@ func startDB() error {
 func (sqlite *SQLite) generateEncryptionKeys() error {
 	var keyBytes bytes.Buffer
 	// generate 64 bit key
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		// golangci-lint tosses a false positive G404: Use of weak random number generator error so we'll skip that for this line
 		keyBytes.WriteString(fmt.Sprintf("%x", rand.New(rand.NewSource(time.Now().UnixNano()+int64(i))).Uint64())) // #nosec
 	}
@@ -134,6 +134,7 @@ func (table *Table) CreateTable(tableName *string) error {
 		if err != nil {
 			return err
 		}
+		defer stmt.Close()
 		if _, err = stmt.Exec(); err != nil {
 			return err
 		}
@@ -142,6 +143,7 @@ func (table *Table) CreateTable(tableName *string) error {
 			if err != nil {
 				return err
 			}
+			defer stmt.Close()
 			if _, err = stmt.Exec(); err != nil {
 				return err
 			}
@@ -158,6 +160,7 @@ func (table *Table) CreateTable(tableName *string) error {
 				if err != nil {
 					return err
 				}
+				defer stmt.Close()
 				if _, err = stmt.Exec(); err != nil {
 					return err
 				}

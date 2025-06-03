@@ -190,12 +190,18 @@ func getInventory(headers map[string]string) map[string]interface{} {
 
 func getSeedID(categoryName, commonName *string, jo map[string]any) *string {
 	if category, ok := jo[*categoryName]; ok {
-		if items, ok := category.(map[string]interface{})["items"]; ok {
-			for seedID, details := range items.(map[string]interface{}) {
-				if herbName, ok := details.(map[string]interface{})["commonName"]; ok {
-					if herbStr, ok := herbName.(string); ok {
-						if strings.EqualFold(herbStr, *commonName) {
-							return &seedID
+		if m, t := category.(map[string]interface{}); t {
+			if items, ok := m["items"]; ok {
+				if itemMap, itemConvert := items.(map[string]interface{}); itemConvert {
+					for seedID, details := range itemMap {
+						if d, ok := details.(map[string]interface{}); ok {
+							if herbName, ok := d["commonName"]; ok {
+								if herbStr, ok := herbName.(string); ok {
+									if strings.EqualFold(herbStr, *commonName) {
+										return &seedID
+									}
+								}
+							}
 						}
 					}
 				}
@@ -291,10 +297,8 @@ func httpRequest(requestedURL, method string, headers map[string]string, payload
 		}
 	}
 
-	if headers != nil {
-		for key, value := range headers {
-			request.Header.Add(key, value)
-		}
+	for key, value := range headers {
+		request.Header.Add(key, value)
 	}
 
 	c, err := getClient()

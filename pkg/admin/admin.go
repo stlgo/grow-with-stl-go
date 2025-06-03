@@ -17,9 +17,10 @@ package admin
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 
-	"golang.org/x/exp/maps"
+	"maps"
 
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -174,7 +175,7 @@ func getUserInfo() (map[string]interface{}, error) {
 
 	data := map[string]interface{}{
 		"users":  users,
-		"vhosts": maps.Keys(configs.GrowSTLGo.WebService.Vhosts),
+		"vhosts": slices.AppendSeq(make([]string, 0, len(configs.GrowSTLGo.WebService.Vhosts)), maps.Keys(configs.GrowSTLGo.WebService.Vhosts)),
 	}
 	return data, nil
 }

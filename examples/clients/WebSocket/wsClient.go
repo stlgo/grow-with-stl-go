@@ -370,12 +370,18 @@ func purchaseSeed(seedType, seedID *string) {
 
 func getSeedID(categoryName, commonName *string, jo map[string]any) *string {
 	if category, ok := jo[*categoryName]; ok {
-		if items, ok := category.(map[string]interface{})["items"]; ok {
-			for seedID, details := range items.(map[string]interface{}) {
-				if herbName, ok := details.(map[string]interface{})["commonName"]; ok {
-					if herbStr, ok := herbName.(string); ok {
-						if strings.EqualFold(herbStr, *commonName) {
-							return &seedID
+		if cm, ok := category.(map[string]interface{}); ok {
+			if items, ok := cm["items"]; ok {
+				if im, ok := items.(map[string]interface{}); ok {
+					for seedID, details := range im {
+						if dm, ok := details.(map[string]interface{}); ok {
+							if herbName, ok := dm["commonName"]; ok {
+								if herbStr, ok := herbName.(string); ok {
+									if strings.EqualFold(herbStr, *commonName) {
+										return &seedID
+									}
+								}
+							}
 						}
 					}
 				}

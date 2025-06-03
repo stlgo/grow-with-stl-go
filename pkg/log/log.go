@@ -40,6 +40,19 @@ var (
 	writeMutex sync.Mutex
 )
 
+// formatMilliseconds will output time in a more human readable fashion
+func formatMilliseconds(milliseconds int64) string {
+	totalSeconds := milliseconds / 1000
+	ms := milliseconds % 1000
+	minutes := totalSeconds / 60
+	seconds := totalSeconds % 60
+	hours := minutes / 60
+	minutes %= 60
+	days := hours / 24
+	hours %= 24
+	return fmt.Sprintf("%dd:%02dh:%02dm:%02ds:%03dms", days, hours, minutes, seconds, ms)
+}
+
 // FunctionTimer is a deferable function call to time how long something takes
 func FunctionTimer() func() {
 	start := time.Now()
@@ -54,7 +67,7 @@ func FunctionTimer() func() {
 
 	return func() {
 		duration := time.Since(start)
-		writeLog(6, fmt.Sprintf("Function '%s' completed in %vms", functionName, duration.Abs().Milliseconds()))
+		writeLog(6, fmt.Sprintf("Function '%s' completed in %vms", functionName, formatMilliseconds(duration.Abs().Milliseconds())))
 	}
 }
 

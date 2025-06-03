@@ -183,7 +183,7 @@ func getDetail(categoryName, id *string) (*InventoryItem, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("item not found")
+	return nil, errors.New("item not found")
 }
 
 func updateItemInDB(item *InventoryItem) error {

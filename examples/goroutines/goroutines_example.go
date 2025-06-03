@@ -45,7 +45,7 @@ func runWait() {
 	// setup a wait group
 	var wg sync.WaitGroup
 	// kick off 10 goroutines but wait for them with a wait group
-	for i := 0; i <= 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		iter := i // copy this off or it'll get overwritten by the loop
 		go func() {
