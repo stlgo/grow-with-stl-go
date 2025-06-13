@@ -359,6 +359,7 @@ func purchaseSeed(seedType, seedID *string) {
 			Component:    seedType,
 			SubComponent: seedID,
 			Data: &map[string]any{
+				"category": seedType,
 				"id":       seedID,
 				"quantity": 1,
 			},

@@ -133,6 +133,7 @@ class Seeds {
                             component: seed.category,
                             subComponent: seed.id,
                             data: {
+                                category: seed.category,
                                 id: seed.id,
                                 quantity: input.value
                             }

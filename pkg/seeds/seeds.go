@@ -29,17 +29,23 @@ import (
 )
 
 const (
-	seeds               = "seeds"
-	getInventoryRequest = "getInventory"
-	getDetailRequest    = "getDetail"
-	purchaseRequest     = "purchase"
-	addInventoryRequest = "addInventory"
+	seedsKey               = "seeds"
+	getInventoryRequestKey = "getInventory"
+	getDetailRequestKey    = "getDetail"
+	purchaseRequestKey     = "purchase"
+	addInventoryRequestKey = "addInventory"
 )
+
+type purchaseRequest struct {
+	Category *string      `json:"category,omitempty"`
+	ID       *string      `json:"id,omitempty"`
+	Quantity *interface{} `json:"quantity,omitempty"`
+}
 
 // Init is called by the launch in the pkg/commands/root.go
 func Init() error {
-	webservice.AppendToWebsocketFunctionMap(seeds, handleWebsocketRequest)
-	webservice.AppendToRESTFunctionMap(seeds, handleRESTRequest)
+	webservice.AppendToWebsocketFunctionMap(seedsKey, handleWebsocketRequest)
+	webservice.AppendToRESTFunctionMap(seedsKey, handleRESTRequest)
 
 	// make sure the tables exist
 	if err := setupTables(); err != nil {
@@ -59,12 +65,12 @@ func handleWebsocketRequest(request, response *configs.WsMessage) {
 	if request.Type != nil && response != nil {
 		var err error
 		switch *request.Type {
-		case getInventoryRequest:
+		case getInventoryRequestKey:
 			response.Data, err = getInventory()
-		case getDetailRequest:
+		case getDetailRequestKey:
 			response.Data, err = getDetail(request.Component, request.SubComponent)
-		case purchaseRequest:
-			response.Data, err = purchase(request.Component, request.SubComponent, request.SessionID, request.Data)
+		case purchaseRequestKey:
+			response.Data, err = purchase(request.SessionID, request.Data)
 		default:
 			err = fmt.Errorf("type %s not implemented", *request.Type)
 		}
@@ -86,7 +92,7 @@ func handleWebsocketRequest(request, response *configs.WsMessage) {
 }
 
 func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
-	restURI := strings.TrimPrefix(r.RequestURI, fmt.Sprintf("/REST/v1.0.0/%s/", seeds))
+	restURI := strings.TrimPrefix(r.RequestURI, fmt.Sprintf("/REST/v1.0.0/%s/", seedsKey))
 	uriParts := strings.Split(restURI, "/")
 	w.Header().Set("content-type", "application/json")
 	switch r.Method {
@@ -102,7 +108,7 @@ func handleRESTRequest(w http.ResponseWriter, r *http.Request) {
 
 func getHelper(restURI string, uriParts []string, w http.ResponseWriter, r *http.Request) {
 	switch uriParts[0] {
-	case getInventoryRequest:
+	case getInventoryRequestKey:
 		if strings.EqualFold(r.Method, http.MethodGet) {
 			data, err := getInventory()
 			if err != nil {
@@ -112,7 +118,7 @@ func getHelper(restURI string, uriParts []string, w http.ResponseWriter, r *http
 			}
 			writeRESTResponse(data, w, http.StatusOK)
 		}
-	case getDetailRequest:
+	case getDetailRequestKey:
 		if len(uriParts) >= 2 {
 			data, err := getDetail(&uriParts[1], &uriParts[2])
 			if err != nil {
@@ -132,9 +138,9 @@ func getHelper(restURI string, uriParts []string, w http.ResponseWriter, r *http
 
 func postHelper(restURI string, uriParts []string, w http.ResponseWriter, r *http.Request) {
 	switch uriParts[0] {
-	case purchaseRequest:
+	case purchaseRequestKey:
 		purchaseREST(w, r)
-	case addInventoryRequest:
+	case addInventoryRequestKey:
 		http.Error(w, configs.NotImplementedError, http.StatusNotImplemented)
 	default:
 		log.Errorf("%s URI with Method %s not possible", restURI, r.Method)
@@ -175,45 +181,50 @@ func purchaseREST(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if category, ok := requestBody["category"].(string); ok {
-			if seedID, ok := requestBody["id"].(string); ok {
-				data, err := purchase(&category, &seedID, nil, requestBody)
-				if err != nil {
-					log.Error(err)
-					http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
-					return
-				}
-
-				writeRESTResponse(data, w, http.StatusCreated)
-				return
-			}
+		data, err := purchase(nil, requestBody)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			return
 		}
+
+		writeRESTResponse(data, w, http.StatusCreated)
+		return
 	}
 
 	log.Error("bad request")
 	http.Error(w, configs.BadRequestError, http.StatusBadRequest)
 }
 
-func purchase(categoryName, seedID, sessionID *string, data interface{}) (*InventoryItem, error) {
-	if categoryName != nil && seedID != nil && data != nil {
-		if rawData, ok := data.(map[string]interface{}); ok {
-			if category, ok := inventoryCache[*categoryName]; ok && category != nil {
-				if item, ok := category.Items[*seedID]; ok {
-					quantity, err := determineQuantity(rawData["quantity"])
-					if err != nil {
+func purchase(sessionID *string, data interface{}) (*InventoryItem, error) {
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var request purchaseRequest
+	unmarshalErr := json.Unmarshal(bytes, &request)
+	if unmarshalErr != nil {
+		return nil, unmarshalErr
+	}
+
+	if request.Category != nil && request.ID != nil && request.Quantity != nil {
+		if category, ok := inventoryCache[*request.Category]; ok && category != nil {
+			if item, ok := category.Items[*request.ID]; ok {
+				quantity, err := determineQuantity(*request.Quantity)
+				if err != nil {
+					return nil, err
+				}
+				if quantity != nil && *item.Packets >= *quantity {
+					remainder := *item.Packets - *quantity
+					item.Packets = &remainder
+					if err := updateItemInDB(item); err != nil {
 						return nil, err
 					}
-					if quantity != nil && *item.Packets > *quantity {
-						remainder := *item.Packets - *quantity
-						item.Packets = &remainder
-						if err := updateItemInDB(item); err != nil {
-							return nil, err
-						}
-						go notifyAll(categoryName, seedID, sessionID, item)
-						return item, nil
-					}
-					return nil, errors.New("cannot purchase more packets than what the inventory contains")
+					go notifyAll(request.Category, request.ID, sessionID, item)
+					return item, nil
 				}
+				return nil, errors.New("cannot purchase more packets than what the inventory contains")
 			}
 		}
 	}
@@ -221,7 +232,7 @@ func purchase(categoryName, seedID, sessionID *string, data interface{}) (*Inven
 }
 
 func notifyAll(categoryName, seedID, sessionID *string, item *InventoryItem) {
-	route := seeds
+	route := seedsKey
 	requestType := "purchase"
 	response := &configs.WsMessage{
 		Route:        &route,
