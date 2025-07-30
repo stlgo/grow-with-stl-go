@@ -42,7 +42,7 @@ type RESTTransaction struct {
 	URI             *string
 	User            *string
 	Method          *string
-	Payoload        *string
+	Payload         *string
 	QueryParamaters *string
 	Start           *int64
 	Elapsed         *int64
@@ -149,6 +149,7 @@ func RecordLogin(userID *string, protocol string, goodLogin bool) {
 		}
 
 		log.Tracef("%d rows inserted into user", rows)
+		return
 	}
 	log.Trace("did not meet the requirements to record the login")
 }
@@ -265,7 +266,7 @@ func (transaction *RESTTransaction) Complete(httpStatusCode int) error {
 				transaction.URI,
 				transaction.User,
 				transaction.Method,
-				transaction.Payoload,
+				transaction.Payload,
 				transaction.QueryParamaters,
 				httpStatusCode,
 				start,

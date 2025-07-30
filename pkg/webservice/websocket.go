@@ -73,7 +73,7 @@ var websocketFuncMap = map[string]func(*configs.WsMessage, *configs.WsMessage){
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
 func AppendToWebsocketFunctionMap(requestType string, function func(*configs.WsMessage, *configs.WsMessage)) {
-	log.Debugf("Regestering '%s' as a WebSocket Endpoint", requestType)
+	log.Debugf("Registering '%s' as a WebSocket Endpoint", requestType)
 	websocketFuncMap[requestType] = function
 }
 
@@ -213,8 +213,8 @@ func (session *session) handleRequest(request *configs.WsMessage, transaction *a
 }
 
 func (session *session) resetIdleTimer(request *configs.WsMessage) {
-	if session != nil && request != nil && request.Component != nil {
-		if !strings.EqualFold(*request.Component, configs.Keepalive) {
+	if session != nil && request != nil && request.Type != nil {
+		if !strings.EqualFold(*request.Type, configs.Keepalive) {
 			session.lastUsed = utils.CurrentTimeInMillis()
 		}
 	}

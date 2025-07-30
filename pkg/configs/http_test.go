@@ -12,22 +12,4 @@
  limitations under the License.
 */
 
-package utils
-
-import "time"
-
-// CurrentTimeInMillis returns current time as a long int pointer NARF!
-func CurrentTimeInMillis() *int64 {
-	now := time.Now().UnixMilli()
-	return &now
-}
-
-// BoolPointer true or false as a boolean pointer POINT!
-func BoolPointer(b bool) *bool {
-	return &b
-}
-
-// StringPointer return a pointer of a string as a convenience function
-func StringPointer(s string) *string {
-	return &s
-}
+package configs

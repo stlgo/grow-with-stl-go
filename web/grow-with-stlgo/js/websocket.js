@@ -63,7 +63,7 @@ class WebSocketClient {
         };
 
         this.ws.onerror = (event) => {
-            this.log.error(`Web Socket recieved an error: ${event.code}`);
+            this.log.error(`Web Socket received an error: ${event.code}`);
             this.wsClose(event.code);
         };
 

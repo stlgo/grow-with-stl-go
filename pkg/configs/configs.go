@@ -22,7 +22,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -238,17 +240,9 @@ func scanJSONHelper(jo any, value interface{}, key string) error {
 func checkConfigs() error {
 	checkAPIUsers()
 
-	if err := checkWebService(); err != nil {
-		return err
-	}
-
-	if err := checkSQLite(); err != nil {
-		return err
-	}
-
-	if rewriteConfig {
-		if err := GrowSTLGo.persist(); err != nil {
-			return err
+	for _, function := range []func() error{checkWebService, checkSQLite, testRewriteConfig} {
+		if err := function(); err != nil {
+			log.Errorf("error calling function %s", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
 		}
 	}
 
@@ -258,6 +252,15 @@ func checkConfigs() error {
 	}
 
 	configReadTime = time.Now().UnixMilli()
+	return nil
+}
+
+func testRewriteConfig() error {
+	if rewriteConfig {
+		if err := GrowSTLGo.persist(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

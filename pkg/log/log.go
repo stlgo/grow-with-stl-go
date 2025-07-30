@@ -40,8 +40,8 @@ var (
 	writeMutex sync.Mutex
 )
 
-// formatMilliseconds will output time in a more human readable fashion
-func formatMilliseconds(milliseconds int64) string {
+// FormatMilliseconds will output time in a more human readable fashion
+func FormatMilliseconds(milliseconds int64) string {
 	totalSeconds := milliseconds / 1000
 	ms := milliseconds % 1000
 	minutes := totalSeconds / 60
@@ -67,7 +67,7 @@ func FunctionTimer() func() {
 
 	return func() {
 		duration := time.Since(start)
-		writeLog(6, fmt.Sprintf("Function '%s' completed in %vms", functionName, formatMilliseconds(duration.Abs().Milliseconds())))
+		writeLog(6, fmt.Sprintf("Function '%s' completed in %vms", functionName, FormatMilliseconds(duration.Abs().Milliseconds())))
 	}
 }
 
