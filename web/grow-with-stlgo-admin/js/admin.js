@@ -99,11 +99,11 @@ class Admin {
         }
     }
 
-    generatePassword(uesrType) {
+    generatePassword(userType) {
         this.ws.sendMessage({
             route: this.route,
             type: 'generatePassword',
-            component: uesrType,
+            component: userType,
         });
     }
 
@@ -417,6 +417,9 @@ class Admin {
                 this.showUsers(json.data.users);
                 this.showVhosts(json.data.vhosts);
                 this.bindButtons();
+                if (Object.prototype.hasOwnProperty.call(json.data, 'version')) {
+                    document.getElementById('VersionDiv').innerHTML = `Current Version: ${json.data.version}`;
+                }
                 break;
             case 'generatePassword':
                 this.populatePassword(json.component, json.data);

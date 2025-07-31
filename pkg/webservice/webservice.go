@@ -50,7 +50,7 @@ const (
 // It does however require them to implement an init function to append them
 // TODO: maybe some form of an interface to enforce this may be necessary?
 func AppendToRESTFunctionMap(requestType string, function func(w http.ResponseWriter, r *http.Request)) {
-	log.Debugf("Regestering %s as a REST Endpoint", requestType)
+	log.Debugf("Registering %s as a REST Endpoint", requestType)
 	webServiceFunctionMap[requestType] = function
 }
 
@@ -127,7 +127,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		token, validTill, err := createJWTToken(id, &sessionID)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 			go audit.RecordLogin(id, "REST", false)
 			return
 		}
@@ -135,7 +135,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(map[string]interface{}{"sessionID": sessionID, "token": token, "validTill": validTill})
 		if err != nil {
 			log.Error(err)
-			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 			go audit.RecordLogin(id, "REST", false)
 			return
 		}
@@ -144,7 +144,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		_, err = w.Write(b)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 			go audit.RecordLogin(id, "REST", false)
 			return
 		}
@@ -154,7 +154,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Error("http request was nil")
-	http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+	http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 }
 
 func handleRESTAuth(r *http.Request) (*string, error) {

@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -81,8 +82,29 @@ func getHTTPClient() (*http.Client, error) {
 	return &http.Client{Transport: transport}, nil
 }
 
-// HTTPRequestHelper will be used by other various methods to call endpoints
-func HTTPRequestHelper(r *http.Request, start time.Time) (responseText *string, httpStatusCode *int, err error) {
+// HTTPRequest will be used by other various methods to call endpoints
+func HTTPRequest(url, method string, payload *string) (responseText *string, httpStatusCode *int, err error) {
+	startTime := time.Now()
+
+	var request *http.Request
+	if payload != nil {
+		request, err = http.NewRequest(method, url, strings.NewReader(*payload))
+		if err != nil {
+			return nil, nil, err
+		}
+		request.Header.Add("content-type", "application/json")
+	} else {
+		request, err = http.NewRequest(method, url, nil)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return requestHelper(request, startTime)
+}
+
+// requestHelper will be used by other various methods to call endpoints
+func requestHelper(r *http.Request, start time.Time) (responseText *string, httpStatusCode *int, err error) {
 	requestClient, clientErr := getHTTPClient()
 	if clientErr != nil {
 		return nil, nil, clientErr

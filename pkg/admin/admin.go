@@ -35,26 +35,27 @@ const (
 	updateUser       = "updateUser"
 	resetPassword    = "resetPassword"
 	removeUser       = "removeUser"
-	pageLoad         = "pageLoad"
+	pageLoadKey      = "pageLoad"
 	generatePassword = "generatePassword"
 	getUserDetails   = "getUserDetails"
 )
 
 // Init is different than the standard init because it is called outside of the object load
-func Init() {
+func Init() error {
 	webservice.AppendToWebsocketFunctionMap("admin", handleMessage)
 	// warm up the db connection so when we hit the page the first time it's faster
-	if _, err := getUserInfo(); err != nil {
-		log.Error(err)
+	if _, err := pageLoad(); err != nil {
+		return err
 	}
+	return nil
 }
 
 func handleMessage(request, response *configs.WsMessage) {
 	if request.Type != nil && response != nil && (request.IsAdmin != nil && *request.IsAdmin) {
 		var err error
 		switch *request.Type {
-		case pageLoad:
-			response.Data, err = getUserInfo()
+		case pageLoadKey:
+			response.Data, err = pageLoad()
 		case generatePassword:
 			response.Data = map[string]*string{
 				"password": configs.GeneratePassword(),
@@ -139,7 +140,7 @@ func userAction(request, response *configs.WsMessage) *configs.WsMessage {
 			return response
 		}
 
-		data, err := getUserInfo()
+		data, err := pageLoad()
 		if err != nil {
 			log.Error(err)
 			e := err.Error()
@@ -152,7 +153,7 @@ func userAction(request, response *configs.WsMessage) *configs.WsMessage {
 	return nil
 }
 
-func getUserInfo() (map[string]interface{}, error) {
+func pageLoad() (map[string]interface{}, error) {
 	users := make(map[string]interface{})
 	lastLogins, err := audit.GetLastLogins()
 	if err != nil {
@@ -174,8 +175,9 @@ func getUserInfo() (map[string]interface{}, error) {
 	}
 
 	data := map[string]interface{}{
-		"users":  users,
-		"vhosts": slices.AppendSeq(make([]string, 0, len(configs.GrowSTLGo.WebService.Vhosts)), maps.Keys(configs.GrowSTLGo.WebService.Vhosts)),
+		"users":   users,
+		"vhosts":  slices.AppendSeq(make([]string, 0, len(configs.GrowSTLGo.WebService.Vhosts)), maps.Keys(configs.GrowSTLGo.WebService.Vhosts)),
+		"version": configs.Version,
 	}
 	return data, nil
 }

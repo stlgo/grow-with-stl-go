@@ -100,12 +100,12 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	log.Info("Start automated requests")
 	cert := "etc/cert.pem"
 	extraCerts = &cert
-	token, sessinID := login()
-	if token != nil && sessinID != nil {
-		log.Infof("%s %s", *token, *sessinID)
+	token, sessionID := login()
+	if token != nil && sessionID != nil {
+		log.Infof("%s %s", *token, *sessionID)
 		headers := map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", *token),
-			"sessionID":     *sessinID,
+			"sessionID":     *sessionID,
 		}
 		inventory := getInventory(headers)
 		category := "Herb"

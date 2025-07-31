@@ -196,15 +196,15 @@ $ bin/grow-with-stl-go --loglevel 6
 [stl-go] 2024/02/28 13:17:25 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table WebSocket was created if it didn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table REST was created if it didn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table user was created if it didn't already exist
-[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/websocket.go:74: [DEBUG] Regestering 'seeds' as a WebSocket Endpoint
-[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/webservice.go:53: [DEBUG] Regestering seeds as a REST Endpoint
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/websocket.go:74: [DEBUG] Registering 'seeds' as a WebSocket Endpoint
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/webservice.go:53: [DEBUG] Registering seeds as a REST Endpoint
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:132: [TRACE] Audit table seeds was created if it didn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default chive for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default bell pepper for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default serrano for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default galahad for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default plum regal for table seeds if it doesn't already exist
-[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default oreagno for table seeds if it doesn't already exist
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default oregano for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default ailsa craig for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default walla walla for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default carbon for table seeds if it doesn't already exist
@@ -217,7 +217,7 @@ $ bin/grow-with-stl-go --loglevel 6
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/SQLite.go:156: [TRACE] Inserting default jalapeno for table seeds if it doesn't already exist
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/configs/configs.go:282: [DEBUG] Rewriting etc/grow-with-stl-go.json to ensure data is enciphered on disk
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/seeds/seeds.go:160: [DEBUG] 4 categories in inventory cache
-[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/websocket.go:74: [DEBUG] Regestering 'admin' as a WebSocket Endpoint
+[stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/websocket.go:74: [DEBUG] Registering 'admin' as a WebSocket Endpoint
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/server.go:57: [DEBUG] Attempting to serve static content from web
 [stl-go] 2024/02/28 13:17:26 stl-go/grow-with-stl-go/pkg/webservice/server.go:63: [INFO] Attempting to start webservice on localhost:10443
 ```

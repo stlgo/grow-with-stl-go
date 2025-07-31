@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"reflect"
+	"runtime"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -38,9 +40,6 @@ var (
 		Run:     launch,
 		Version: Version(),
 	}
-
-	// version will be overridden by ldflags supplied in Makefile
-	version = "(dev-version)"
 )
 
 func init() {
@@ -88,20 +87,11 @@ func launch(_ *cobra.Command, _ []string) {
 		log.Fatalf("error in config %s: %s", *configs.ConfigFile, err)
 	}
 
-	// start the auditor
-	if err := audit.Init(); err != nil {
-		log.Fatalf("error starting the the auditor: %s", err)
-	}
-
-	// register the web services
-	if err := seeds.Init(); err != nil {
-		log.Fatalf("error populating the seeds: %s", err)
-	}
-
-	// register the web services
-	initFunctions := []func(){admin.Init}
-	for _, function := range initFunctions {
-		function()
+	// kick off the init functions for the various packages
+	for _, function := range []func() error{audit.Init, seeds.Init, admin.Init} {
+		if err := function(); err != nil {
+			log.Fatalf("error calling function %s cannot continue to start", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
+		}
 	}
 
 	// start webservice and listen for the the ctl + c to exit
@@ -120,7 +110,7 @@ func launch(_ *cobra.Command, _ []string) {
 
 // Version returns the version number for the cobra command
 func Version() string {
-	return version
+	return configs.Version
 }
 
 // Execute is called from the main program and kicks this whole shindig off

@@ -42,7 +42,7 @@ COVER_PROFILE       ?= cover.out
 COVER_EXCLUDE       ?= (zz_generated)
 
 # Override the value of the version variable in main.go
-LD_FLAGS= "-X stl-go/grow-with-stl-go/pkg/commands.version=${COMPILED_VERSION}"
+LD_FLAGS= "-X stl-go/grow-with-stl-go/pkg/configs.Version=${COMPILED_VERSION}"
 GO_FLAGS  := -ldflags=$(LD_FLAGS) -trimpath
 BUILD_DIR := bin
 

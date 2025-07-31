@@ -49,6 +49,9 @@ var (
 
 	// SqliteDB is an embedded database
 	SqliteDB *sql.DB
+
+	// Version will be overridden by ldflags supplied in Makefile
+	Version = "(dev-version)"
 )
 
 // constant keys used by the websocket communications
@@ -73,7 +76,7 @@ const (
 	NotFoundError       = `{"error": "Not Found", "status": 404}`
 	NotImplementedError = `{"error": "Not Implemented", "status": 501}`
 	BadRequestError     = `{"error": "Bad Request", "status": 400}`
-	IntenralServerError = `{"error": "Internal Server Error", "status": 500}`
+	InternalServerError = `{"error": "Internal Server Error", "status": 500}`
 	UnauthorizedError   = `{"error": "Unauthorized", "status": 401}`
 )
 
@@ -125,7 +128,7 @@ func SetGrowSTLGoConfig() error {
 			log.Info("No configuration found building a default configuration")
 		}
 
-		// unmarshall the config file to a hash map if it exists
+		// unmarshal the config file to a hash map if it exists
 		var jo map[string]interface{}
 		err = json.Unmarshal(jsonBytes, &jo)
 		if err != nil {

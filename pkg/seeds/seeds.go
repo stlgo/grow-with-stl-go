@@ -113,7 +113,7 @@ func getHelper(restURI string, uriParts []string, w http.ResponseWriter, r *http
 			data, err := getInventory()
 			if err != nil {
 				log.Error(err)
-				http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+				http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 				return
 			}
 			writeRESTResponse(data, w, http.StatusOK)
@@ -123,7 +123,7 @@ func getHelper(restURI string, uriParts []string, w http.ResponseWriter, r *http
 			data, err := getDetail(&uriParts[1], &uriParts[2])
 			if err != nil {
 				log.Error(err)
-				http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+				http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 				return
 			}
 			writeRESTResponse(data, w, http.StatusOK)
@@ -152,7 +152,7 @@ func writeRESTResponse(data interface{}, w http.ResponseWriter, httpStatus int) 
 	b, err := json.Marshal(data)
 	if err != nil {
 		log.Error(err)
-		http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+		http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 		return
 	}
 
@@ -160,7 +160,7 @@ func writeRESTResponse(data interface{}, w http.ResponseWriter, httpStatus int) 
 	_, err = w.Write(b)
 	if err != nil {
 		log.Error(err)
-		http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+		http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 		return
 	}
 }
@@ -184,7 +184,7 @@ func purchaseREST(w http.ResponseWriter, r *http.Request) {
 		data, err := purchase(nil, requestBody)
 		if err != nil {
 			log.Error(err)
-			http.Error(w, configs.IntenralServerError, http.StatusInternalServerError)
+			http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 			return
 		}
 
