@@ -28,7 +28,7 @@ func TestAuthenticationFunctions(t *testing.T) {
 	}
 
 	s := "the-key-has-to-be-32-bytes-long!"
-	GrowSTLGo = Config{
+	GrowSTLGo = &Config{
 		Secret: &s,
 	}
 

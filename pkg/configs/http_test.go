@@ -13,3 +13,28 @@
 */
 
 package configs
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"stl-go/grow-with-stl-go/pkg/log"
+)
+
+func TestHTTPFunctions(t *testing.T) {
+	t.Skip()
+	initConfigTest()
+	t.Run("Download file", func(t *testing.T) {
+		err := SetGrowSTLGoConfig()
+		require.NoError(t, err)
+
+		statusCode, err := DownloadFile("https://download.geonames.org/export/zip/US.zip", http.MethodGet, "c:/temp/test.download.zip", nil)
+		require.NoError(t, err)
+		require.NotNil(t, statusCode)
+		if err == nil && statusCode != nil {
+			log.Info(*statusCode)
+		}
+	})
+}

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -37,7 +38,7 @@ import (
 
 var (
 	// GrowSTLGo is the main config for the application
-	GrowSTLGo Config
+	GrowSTLGo *Config
 	// ConfigFile is the physical file that contains the config for the application
 	ConfigFile     *string
 	etcDir         *string
@@ -83,10 +84,114 @@ const (
 // Config contains the basis of the web service
 type Config struct {
 	APIUsers   map[string]*APIUser `json:"apiUsers,omitempty"`
+	Country    *Country            `json:"country,omitempty"`
+	DataDir    *string             `json:"data_dir,omitempty"`
 	Proxy      *Proxy              `json:"proxy,omitempty"`
 	Secret     *string             `json:"secret,omitempty"`
 	SQLite     *SQLite             `json:"sqlite,omitempty"`
 	WebService *WebService         `json:"webService,omitempty"`
+}
+
+func (c *Config) checkConfig() error {
+	checkAPIUsers()
+
+	for _, function := range []func() error{c.checkDataDir, c.checkCountry, checkWebService, checkSQLite, c.testRewriteConfig} {
+		if err := function(); err != nil {
+			log.Errorf("error calling function %s", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
+		}
+	}
+
+	if !watchSetup {
+		watchSetup = true
+		go configRecheckTimer()
+	}
+
+	configReadTime = time.Now().UnixMilli()
+	return nil
+}
+
+func (c *Config) checkDataDir() error {
+	if c != nil {
+		if c.DataDir == nil {
+			dir, err := os.MkdirTemp("", "gwstlg")
+			if err != nil {
+				return err
+			}
+			c.DataDir = &dir
+		}
+		return nil
+	}
+	return errors.New("invalid config cannot check data dir")
+}
+
+func (c *Config) checkCountry() error {
+	if c != nil {
+		if c.Country == nil {
+			u, urlErr := url.Parse("https://download.geonames.org/export/zip/")
+			if urlErr != nil {
+				return urlErr
+			}
+			urlStr := u.String()
+			country := "US"
+			c.Country = &Country{
+				Country: &country,
+				URL:     &urlStr,
+			}
+			rewriteConfig = true
+			return nil
+		} else if c.Country.Country != nil && c.Country.URL != nil {
+			_, urlErr := url.Parse(*c.Country.URL)
+			if urlErr != nil {
+				return urlErr
+			}
+			return nil
+		}
+	}
+	return errors.New("invalid config cannot check country")
+}
+
+func (c *Config) testRewriteConfig() error {
+	if c != nil {
+		if rewriteConfig {
+			if err := c.persist(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return errors.New("invalid config cannot check rewrite condition")
+}
+
+func (c *Config) persist() error {
+	if c != nil {
+		// lets's make sure we can kick the JSON out of the config
+		bytes, err := json.Marshal(GrowSTLGo)
+		if err != nil {
+			return err
+		}
+
+		// we do this so we can rescan for cleartext passwords
+		var jo map[string]interface{}
+		err = json.Unmarshal(bytes, &jo)
+		if err != nil {
+			return err
+		}
+
+		// scan for cleartext passwords
+		err = scanJSON(jo)
+		if err != nil {
+			return err
+		}
+
+		return writeJSON(jo)
+	}
+	return errors.New("invalid config cannot persist data")
+}
+
+// Country is set for our download of zip codes & latitude / longitudes
+type Country struct {
+	Country *string `json:"country,omitempty"`
+	URL     *string `json:"url,omitempty"`
 }
 
 // Proxy is in case we need to use a proxy for http connections this is where it goes
@@ -159,14 +264,24 @@ func SetGrowSTLGoConfig() error {
 		}
 	}
 
-	return checkConfigs()
+	if GrowSTLGo != nil {
+		return GrowSTLGo.checkConfig()
+	}
+	return errors.New("invalid config cannot continue")
 }
 
 // get the secret from the config
 func getSecret(jo map[string]interface{}) error {
 	if secretInterface, ok := jo["secret"]; ok {
 		if s, ok := secretInterface.(string); ok {
-			GrowSTLGo.Secret = &s
+			if GrowSTLGo == nil {
+				GrowSTLGo = &Config{
+					Secret: &s,
+				}
+			} else {
+				GrowSTLGo.Secret = &s
+			}
+
 			return nil
 		}
 	}
@@ -238,56 +353,6 @@ func scanJSONHelper(jo any, value interface{}, key string) error {
 		}
 	}
 	return nil
-}
-
-func checkConfigs() error {
-	checkAPIUsers()
-
-	for _, function := range []func() error{checkWebService, checkSQLite, testRewriteConfig} {
-		if err := function(); err != nil {
-			log.Errorf("error calling function %s", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
-		}
-	}
-
-	if !watchSetup {
-		watchSetup = true
-		go configRecheckTimer()
-	}
-
-	configReadTime = time.Now().UnixMilli()
-	return nil
-}
-
-func testRewriteConfig() error {
-	if rewriteConfig {
-		if err := GrowSTLGo.persist(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (c *Config) persist() error {
-	// lets's make sure we can kick the JSON out of the config
-	bytes, err := json.Marshal(GrowSTLGo)
-	if err != nil {
-		return err
-	}
-
-	// we do this so we can rescan for cleartext passwords
-	var jo map[string]interface{}
-	err = json.Unmarshal(bytes, &jo)
-	if err != nil {
-		return err
-	}
-
-	// scan for cleartext passwords
-	err = scanJSON(jo)
-	if err != nil {
-		return err
-	}
-
-	return writeJSON(jo)
 }
 
 func writeJSON(jo map[string]interface{}) error {
