@@ -93,21 +93,24 @@ type Config struct {
 }
 
 func (c *Config) checkConfig() error {
-	checkAPIUsers()
+	if c != nil {
+		checkAPIUsers()
 
-	for _, function := range []func() error{c.checkDataDir, c.checkCountry, checkWebService, checkSQLite, c.testRewriteConfig} {
-		if err := function(); err != nil {
-			log.Errorf("error calling function %s", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
+		for _, function := range []func() error{c.checkDataDir, c.checkCountry, c.checkWebService, c.checkSQLite, c.testRewriteConfig} {
+			if err := function(); err != nil {
+				log.Errorf("error calling function %s", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
+			}
 		}
-	}
 
-	if !watchSetup {
-		watchSetup = true
-		go configRecheckTimer()
-	}
+		if !watchSetup {
+			watchSetup = true
+			go configRecheckTimer()
+		}
 
-	configReadTime = time.Now().UnixMilli()
-	return nil
+		configReadTime = time.Now().UnixMilli()
+		return nil
+	}
+	return errors.New("invalid config cannot check configs")
 }
 
 func (c *Config) checkDataDir() error {

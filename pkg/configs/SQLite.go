@@ -48,25 +48,28 @@ type SQLite struct {
 	PopulatedTables map[string]struct{} `json:"populatedTables,omitempty"`
 }
 
-func checkSQLite() error {
-	if GrowSTLGo.SQLite == nil {
-		etcDir, err := getEtcDir()
-		if err != nil {
-			return err
+func (c *Config) checkSQLite() error {
+	if c != nil {
+		if GrowSTLGo.SQLite == nil {
+			etcDir, err := getEtcDir()
+			if err != nil {
+				return err
+			}
+			log.Debug("No embedded database found in the config file, generating a default configuration")
+			fileName := filepath.Join(*etcDir, "grow-with-stl-go.db")
+			sqlite := SQLite{
+				FileName:        &fileName,
+				EncryptDatabase: utils.BoolPointer(true),
+			}
+			if err := sqlite.generateEncryptionKeys(); err != nil {
+				return err
+			}
+			GrowSTLGo.SQLite = &sqlite
+			rewriteConfig = true
 		}
-		log.Debug("No embedded database found in the config file, generating a default configuration")
-		fileName := filepath.Join(*etcDir, "grow-with-stl-go.db")
-		sqlite := SQLite{
-			FileName:        &fileName,
-			EncryptDatabase: utils.BoolPointer(true),
-		}
-		if err := sqlite.generateEncryptionKeys(); err != nil {
-			return err
-		}
-		GrowSTLGo.SQLite = &sqlite
-		rewriteConfig = true
+		return startDB()
 	}
-	return startDB()
+	return errors.New("invalid config cannot check SQLite")
 }
 
 // Init will setup the default tables in the sqlite embedded database

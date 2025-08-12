@@ -36,50 +36,53 @@ type WebService struct {
 	Vhosts     map[string]*string `json:"vhosts,omitempty"`
 }
 
-func checkWebService() error {
-	if GrowSTLGo.WebService == nil {
-		log.Info("No webservice config found, generating ssl keys, host and port info")
+func (c *Config) checkWebService() error {
+	if c != nil {
+		if c.WebService == nil {
+			log.Info("No webservice config found, generating ssl keys, host and port info")
 
-		etcDir, err := getEtcDir()
-		if err != nil {
-			return err
-		}
-
-		if etcDir != nil {
-			privateKeyFile, publicKeyFile, err := cryptography.GenerateDevSSL(etcDir)
+			etcDir, err := getEtcDir()
 			if err != nil {
 				return err
 			}
 
-			if privateKeyFile != nil && publicKeyFile != nil {
-				port := 10443
-				host := "localhost"
-				webDir := "web/grow-with-stlgo"
-				adminWebDir := "web/grow-with-stlgo-admin"
-
-				GrowSTLGo.WebService = &WebService{
-					Host:       &host,
-					Port:       &port,
-					PublicKey:  publicKeyFile,
-					PrivateKey: privateKeyFile,
-					Vhosts: map[string]*string{
-						"localhost":                          &adminWebDir,
-						"grow-with-stlgo.localdev.org":       &webDir,
-						"grow-with-stlgo-admin.localdev.org": &adminWebDir,
-					},
-				}
-
-				err = cryptography.CheckCertValidity(publicKeyFile)
+			if etcDir != nil {
+				privateKeyFile, publicKeyFile, err := cryptography.GenerateDevSSL(etcDir)
 				if err != nil {
 					return err
 				}
 
-				rewriteConfig = true
-				return nil
+				if privateKeyFile != nil && publicKeyFile != nil {
+					port := 10443
+					host := "localhost"
+					webDir := "web/grow-with-stlgo"
+					adminWebDir := "web/grow-with-stlgo-admin"
+
+					GrowSTLGo.WebService = &WebService{
+						Host:       &host,
+						Port:       &port,
+						PublicKey:  publicKeyFile,
+						PrivateKey: privateKeyFile,
+						Vhosts: map[string]*string{
+							"localhost":                          &adminWebDir,
+							"grow-with-stlgo.localdev.org":       &webDir,
+							"grow-with-stlgo-admin.localdev.org": &adminWebDir,
+						},
+					}
+
+					err = cryptography.CheckCertValidity(publicKeyFile)
+					if err != nil {
+						return err
+					}
+
+					rewriteConfig = true
+					return nil
+				}
+				return errors.New("nil private key or public key, cannot continue")
 			}
-			return errors.New("nil private key or public key, cannot continue")
+			return errors.New("nil etc dir, cannot continue")
 		}
-		return errors.New("nil etc dir, cannot continue")
+		return nil
 	}
-	return nil
+	return errors.New("invalid config cannot check webservices")
 }
