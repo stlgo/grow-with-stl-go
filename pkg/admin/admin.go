@@ -64,7 +64,10 @@ func handleMessage(request, response *configs.WsMessage) {
 			userAction(request, response)
 		case getUserDetails:
 			if request.Component != nil {
-				if apiUser, ok := configs.GrowSTLGo.APIUsers[*request.Component]; ok {
+				configs.GrowSTLGo.APIUsersMutex.Lock()
+				apiUser, ok := configs.GrowSTLGo.APIUsers[*request.Component]
+				configs.GrowSTLGo.APIUsersMutex.Unlock()
+				if ok {
 					response.Data = apiUser.Vhosts
 				}
 			}
@@ -95,7 +98,10 @@ func updateUserActive(userID, active *string) error {
 		if err != nil {
 			return err
 		}
-		if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
+		configs.GrowSTLGo.APIUsersMutex.Lock()
+		apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]
+		configs.GrowSTLGo.APIUsersMutex.Unlock()
+		if ok {
 			return apiUser.ToggleActive(&b)
 		}
 	}
@@ -108,7 +114,10 @@ func updateUserAdmin(userID, admin *string) error {
 		if err != nil {
 			return err
 		}
-		if apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]; ok {
+		configs.GrowSTLGo.APIUsersMutex.Lock()
+		apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]
+		configs.GrowSTLGo.APIUsersMutex.Unlock()
+		if ok {
 			return apiUser.ToggleAdmin(&b)
 		}
 	}
@@ -155,24 +164,19 @@ func userAction(request, response *configs.WsMessage) *configs.WsMessage {
 
 func pageLoad() (map[string]interface{}, error) {
 	users := make(map[string]interface{})
-	lastLogins, err := audit.GetLastLogins()
+	err := audit.GetLastLogins()
 	if err != nil {
 		return nil, err
 	}
+	configs.GrowSTLGo.APIUsersMutex.Lock()
 	for userID, apiUser := range configs.GrowSTLGo.APIUsers {
 		users[userID] = map[string]interface{}{
-			"lastLogin": nil,
+			"lastLogin": apiUser.LastLogin,
 			"active":    apiUser.Active,
 			"admin":     apiUser.Admin,
 		}
-		if lastLogin, ok := lastLogins[userID]; ok {
-			users[userID] = map[string]interface{}{
-				"lastLogin": lastLogin,
-				"active":    apiUser.Active,
-				"admin":     apiUser.Admin,
-			}
-		}
 	}
+	configs.GrowSTLGo.APIUsersMutex.Unlock()
 
 	data := map[string]interface{}{
 		"users":   users,

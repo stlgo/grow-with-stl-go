@@ -64,7 +64,9 @@ func checkAPIUsers() {
 			if password, err := user.Authentication.GeneratePassword(); err == nil && password != nil {
 				log.Warnf("Password generated for user '%s', password %s - DO NOT USE THIS FOR PRODUCTION", localID, *password)
 
+				GrowSTLGo.APIUsersMutex.Lock()
 				GrowSTLGo.APIUsers[localID] = &user
+				GrowSTLGo.APIUsersMutex.Unlock()
 			}
 		}
 		rewriteConfig = true
@@ -78,7 +80,10 @@ func AddUser(userID *string, data interface{}) error {
 			var user userModifier
 			if err := json.Unmarshal(bytes, &user); err == nil && user.ID != nil && user.Password != nil {
 				if err := user.hashAuthentication(); err == nil {
-					if _, ok := GrowSTLGo.APIUsers[*userID]; !ok {
+					GrowSTLGo.APIUsersMutex.Lock()
+					_, ok := GrowSTLGo.APIUsers[*userID]
+					GrowSTLGo.APIUsersMutex.Unlock()
+					if !ok {
 						apiUser := &APIUser{
 							Active:         utils.BoolPointer(true),
 							Authentication: &user.Authentication,
@@ -92,7 +97,9 @@ func AddUser(userID *string, data interface{}) error {
 							}
 						}
 
+						GrowSTLGo.APIUsersMutex.Lock()
 						GrowSTLGo.APIUsers[*userID] = apiUser
+						GrowSTLGo.APIUsersMutex.Unlock()
 						return GrowSTLGo.persist()
 					}
 				}
@@ -109,7 +116,10 @@ func UpdateUser(userID *string, data interface{}) error {
 			var user userModifier
 			if err := json.Unmarshal(bytes, &user); err == nil && user.ID != nil && user.Password != nil {
 				if err := user.hashAuthentication(); err == nil {
-					if apiUser, ok := GrowSTLGo.APIUsers[*userID]; ok {
+					GrowSTLGo.APIUsersMutex.Lock()
+					apiUser, ok := GrowSTLGo.APIUsers[*userID]
+					GrowSTLGo.APIUsersMutex.Unlock()
+					if ok {
 						apiUser.Authentication = &user.Authentication
 
 						if user.Vhosts != nil {
@@ -133,7 +143,10 @@ func UpdateUser(userID *string, data interface{}) error {
 // RemoveUser will permanently delete the user from the configs
 func RemoveUser(userID *string) error {
 	if userID != nil {
-		if _, ok := GrowSTLGo.APIUsers[*userID]; ok {
+		GrowSTLGo.APIUsersMutex.Lock()
+		_, ok := GrowSTLGo.APIUsers[*userID]
+		GrowSTLGo.APIUsersMutex.Unlock()
+		if ok {
 			delete(GrowSTLGo.APIUsers, *userID)
 			return GrowSTLGo.persist()
 		}

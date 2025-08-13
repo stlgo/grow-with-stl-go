@@ -17,6 +17,7 @@ package seeds
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/google/uuid"
 
@@ -104,12 +105,14 @@ var (
 	}
 
 	inventoryCache = make(map[string]*InventoryCategory)
+	inventoryMutex sync.Mutex
 )
 
 // InventoryCategory is a way to hold inventory categories together
 type InventoryCategory struct {
 	Category *string                   `json:"category,omitempty"`
 	Items    map[string]*InventoryItem `json:"items,omitempty"`
+	Mutex    sync.Mutex                `json:"-"`
 }
 
 // InventoryItem data we stored in the database
@@ -141,10 +144,14 @@ func setupTables() error {
 
 // getInventory will query the database for the inventory data
 func getInventory() (map[string]*InventoryCategory, error) {
-	if configs.SqliteDB != nil {
+	db, dbErr := configs.GetSQLiteConnection()
+	if dbErr != nil {
+		return nil, fmt.Errorf("unable to retrieve inventory, sqlite error: %s", dbErr)
+	}
+
+	if db != nil {
 		if len(inventoryCache) == 0 {
-			inventory := make(map[string]*InventoryCategory)
-			rows, err := configs.SqliteDB.Query("select * from seeds")
+			rows, err := db.Query("select * from seeds")
 			if err != nil {
 				return nil, err
 			}
@@ -156,19 +163,25 @@ func getInventory() (map[string]*InventoryCategory, error) {
 					return nil, err
 				}
 				if ii.ID != nil && ii.Category != nil {
-					if category, ok := inventory[*ii.Category]; ok && category.Items != nil {
+					inventoryMutex.Lock()
+					category, ok := inventoryCache[*ii.Category]
+					inventoryMutex.Unlock()
+					if ok && category.Items != nil {
+						category.Mutex.Lock()
 						category.Items[*ii.ID] = &ii
+						category.Mutex.Unlock()
 					} else {
-						inventory[*ii.Category] = &InventoryCategory{
+						inventoryMutex.Lock()
+						inventoryCache[*ii.Category] = &InventoryCategory{
 							Category: ii.Category,
 							Items: map[string]*InventoryItem{
 								*ii.ID: &ii,
 							},
 						}
+						inventoryMutex.Unlock()
 					}
 				}
 			}
-			inventoryCache = inventory
 		}
 		return inventoryCache, nil
 	}
@@ -177,18 +190,28 @@ func getInventory() (map[string]*InventoryCategory, error) {
 
 func getDetail(categoryName, id *string) (*InventoryItem, error) {
 	if categoryName != nil && id != nil {
-		if category, ok := inventoryCache[*categoryName]; ok && category != nil {
+		inventoryMutex.Lock()
+		category, ok := inventoryCache[*categoryName]
+		inventoryMutex.Unlock()
+		if ok && category != nil {
+			category.Mutex.Lock()
 			if item, ok := category.Items[*id]; ok {
 				return item, nil
 			}
+			category.Mutex.Unlock()
 		}
 	}
 	return nil, errors.New("item not found")
 }
 
 func updateItemInDB(item *InventoryItem) error {
-	if table, ok := inventoryTables["seeds"]; ok && table != nil && item != nil {
-		stmt, err := configs.SqliteDB.Prepare(table.UpdateSQL)
+	db, dbErr := configs.GetSQLiteConnection()
+	if dbErr != nil {
+		return fmt.Errorf("unable to update the item, sqlite error: %s", dbErr)
+	}
+
+	if table, ok := inventoryTables["seeds"]; db != nil && ok && table != nil && item != nil {
+		stmt, err := db.Prepare(table.UpdateSQL)
 		if err != nil {
 			return err
 		}

@@ -49,7 +49,9 @@ func validateAPIUser(vhost string, body []byte) (*string, error) {
 		return authRequest.ID, errors.New("bad request body")
 	}
 
+	configs.GrowSTLGo.APIUsersMutex.Lock()
 	apiUser, ok := configs.GrowSTLGo.APIUsers[*authRequest.ID]
+	configs.GrowSTLGo.APIUsersMutex.Unlock()
 	if !ok || apiUser == nil || apiUser.Active == nil || !*apiUser.Active {
 		log.Errorf("User %s not found or is inactive", *authRequest.ID)
 		return nil, errors.New("Unauthorized")
@@ -128,7 +130,10 @@ func testForRefresh(claim jwt.MapClaims, request *configs.WsMessage) {
 // createRefreshToken will create an oauth2 refresh token based on the timeout on the UI
 func createRefreshToken(claim jwt.MapClaims, request *configs.WsMessage) {
 	// test to see if the session is still in existence before firing off a refresh
-	if session, ok := sessions[*request.SessionID]; ok {
+	sessionsMutex.Lock()
+	session, ok := sessions[*request.SessionID]
+	sessionsMutex.Unlock()
+	if ok {
 		// add the new expiration to the claim
 		validTill := time.Now().Add(time.Hour * 1).Unix()
 		claim[expiration] = validTill

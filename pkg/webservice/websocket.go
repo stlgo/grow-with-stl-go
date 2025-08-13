@@ -49,14 +49,17 @@ type session struct {
 	Vhost       *string
 }
 
-// sessions keeps track of open websocket sessions
-var sessions = map[string]*session{}
+var (
+	// sessions keeps track of open websocket sessions
+	sessions      = make(map[string]*session)
+	sessionsMutex sync.Mutex
 
-// gorilla ws specific HTTP upgrade to WebSockets
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
+	// gorilla ws specific HTTP upgrade to WebSockets
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+)
 
 // start up the idle hands tester
 func init() {
@@ -165,7 +168,9 @@ func (session *session) onClose() {
 		}
 		log.Infof("closing websocket for %s session %s", user, *session.sessionID)
 		session.ws.Close()
+		sessionsMutex.Lock()
 		delete(sessions, *session.sessionID)
+		sessionsMutex.Unlock()
 	}
 }
 
@@ -291,7 +296,10 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 
 	if request.Component != nil && strings.EqualFold(*request.Component, configs.Authenticate) && request.SessionID != nil &&
 		request.Authentication != nil && request.Authentication.ID != nil && request.Authentication.Password != nil {
-		if user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]; ok && user.Active != nil && *user.Active && request.Vhost != nil {
+		configs.GrowSTLGo.APIUsersMutex.Lock()
+		user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]
+		configs.GrowSTLGo.APIUsersMutex.Unlock()
+		if ok && user.Active != nil && *user.Active && request.Vhost != nil {
 			if !slices.Contains(user.Vhosts, *request.Vhost) {
 				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
 				return user.Authentication.ID, fmt.Errorf("user %s not authorized for vhost %s", *request.Authentication.ID, *request.Vhost)
@@ -308,7 +316,10 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 				return user.Authentication.ID, err
 			}
 
-			if session, ok := sessions[*request.SessionID]; ok {
+			sessionsMutex.Lock()
+			session, ok := sessions[*request.SessionID]
+			sessionsMutex.Unlock()
+			if ok {
 				session.jwt = token
 				session.isAdmin = user.Admin
 			}
@@ -336,7 +347,10 @@ func handleMessage(request, response *configs.WsMessage) {
 		case configs.Keepalive:
 			log.Tracef("keepalive received for session %s", *request.SessionID)
 		case configs.Auth:
-			if session, ok := sessions[*request.SessionID]; ok {
+			sessionsMutex.Lock()
+			session, ok := sessions[*request.SessionID]
+			sessionsMutex.Unlock()
+			if ok {
 				user, err := handleWebSocketAuth(request, response)
 				session.user = user
 				if err != nil {
@@ -372,7 +386,10 @@ func getPagelet(request, response *configs.WsMessage) {
 		}
 		// everyone else is free to move about the cabin
 		if request.SessionID != nil {
-			if session, ok := sessions[*request.SessionID]; ok && session.Vhost != nil {
+			sessionsMutex.Lock()
+			session, ok := sessions[*request.SessionID]
+			sessionsMutex.Unlock()
+			if ok && session.Vhost != nil {
 				log.Info(*session.Vhost)
 				if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[*session.Vhost]; ok && webRoot != nil {
 					fileName := filepath.Join(*webRoot, "pagelets", fmt.Sprintf("%s.html", *request.Component))
@@ -394,6 +411,7 @@ func getPagelet(request, response *configs.WsMessage) {
 // NotifyAll will broadcast a user event to all websocket clients currently attached
 func NotifyAll(sessionID *string, message *configs.WsMessage) {
 	if message != nil {
+		sessionsMutex.Lock()
 		for _, session := range sessions {
 			// don't send a notification to the user that requested the action
 			if session != nil && session.sessionID != nil && sessionID != nil && strings.EqualFold(*sessionID, *session.sessionID) {
@@ -403,12 +421,14 @@ func NotifyAll(sessionID *string, message *configs.WsMessage) {
 				log.Error(err)
 			}
 		}
+		sessionsMutex.Unlock()
 	}
 }
 
 func idleHandsTester() {
 	time.Sleep(time.Duration(60-time.Now().Local().Second()) * time.Second)
 	for range time.NewTicker(10 * time.Second).C {
+		sessionsMutex.Lock()
 		for _, session := range sessions {
 			if session != nil && session.lastUsed != nil {
 				// 10 minute timeout
@@ -421,6 +441,7 @@ func idleHandsTester() {
 				}
 			}
 		}
+		sessionsMutex.Unlock()
 	}
 }
 
@@ -449,7 +470,9 @@ func newSession(requestHost, vhost *string, ws *websocket.Conn) *session {
 	}
 
 	// keep track of the session
+	sessionsMutex.Lock()
 	sessions[id] = session
+	sessionsMutex.Unlock()
 
 	// send the init message to the client
 	go session.sendInit()
@@ -460,7 +483,10 @@ func newSession(requestHost, vhost *string, ws *websocket.Conn) *session {
 // WebSocketSend allows of other packages to send a request for the websocket
 func WebSocketSend(response *configs.WsMessage) error {
 	if response.SessionID != nil {
-		if session, ok := sessions[*response.SessionID]; ok {
+		sessionsMutex.Lock()
+		session, ok := sessions[*response.SessionID]
+		sessionsMutex.Unlock()
+		if ok {
 			return session.webSocketSend(response)
 		}
 		return fmt.Errorf("session id %s not found", *response.SessionID)
@@ -470,7 +496,9 @@ func WebSocketSend(response *configs.WsMessage) error {
 
 // Shutdown is called when the system is exiting to cleanly close all the current connections
 func Shutdown() {
+	sessionsMutex.Lock()
 	for _, session := range sessions {
 		session.onClose()
 	}
+	sessionsMutex.Unlock()
 }

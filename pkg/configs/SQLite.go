@@ -46,6 +46,7 @@ type SQLite struct {
 	EncryptDatabase *bool               `json:"encryptDatabase,omitempty"`
 	EncryptionKey   *string             `json:"encryptionKey,omitempty"`
 	PopulatedTables map[string]struct{} `json:"populatedTables,omitempty"`
+	DB              *sql.DB             `json:"-"`
 }
 
 func (c *Config) checkSQLite() error {
@@ -67,24 +68,24 @@ func (c *Config) checkSQLite() error {
 			GrowSTLGo.SQLite = &sqlite
 			rewriteConfig = true
 		}
-		return startDB()
+		return c.SQLite.startDB()
 	}
 	return errors.New("invalid config cannot check SQLite")
 }
 
 // Init will setup the default tables in the sqlite embedded database
-func startDB() error {
-	if GrowSTLGo.SQLite != nil && GrowSTLGo.SQLite.FileName != nil {
-		baseDir := filepath.Dir(*GrowSTLGo.SQLite.FileName)
+func (sqlite *SQLite) startDB() error {
+	if sqlite != nil && sqlite.FileName != nil {
+		baseDir := filepath.Dir(*sqlite.FileName)
 		if err := os.MkdirAll(baseDir, 0o750); err != nil {
 			return err
 		}
 
 		// encrypted db
-		if GrowSTLGo.SQLite.EncryptionKey != nil {
-			if key, err := GrowSTLGo.SQLite.GetEncryptionKey(); err == nil && key != nil {
-				dbname := fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", *GrowSTLGo.SQLite.FileName, *key)
-				SqliteDB, err = sql.Open("sqlite3", dbname)
+		if sqlite.EncryptionKey != nil {
+			if key, err := sqlite.GetEncryptionKey(); err == nil && key != nil {
+				dbname := fmt.Sprintf("%s?_pragma_key=x'%s'&_pragma_cipher_page_size=4096", *sqlite.FileName, *key)
+				sqlite.DB, err = sql.Open("sqlite3", dbname)
 				if err != nil {
 					return err
 				}
@@ -92,12 +93,12 @@ func startDB() error {
 				return nil
 			}
 		}
-		db, err := sql.Open("sqlite3", *GrowSTLGo.SQLite.FileName)
-		if err != nil {
-			return err
+		db, sqliteErr := sql.Open("sqlite3", *sqlite.FileName)
+		if sqliteErr != nil {
+			return sqliteErr
 		}
-		SqliteDB = db
-		log.Debugf("Using unencrypted aud database in %s", *GrowSTLGo.SQLite.FileName)
+		sqlite.DB = db
+		log.Debugf("Using unencrypted aud database in %s", *sqlite.FileName)
 		return nil
 	}
 	return fmt.Errorf("no sutiable configuration for SQLite found in the config file %s", *ConfigFile)
@@ -129,11 +130,34 @@ func (sqlite *SQLite) GetEncryptionKey() (*string, error) {
 	return nil, errors.New("sqlite does not meet the encryption requirements")
 }
 
+// GetSQLiteConnection will give access to the sqlite database
+func GetSQLiteConnection() (*sql.DB, error) {
+	if GrowSTLGo != nil && GrowSTLGo.SQLite != nil && GrowSTLGo.SQLite.DB != nil {
+		return GrowSTLGo.SQLite.DB, nil
+	}
+	return nil, errors.New("sqlite object is nil")
+}
+
+// ShutdownSQLite does a clean shutdown of the sqlite database
+func ShutdownSQLite() {
+	if GrowSTLGo != nil && GrowSTLGo.SQLite != nil && GrowSTLGo.SQLite.DB != nil {
+		log.Info("closing the SQLite database")
+		if err := GrowSTLGo.SQLite.DB.Close(); err != nil {
+			log.Errorf("Problems closing the SQLite database.  Error: %s", err)
+		}
+	}
+}
+
 // CreateTable is a helper function that will create the table & indexes in the embedded database
 func (table *Table) CreateTable(tableName *string) error {
-	if table != nil && tableName != nil {
+	db, dbErr := GetSQLiteConnection()
+	if dbErr != nil {
+		return dbErr
+	}
+
+	if db != nil && table != nil && tableName != nil {
 		log.Tracef("Audit table %s was created if it didn't already exist", *tableName)
-		stmt, err := SqliteDB.Prepare(table.CreateSQL)
+		stmt, err := db.Prepare(table.CreateSQL)
 		if err != nil {
 			return err
 		}
@@ -142,7 +166,7 @@ func (table *Table) CreateTable(tableName *string) error {
 			return err
 		}
 		for _, index := range table.Indices {
-			stmt, err := SqliteDB.Prepare(index)
+			stmt, err := db.Prepare(index)
 			if err != nil {
 				return err
 			}
@@ -159,7 +183,7 @@ func (table *Table) CreateTable(tableName *string) error {
 		if _, ok := GrowSTLGo.SQLite.PopulatedTables[*tableName]; !ok && table.Defaults != nil {
 			for key, sql := range table.Defaults {
 				log.Tracef("Inserting default %s for table %s if it doesn't already exist", key, *tableName)
-				stmt, err := SqliteDB.Prepare(sql)
+				stmt, err := db.Prepare(sql)
 				if err != nil {
 					return err
 				}

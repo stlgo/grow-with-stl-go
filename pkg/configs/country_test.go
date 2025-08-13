@@ -12,16 +12,24 @@
  limitations under the License.
 */
 
-package locations
+package configs
 
-import "stl-go/grow-with-stl-go/pkg/configs"
+import (
+	"testing"
 
-// Init is different than the standard init because it is called outside of the object load
-func Init() error {
-	return getLocations()
-}
+	"github.com/stretchr/testify/require"
+)
 
-func getLocations() error {
-	// we're going to get our zip code based locations on the country here: https://download.geonames.org/export/zip/
-	return configs.GrowSTLGo.Country.GetCountryData()
+func TestCountryFunctions(t *testing.T) {
+	t.Skip()
+	initConfigTest()
+	t.Run("Download file", func(t *testing.T) {
+		err := SetGrowSTLGoConfig()
+		require.NoError(t, err)
+
+		if GrowSTLGo.Country != nil {
+			err := GrowSTLGo.Country.GetCountryData()
+			require.NoError(t, err)
+		}
+	})
 }

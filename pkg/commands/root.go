@@ -27,6 +27,7 @@ import (
 	"stl-go/grow-with-stl-go/pkg/admin"
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/locations"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/seeds"
 	"stl-go/grow-with-stl-go/pkg/webservice"
@@ -88,7 +89,7 @@ func launch(_ *cobra.Command, _ []string) {
 	}
 
 	// kick off the init functions for the various packages
-	for _, function := range []func() error{audit.Init, seeds.Init, admin.Init} {
+	for _, function := range []func() error{audit.Init, seeds.Init, admin.Init, locations.Init} {
 		if err := function(); err != nil {
 			log.Fatalf("error calling function %s cannot continue to start", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
 		}
@@ -101,6 +102,7 @@ func launch(_ *cobra.Command, _ []string) {
 		<-c
 		log.Info("Closing all active sessions")
 		webservice.Shutdown()
+		configs.ShutdownSQLite()
 		log.Info("Exiting the webservice")
 		os.Exit(0)
 	}()

@@ -138,7 +138,7 @@ func DownloadFile(url, method, fileName string, payload *string) (httpStatusCode
 			return nil, err
 		}
 
-		fmt.Printf("Downloaded a file %s with size %d", fileName, size)
+		log.Infof("Downloaded a file %s with size %d bytes", fileName, size)
 	}
 
 	return httpStatusCode, err

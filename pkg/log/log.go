@@ -67,7 +67,7 @@ func FunctionTimer() func() {
 
 	return func() {
 		duration := time.Since(start)
-		writeLog(6, fmt.Sprintf("Function '%s' completed in %vms", functionName, FormatMilliseconds(duration.Abs().Milliseconds())))
+		writeLog(6, fmt.Sprintf("Function '%s' completed in %v", functionName, FormatMilliseconds(duration.Abs().Milliseconds())))
 	}
 }
 

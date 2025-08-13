@@ -20,13 +20,13 @@
     <script type='module'>
         import { GrowWithSTLGO } from './js/main.js';
 
-        var gwsg = null;
+        var gwstlg = null;
 
         function login() {
-            if (gwsg === null) {
-                    gwsg = new GrowWithSTLGO()
+            if (gwstlg === null) {
+                    gwstlg = new GrowWithSTLGO()
                 }
-                gwsg.login()
+                gwstlg.login()
         }
 
         document.getElementById("LoginButton").onclick = () => {
@@ -36,7 +36,7 @@
         document.querySelectorAll('.nav-link').forEach(link => {
             link.onclick = (event) => {
                 event.preventDefault();
-                gwsg.load(new URL(link.href).pathname.substring(1));
+                gwstlg.load(new URL(link.href).pathname.substring(1));
             }
         });
     </script>

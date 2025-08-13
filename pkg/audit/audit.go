@@ -16,6 +16,7 @@ package audit
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -115,8 +116,12 @@ func Init() error {
 
 // RecordLogin will insert a record into the users table once a user attempts a login
 func RecordLogin(userID *string, protocol string, goodLogin bool) {
-	if table, ok := auditTables["user"]; ok && table != nil && userID != nil {
-		stmt, err := configs.SqliteDB.Prepare(table.InsertSQL)
+	db, dbErr := configs.GetSQLiteConnection()
+	if dbErr != nil {
+		log.Errorf("unable to record login, sqlite error: %s", dbErr)
+	}
+	if table, ok := auditTables["user"]; db != nil && ok && table != nil && userID != nil {
+		stmt, err := db.Prepare(table.InsertSQL)
 		if err != nil {
 			log.Error(err)
 			return
@@ -155,25 +160,33 @@ func RecordLogin(userID *string, protocol string, goodLogin bool) {
 }
 
 // GetLastLogins will query the database for the last recorded login of the users
-func GetLastLogins() (map[string]*int64, error) {
-	if configs.SqliteDB != nil {
-		users := make(map[string]*int64)
-		rows, err := configs.SqliteDB.Query("select user, max(observed) from user where success = 1 group by user")
+func GetLastLogins() error {
+	db, dbErr := configs.GetSQLiteConnection()
+	if dbErr != nil {
+		return fmt.Errorf("unable to get last logins, sqlite error: %s", dbErr)
+	}
+	if db != nil {
+		rows, err := db.Query("select user, max(observed) from user where success = 1 group by user")
 		if err != nil {
-			return nil, err
+			return err
 		}
 		defer rows.Close()
 		for rows.Next() {
 			var userID string
 			var lastLogin *int64
 			if err := rows.Scan(&userID, &lastLogin); err != nil {
-				return nil, err
+				return err
 			}
-			users[userID] = lastLogin
+			configs.GrowSTLGo.APIUsersMutex.Lock()
+			user, ok := configs.GrowSTLGo.APIUsers[userID]
+			configs.GrowSTLGo.APIUsersMutex.Unlock()
+			if ok {
+				user.LastLogin = lastLogin
+			}
 		}
-		return users, nil
+		return nil
 	}
-	return nil, errors.New("the sqlite database is nil, cannot get last logins")
+	return errors.New("the sqlite database is nil, cannot get last logins")
 }
 
 // NewWSTransaction creates a new WSTransaction object to record as an auditable thing
@@ -202,10 +215,14 @@ func NewRESTTransaction(host, uri, method *string) *RESTTransaction {
 
 // Complete is a WSTransaction receiver function to record it to the DB if applicable
 func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
-	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && configs.SqliteDB != nil &&
+	db, dbErr := configs.GetSQLiteConnection()
+	if dbErr != nil {
+		return fmt.Errorf("unable to record the complete transaction, sqlite error: %s", dbErr)
+	}
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && db != nil &&
 		transaction.Component != nil && transaction.Type != nil && !strings.EqualFold(*transaction.Type, "keepalive") {
 		if table, ok := auditTables["WebSocket"]; ok && table != nil {
-			stmt, err := configs.SqliteDB.Prepare(table.InsertSQL)
+			stmt, err := db.Prepare(table.InsertSQL)
 			if err != nil {
 				return err
 			}
@@ -249,9 +266,13 @@ func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 
 // Complete is a RESTTransaction receiver function to record it to the DB if applicable
 func (transaction *RESTTransaction) Complete(httpStatusCode int) error {
-	if transaction.Recordable != nil && *transaction.Recordable && transaction.Start != nil && configs.SqliteDB != nil {
+	db, dbErr := configs.GetSQLiteConnection()
+	if dbErr != nil {
+		return fmt.Errorf("unable to record the complete transaction, sqlite error: %s", dbErr)
+	}
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.Start != nil && db != nil {
 		if table, ok := auditTables["REST"]; ok && table != nil {
-			stmt, err := configs.SqliteDB.Prepare(table.InsertSQL)
+			stmt, err := db.Prepare(table.InsertSQL)
 			if err != nil {
 				return err
 			}

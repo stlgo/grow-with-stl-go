@@ -15,11 +15,9 @@
 package configs
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -47,9 +45,6 @@ var (
 	watchSetup     bool
 	writeMutex     sync.Mutex
 	keysToEncrypt  = regexp.MustCompile("([a-zA-Z]+sswd|[a-zA-Z]+pswd|[a-zA-Z]+assword)")
-
-	// SqliteDB is an embedded database
-	SqliteDB *sql.DB
 
 	// Version will be overridden by ldflags supplied in Makefile
 	Version = "(dev-version)"
@@ -83,13 +78,14 @@ const (
 
 // Config contains the basis of the web service
 type Config struct {
-	APIUsers   map[string]*APIUser `json:"apiUsers,omitempty"`
-	Country    *Country            `json:"country,omitempty"`
-	DataDir    *string             `json:"data_dir,omitempty"`
-	Proxy      *Proxy              `json:"proxy,omitempty"`
-	Secret     *string             `json:"secret,omitempty"`
-	SQLite     *SQLite             `json:"sqlite,omitempty"`
-	WebService *WebService         `json:"webService,omitempty"`
+	APIUsers      map[string]*APIUser `json:"apiUsers,omitempty"`
+	APIUsersMutex sync.Mutex          `json:"-"`
+	Country       *Country            `json:"country,omitempty"`
+	DataDir       *string             `json:"data_dir,omitempty"`
+	Proxy         *Proxy              `json:"proxy,omitempty"`
+	Secret        *string             `json:"secret,omitempty"`
+	SQLite        *SQLite             `json:"sqlite,omitempty"`
+	WebService    *WebService         `json:"webService,omitempty"`
 }
 
 func (c *Config) checkConfig() error {
@@ -121,36 +117,11 @@ func (c *Config) checkDataDir() error {
 				return err
 			}
 			c.DataDir = &dir
+			rewriteConfig = true
 		}
 		return nil
 	}
 	return errors.New("invalid config cannot check data dir")
-}
-
-func (c *Config) checkCountry() error {
-	if c != nil {
-		if c.Country == nil {
-			u, urlErr := url.Parse("https://download.geonames.org/export/zip/")
-			if urlErr != nil {
-				return urlErr
-			}
-			urlStr := u.String()
-			country := "US"
-			c.Country = &Country{
-				Country: &country,
-				URL:     &urlStr,
-			}
-			rewriteConfig = true
-			return nil
-		} else if c.Country.Country != nil && c.Country.URL != nil {
-			_, urlErr := url.Parse(*c.Country.URL)
-			if urlErr != nil {
-				return urlErr
-			}
-			return nil
-		}
-	}
-	return errors.New("invalid config cannot check country")
 }
 
 func (c *Config) testRewriteConfig() error {
@@ -191,12 +162,6 @@ func (c *Config) persist() error {
 	return errors.New("invalid config cannot persist data")
 }
 
-// Country is set for our download of zip codes & latitude / longitudes
-type Country struct {
-	Country *string `json:"country,omitempty"`
-	URL     *string `json:"url,omitempty"`
-}
-
 // Proxy is in case we need to use a proxy for http connections this is where it goes
 type Proxy struct {
 	URL          *string `json:"url,omitempty"`
@@ -234,65 +199,68 @@ func SetGrowSTLGoConfig() error {
 		if err != nil {
 			log.Error(err)
 			log.Info("No configuration found building a default configuration")
-		}
 
-		// unmarshal the config file to a hash map if it exists
-		var jo map[string]interface{}
-		err = json.Unmarshal(jsonBytes, &jo)
-		if err != nil {
-			log.Error(err)
-		}
+			secret, err := cryptography.GenerateSecret()
+			if err != nil {
+				return fmt.Errorf("cannot generate new secret.  Error: %s", err)
+			}
 
-		// get the secret out of the file, if there isn't one generate it
-		err = getSecret(jo)
-		if err != nil {
-			return err
-		}
+			GrowSTLGo = &Config{
+				Secret: secret,
+			}
+		} else {
+			// unmarshal the config file to a hash map if it exists
+			var jo map[string]interface{}
+			err = json.Unmarshal(jsonBytes, &jo)
+			if err != nil {
+				return err
+			}
 
-		// scan the json for keys we want to encrypt that are currently clear text
-		err = scanJSON(jo)
-		if err != nil {
-			log.Error(err)
-		}
+			// get the secret out of the file, if there isn't one generate it
+			err = getSecret(jo)
+			if err != nil {
+				return err
+			}
 
-		// map the json to the struct
-		jsonBytes, err = json.Marshal(jo)
-		if err != nil {
-			return err
-		}
+			// scan the json for keys we want to encrypt that are currently clear text
+			err = scanJSON(jo)
+			if err != nil {
+				return err
+			}
 
-		err = json.Unmarshal(jsonBytes, &GrowSTLGo)
-		if err != nil {
-			return err
+			// map the json to the struct
+			jsonBytes, err = json.Marshal(jo)
+			if err != nil {
+				return err
+			}
+
+			err = json.Unmarshal(jsonBytes, &GrowSTLGo)
+			if err != nil {
+				return err
+			}
 		}
 	}
-
-	if GrowSTLGo != nil {
-		return GrowSTLGo.checkConfig()
-	}
-	return errors.New("invalid config cannot continue")
+	return GrowSTLGo.checkConfig()
 }
 
 // get the secret from the config
 func getSecret(jo map[string]interface{}) error {
+	var secret *string
 	if secretInterface, ok := jo["secret"]; ok {
-		if s, ok := secretInterface.(string); ok {
-			if GrowSTLGo == nil {
-				GrowSTLGo = &Config{
-					Secret: &s,
-				}
-			} else {
-				GrowSTLGo.Secret = &s
-			}
-
-			return nil
+		str, strOk := secretInterface.(string)
+		if !strOk {
+			return errors.New("cannot cast secret to string")
 		}
+		secret = &str
+	} else {
+		str, err := cryptography.GenerateSecret()
+		if err != nil {
+			return err
+		}
+		secret = str
 	}
-	newSecret, err := cryptography.GenerateSecret()
-	if err != nil {
-		return err
-	}
-	GrowSTLGo.Secret = newSecret
+
+	jo["secret"] = secret
 	return nil
 }
 

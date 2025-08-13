@@ -209,7 +209,10 @@ func purchase(sessionID *string, data interface{}) (*InventoryItem, error) {
 	}
 
 	if request.Category != nil && request.ID != nil && request.Quantity != nil {
-		if category, ok := inventoryCache[*request.Category]; ok && category != nil {
+		inventoryMutex.Lock()
+		category, ok := inventoryCache[*request.Category]
+		inventoryMutex.Unlock()
+		if ok && category != nil {
 			if item, ok := category.Items[*request.ID]; ok {
 				quantity, err := determineQuantity(*request.Quantity)
 				if err != nil {
