@@ -19,6 +19,7 @@ import (
 
 	"stl-go/grow-with-stl-go/pkg/cryptography"
 	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/utils"
 )
 
 // Vhost holds the bits to define the virtual webroots we'll be using
@@ -34,6 +35,7 @@ type WebService struct {
 	PublicKey  *string            `json:"publicKey,omitempty"`
 	PrivateKey *string            `json:"privateKey,omitempty"`
 	Vhosts     map[string]*string `json:"vhosts,omitempty"`
+	WebDir     *string            `json:"webDir,omitempty"`
 }
 
 func (c *Config) checkWebService() error {
@@ -55,7 +57,8 @@ func (c *Config) checkWebService() error {
 				if privateKeyFile != nil && publicKeyFile != nil {
 					port := 10443
 					host := "localhost"
-					webDir := "web/grow-with-stlgo"
+					webDir := "web"
+					nonAdminWebDir := "web/grow-with-stlgo"
 					adminWebDir := "web/grow-with-stlgo-admin"
 
 					GrowSTLGo.WebService = &WebService{
@@ -63,9 +66,10 @@ func (c *Config) checkWebService() error {
 						Port:       &port,
 						PublicKey:  publicKeyFile,
 						PrivateKey: privateKeyFile,
+						WebDir:     &webDir,
 						Vhosts: map[string]*string{
 							"localhost":                          &adminWebDir,
-							"grow-with-stlgo.localdev.org":       &webDir,
+							"grow-with-stlgo.localdev.org":       &nonAdminWebDir,
 							"grow-with-stlgo-admin.localdev.org": &adminWebDir,
 						},
 					}
@@ -81,6 +85,11 @@ func (c *Config) checkWebService() error {
 				return errors.New("nil private key or public key, cannot continue")
 			}
 			return errors.New("nil etc dir, cannot continue")
+		}
+
+		if c.WebService.WebDir == nil {
+			rewriteConfig = true
+			c.WebService.WebDir = utils.StringPointer("web")
 		}
 		return nil
 	}

@@ -12,16 +12,4 @@
  limitations under the License.
 */
 
-package locations
-
-import "stl-go/grow-with-stl-go/pkg/configs"
-
-// Init is different than the standard init because it is called outside of the object load
-func Init() error {
-	return getLocations()
-}
-
-func getLocations() error {
-	// we're going to get our zip code based locations on the country here: https://download.geonames.org/export/zip/
-	return configs.GrowSTLGo.Country.GetCountryData()
-}
+package weather

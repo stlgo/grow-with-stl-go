@@ -119,8 +119,7 @@ backend-lint:
 .PHONY: frontend-build
 frontend-build:
 	@echo "Executing frontend build steps..."
-	@cd $(WEB_DIR)/grow-with-stlgo && npm install && cd ../..
-	@cd $(WEB_DIR)/grow-with-stlgo-admin && npm install && cd ../..
+	@cd $(WEB_DIR) && npm install && cd ..
 	@echo "Frontend build completed successfully"
 
 .PHONY: frontend-lint

@@ -12,9 +12,9 @@
 # limitations under the License.
 */
 
-import { Seeds } from './seeds.js';
-import { Log } from './log.js';
-import { WebSocketClient } from './websocket.js';
+import { Seeds } from '/common/seeds.js';
+import { Log } from '/common/js/log.js';
+import { WebSocketClient } from '/common/js/websocket.js';
 
 class GrowWithSTLGO {
     constructor() {

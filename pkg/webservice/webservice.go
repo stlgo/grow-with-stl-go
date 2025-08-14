@@ -40,6 +40,9 @@ var (
 
 	// these are things we don't want to server via REST or the UI
 	webDenialPrefixes = regexp.MustCompile(`^(/.eslint.*|/pagelets.*|/package.*)`)
+
+	// this is a hack to move common stuff between vhosts
+	staticCommonPrefixes = regexp.MustCompile(`^(/node_modules/|/common)`)
 )
 
 const (
@@ -90,19 +93,41 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(uri, fontAwesomePrefix) {
 		uri = strings.Split(uri, "?")[0]
 	}
-	if !webDenialPrefixes.MatchString(uri) {
+
+	var path string
+	var exists bool
+	var fileExistsErr error
+	if configs.GrowSTLGo.WebService.WebDir != nil && staticCommonPrefixes.MatchString(r.RequestURI) {
+		path = filepath.Join(*configs.GrowSTLGo.WebService.WebDir, r.URL.Path)
+		exists, fileExistsErr = fileExists(path)
+	} else if !webDenialPrefixes.MatchString(uri) {
 		if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[strings.Split(r.Host, ":")[0]]; ok && webRoot != nil {
-			path := filepath.Join(*webRoot, uri)
-			_, err := os.Stat(path)
-			if err == nil {
-				http.ServeFile(w, r, path)
-				return
-			}
+			path = filepath.Join(*webRoot, uri)
+			exists, fileExistsErr = fileExists(path)
 		}
+	}
+
+	if fileExistsErr != nil {
+		log.Error(fileExistsErr)
+		http.Error(w, fileExistsErr.Error(), http.StatusNotFound)
+		return
+	}
+
+	if exists {
+		http.ServeFile(w, r, path)
+		return
 	}
 
 	// redirect to index.html on error
 	http.Redirect(w, r, "/index.html", http.StatusFound)
+}
+
+func fileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {

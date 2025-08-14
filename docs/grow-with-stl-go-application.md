@@ -91,7 +91,7 @@ Output
                 "price": 2.67,
                 "perPacketCount": 20,
                 "packets": 0,
-                "image": "/images/herbs/ella_dill.jpg"
+                "image": "/common/images/herbs/ella_dill.jpg"
             },
             "7a027c43-3bf9-4dca-bfb8-fd70ccfede70": {
                 "id": "7a027c43-3bf9-4dca-bfb8-fd70ccfede70",
@@ -105,7 +105,7 @@ Output
                 "price": 4.28,
                 "perPacketCount": 100,
                 "packets": 94,
-                "image": "/images/herbs/genovese_basil.jpg"
+                "image": "/common/images/herbs/genovese_basil.jpg"
             },
             "9b37afb6-e191-4a37-9528-7ca57320dcfe": {
                 "id": "9b37afb6-e191-4a37-9528-7ca57320dcfe",
@@ -119,7 +119,7 @@ Output
                 "price": 2.18,
                 "perPacketCount": 100,
                 "packets": 100,
-                "image": "/images/herbs/polyvert_chive.jpg"
+                "image": "/common/images/herbs/polyvert_chive.jpg"
             },
             "e57ed367-de96-468c-a428-d59c85b4fac8": {
                 "id": "e57ed367-de96-468c-a428-d59c85b4fac8",
@@ -133,7 +133,7 @@ Output
                 "price": 3.95,
                 "perPacketCount": 50,
                 "packets": 100,
-                "image": "/images/herbs/greek_oregano.jpg"
+                "image": "/common/images/herbs/greek_oregano.jpg"
             }
         }
     },
@@ -152,7 +152,7 @@ Output
                 "price": 4.28,
                 "perPacketCount": 100,
                 "packets": 100,
-                "image": "/images/onions/patterson.jpg"
+                "image": "/common/images/onions/patterson.jpg"
             },
             "14df4848-53db-4272-935a-a60a436a0b30": {
                 "id": "14df4848-53db-4272-935a-a60a436a0b30",
@@ -166,7 +166,7 @@ Output
                 "price": 3.95,
                 "perPacketCount": 50,
                 "packets": 100,
-                "image": "/images/onions/red_wing.jpg"
+                "image": "/common/images/onions/red_wing.jpg"
             },
             "80c3db24-5253-498b-9628-07fbe2b43cf4": {
                 "id": "80c3db24-5253-498b-9628-07fbe2b43cf4",
@@ -180,7 +180,7 @@ Output
                 "price": 2.18,
                 "perPacketCount": 100,
                 "packets": 100,
-                "image": "/images/onions/walla_walla.jpg"
+                "image": "/common/images/onions/walla_walla.jpg"
             },
             "d867d75f-20f3-40c7-884e-699f4fb9e8b1": {
                 "id": "d867d75f-20f3-40c7-884e-699f4fb9e8b1",
@@ -194,7 +194,7 @@ Output
                 "price": 2.67,
                 "perPacketCount": 20,
                 "packets": 100,
-                "image": "/images/onions/ailsa_craig.jpg"
+                "image": "/common/images/onions/ailsa_craig.jpg"
             }
         }
     },
@@ -213,7 +213,7 @@ Output
                 "price": 6.45,
                 "perPacketCount": 15,
                 "packets": 100,
-                "image": "/images/peppers/serrano.jpg"
+                "image": "/common/images/peppers/serrano.jpg"
             },
             "6f5cdedc-3421-4f9e-a23f-ecb2eabd36bd": {
                 "id": "6f5cdedc-3421-4f9e-a23f-ecb2eabd36bd",
@@ -227,7 +227,7 @@ Output
                 "price": 3.78,
                 "perPacketCount": 12,
                 "packets": 100,
-                "image": "/images/peppers/jalapeno.jpg"
+                "image": "/common/images/peppers/jalapeno.jpg"
             },
             "8c1633cc-faf9-4781-9ae7-e901ba26d122": {
                 "id": "8c1633cc-faf9-4781-9ae7-e901ba26d122",
@@ -240,7 +240,7 @@ Output
                 "price": 2.96,
                 "perPacketCount": 25,
                 "packets": 100,
-                "image": "/images/peppers/poblano.jpg"
+                "image": "/common/images/peppers/poblano.jpg"
             },
             "8e0c4a5b-4305-4421-a298-d7631218546a": {
                 "id": "8e0c4a5b-4305-4421-a298-d7631218546a",
@@ -254,7 +254,7 @@ Output
                 "price": 4.58,
                 "perPacketCount": 50,
                 "packets": 100,
-                "image": "/images/peppers/green_bell.jpg"
+                "image": "/common/images/peppers/green_bell.jpg"
             }
         }
     },
@@ -273,7 +273,7 @@ Output
                 "price": 2.96,
                 "perPacketCount": 25,
                 "packets": 100,
-                "image": "/images/tomatoes/determinate/plum_regal.jpg"
+                "image": "/common/images/tomatoes/determinate/plum_regal.jpg"
             },
             "84507f06-ec5b-4341-81f7-b38cadd5fdcb": {
                 "id": "84507f06-ec5b-4341-81f7-b38cadd5fdcb",
@@ -287,7 +287,7 @@ Output
                 "price": 3.78,
                 "perPacketCount": 12,
                 "packets": 100,
-                "image": "/images/tomatoes/indeterminate/carbon.jpg"
+                "image": "/common/images/tomatoes/indeterminate/carbon.jpg"
             },
             "d78063f7-2110-4339-8fbe-0f9cb1d0ea4d": {
                 "id": "d78063f7-2110-4339-8fbe-0f9cb1d0ea4d",
@@ -301,7 +301,7 @@ Output
                 "price": 4.58,
                 "perPacketCount": 50,
                 "packets": 100,
-                "image": "/images/tomatoes/determinate/galahad.jpg"
+                "image": "/common/images/tomatoes/determinate/galahad.jpg"
             },
             "e78245b8-859f-48e5-a08e-fdbb1a74418f": {
                 "id": "e78245b8-859f-48e5-a08e-fdbb1a74418f",
@@ -315,7 +315,7 @@ Output
                 "price": 6.45,
                 "perPacketCount": 15,
                 "packets": 100,
-                "image": "/images/tomatoes/indeterminate/san_marzano.jpg"
+                "image": "/common/images/tomatoes/indeterminate/san_marzano.jpg"
             }
         }
     }
@@ -356,7 +356,7 @@ date: Wed, 28 Feb 2024 18:26:35 GMT
     "price": 6.45,
     "perPacketCount": 15,
     "packets": 100,
-    "image": "/images/tomatoes/indeterminate/san_marzano.jpg"
+    "image": "/common/images/tomatoes/indeterminate/san_marzano.jpg"
 }
 ```
 
@@ -389,7 +389,7 @@ Output
     "price": 6.45,
     "perPacketCount": 15,
     "packets": 99,
-    "image": "/images/tomatoes/indeterminate/san_marzano.jpg"
+    "image": "/common/images/tomatoes/indeterminate/san_marzano.jpg"
 }
 ```
 
@@ -488,7 +488,7 @@ Output
                     "price": 2.18,
                     "perPacketCount": 100,
                     "packets": 100,
-                    "image": "/images/herbs/polyvert_chive.jpg"
+                    "image": "/common/images/herbs/polyvert_chive.jpg"
                 },
                 "a4b54775-4ad9-4671-818d-85f7a4932bd4": {
                     "id": "a4b54775-4ad9-4671-818d-85f7a4932bd4",
@@ -502,7 +502,7 @@ Output
                     "price": 2.67,
                     "perPacketCount": 20,
                     "packets": 98,
-                    "image": "/images/herbs/ella_dill.jpg"
+                    "image": "/common/images/herbs/ella_dill.jpg"
                 },
                 "e4857eb8-8bb4-46f2-b660-051d15cf3022": {
                     "id": "e4857eb8-8bb4-46f2-b660-051d15cf3022",
@@ -516,7 +516,7 @@ Output
                     "price": 4.28,
                     "perPacketCount": 100,
                     "packets": 100,
-                    "image": "/images/herbs/genovese_basil.jpg"
+                    "image": "/common/images/herbs/genovese_basil.jpg"
                 },
                 "f0632288-6519-479c-b345-65998d387aca": {
                     "id": "f0632288-6519-479c-b345-65998d387aca",
@@ -530,7 +530,7 @@ Output
                     "price": 3.95,
                     "perPacketCount": 50,
                     "packets": 100,
-                    "image": "/images/herbs/greek_oregano.jpg"
+                    "image": "/common/images/herbs/greek_oregano.jpg"
                 }
             }
         },
@@ -549,7 +549,7 @@ Output
                     "price": 3.95,
                     "perPacketCount": 50,
                     "packets": 100,
-                    "image": "/images/onions/red_wing.jpg"
+                    "image": "/common/images/onions/red_wing.jpg"
                 },
                 "3e14e501-a5b9-4d8b-ac05-64c8952ab5e4": {
                     "id": "3e14e501-a5b9-4d8b-ac05-64c8952ab5e4",
@@ -563,7 +563,7 @@ Output
                     "price": 2.18,
                     "perPacketCount": 100,
                     "packets": 95,
-                    "image": "/images/onions/walla_walla.jpg"
+                    "image": "/common/images/onions/walla_walla.jpg"
                 },
                 "5a47f887-3fd5-4ead-99ca-ed14bad694af": {
                     "id": "5a47f887-3fd5-4ead-99ca-ed14bad694af",
@@ -577,7 +577,7 @@ Output
                     "price": 4.28,
                     "perPacketCount": 100,
                     "packets": 100,
-                    "image": "/images/onions/patterson.jpg"
+                    "image": "/common/images/onions/patterson.jpg"
                 },
                 "7bf6183a-972c-4d14-8828-40d2b4742710": {
                     "id": "7bf6183a-972c-4d14-8828-40d2b4742710",
@@ -591,7 +591,7 @@ Output
                     "price": 2.67,
                     "perPacketCount": 20,
                     "packets": 100,
-                    "image": "/images/onions/ailsa_craig.jpg"
+                    "image": "/common/images/onions/ailsa_craig.jpg"
                 }
             }
         },
@@ -610,7 +610,7 @@ Output
                     "price": 4.58,
                     "perPacketCount": 50,
                     "packets": 100,
-                    "image": "/images/peppers/green_bell.jpg"
+                    "image": "/common/images/peppers/green_bell.jpg"
                 },
                 "28c22773-547c-4a28-b803-ba8b4298c117": {
                     "id": "28c22773-547c-4a28-b803-ba8b4298c117",
@@ -624,7 +624,7 @@ Output
                     "price": 6.45,
                     "perPacketCount": 15,
                     "packets": 99,
-                    "image": "/images/peppers/serrano.jpg"
+                    "image": "/common/images/peppers/serrano.jpg"
                 },
                 "3e3cd1fb-48a0-41f4-8f3e-30542d8b4daf": {
                     "id": "3e3cd1fb-48a0-41f4-8f3e-30542d8b4daf",
@@ -637,7 +637,7 @@ Output
                     "price": 2.96,
                     "perPacketCount": 25,
                     "packets": 100,
-                    "image": "/images/peppers/poblano.jpg"
+                    "image": "/common/images/peppers/poblano.jpg"
                 },
                 "9f9d76b1-eda3-4d98-85d9-df8effb04ea8": {
                     "id": "9f9d76b1-eda3-4d98-85d9-df8effb04ea8",
@@ -651,7 +651,7 @@ Output
                     "price": 3.78,
                     "perPacketCount": 12,
                     "packets": 100,
-                    "image": "/images/peppers/jalapeno.jpg"
+                    "image": "/common/images/peppers/jalapeno.jpg"
                 }
             }
         },
@@ -670,7 +670,7 @@ Output
                     "price": 2.96,
                     "perPacketCount": 25,
                     "packets": 100,
-                    "image": "/images/tomatoes/determinate/plum_regal.jpg"
+                    "image": "/common/images/tomatoes/determinate/plum_regal.jpg"
                 },
                 "4c5e38f1-edab-440e-99cd-29c557b925cd": {
                     "id": "4c5e38f1-edab-440e-99cd-29c557b925cd",
@@ -684,7 +684,7 @@ Output
                     "price": 6.45,
                     "perPacketCount": 15,
                     "packets": 100,
-                    "image": "/images/tomatoes/indeterminate/san_marzano.jpg"
+                    "image": "/common/images/tomatoes/indeterminate/san_marzano.jpg"
                 },
                 "8496e153-0a6c-425f-b9c5-8d55dc4b0d3f": {
                     "id": "8496e153-0a6c-425f-b9c5-8d55dc4b0d3f",
@@ -698,7 +698,7 @@ Output
                     "price": 3.78,
                     "perPacketCount": 12,
                     "packets": 100,
-                    "image": "/images/tomatoes/indeterminate/carbon.jpg"
+                    "image": "/common/images/tomatoes/indeterminate/carbon.jpg"
                 },
                 "c119da73-5648-435a-a22f-80d09c86098d": {
                     "id": "c119da73-5648-435a-a22f-80d09c86098d",
@@ -712,7 +712,7 @@ Output
                     "price": 4.58,
                     "perPacketCount": 50,
                     "packets": 100,
-                    "image": "/images/tomatoes/determinate/galahad.jpg"
+                    "image": "/common/images/tomatoes/determinate/galahad.jpg"
                 }
             }
         }
@@ -759,7 +759,7 @@ Output
         "price": 2.18,
         "perPacketCount": 100,
         "packets": 100,
-        "image": "/images/herbs/polyvert_chive.jpg"
+        "image": "/common/images/herbs/polyvert_chive.jpg"
     }
 }
 ```
@@ -807,7 +807,7 @@ Output
         "price": 2.18,
         "perPacketCount": 100,
         "packets": 99,
-        "image": "/images/herbs/polyvert_chive.jpg"
+        "image": "/common/images/herbs/polyvert_chive.jpg"
     }
 }
 ```
