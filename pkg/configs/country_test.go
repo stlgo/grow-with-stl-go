@@ -28,8 +28,9 @@ func TestCountryFunctions(t *testing.T) {
 		require.NoError(t, err)
 
 		if GrowSTLGo.Country != nil {
-			err := GrowSTLGo.Country.GetCountryData()
+			fileName, err := GrowSTLGo.Country.GetCountryData()
 			require.NoError(t, err)
+			require.NotNil(t, fileName)
 		}
 	})
 }

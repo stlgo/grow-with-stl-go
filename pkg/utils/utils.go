@@ -14,7 +14,9 @@
 
 package utils
 
-import "time"
+import (
+	"time"
+)
 
 // CurrentTimeInMillis returns current time as a long int pointer NARF!
 func CurrentTimeInMillis() *int64 {

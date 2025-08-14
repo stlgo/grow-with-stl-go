@@ -12,4 +12,25 @@
  limitations under the License.
 */
 
-package weather
+package locations
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"stl-go/grow-with-stl-go/pkg/log"
+)
+
+func TestZipFunctions(t *testing.T) {
+	t.Skip()
+	t.Run("Test now timestamp pointer", func(t *testing.T) {
+		file := "C:\\Users\\root\\AppData\\Local\\Temp\\gwstlg500524809\\US.zip"
+
+		err := extractLocationData(&file)
+		if err != nil {
+			log.Error(err)
+		}
+		require.NoError(t, err)
+	})
+}

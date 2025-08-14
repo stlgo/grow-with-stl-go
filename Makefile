@@ -125,8 +125,7 @@ frontend-build:
 .PHONY: frontend-lint
 frontend-lint:
 	@echo "Running frontend linting step..."
-	@cd $(WEB_DIR)/grow-with-stlgo && npx eslint --fix . && cd ..
-	@cd $(WEB_DIR)/grow-with-stlgo-admin && npx eslint --fix . && cd ..
+	@cd $(WEB_DIR) && npx eslint --fix . && cd ..
 	@echo "Frontend linting completed successfully"
 
 ### Distribution Build ###

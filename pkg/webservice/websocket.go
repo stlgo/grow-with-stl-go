@@ -345,7 +345,14 @@ func handleMessage(request, response *configs.WsMessage) {
 		case configs.GetPagelet:
 			getPagelet(request, response)
 		case configs.Keepalive:
-			log.Tracef("keepalive received for session %s", *request.SessionID)
+			sessionsMutex.Lock()
+			session, ok := sessions[*request.SessionID]
+			sessionsMutex.Unlock()
+			if ok && session.user != nil && request.Vhost != nil {
+				log.Tracef("keepalive received for user '%s' on vhost '%s' session %s", *session.user, *request.Vhost, *request.SessionID)
+			} else {
+				log.Tracef("keepalive received for session %s", *request.SessionID)
+			}
 		case configs.Auth:
 			sessionsMutex.Lock()
 			session, ok := sessions[*request.SessionID]
@@ -496,9 +503,7 @@ func WebSocketSend(response *configs.WsMessage) error {
 
 // Shutdown is called when the system is exiting to cleanly close all the current connections
 func Shutdown() {
-	sessionsMutex.Lock()
 	for _, session := range sessions {
 		session.onClose()
 	}
-	sessionsMutex.Unlock()
 }

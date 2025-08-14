@@ -22,7 +22,7 @@ import (
 	"stl-go/grow-with-stl-go/pkg/log"
 )
 
-func TestConfigFunctions(t *testing.T) {
+func TestUtilFunctions(t *testing.T) {
 	t.Run("Test now timestamp pointer", func(t *testing.T) {
 		now := CurrentTimeInMillis()
 		require.NotNil(t, now)

@@ -28,6 +28,7 @@ import (
 type Country struct {
 	Country *string `json:"country,omitempty"`
 	URL     *string `json:"url,omitempty"`
+	ZipFile *string `json:"zip_file,omitempty"`
 }
 
 func (c *Config) checkCountry() error {
@@ -57,20 +58,23 @@ func (c *Config) checkCountry() error {
 }
 
 // GetCountryData will get the configured country's city, state, zip, latitude / longitude information
-func (c *Country) GetCountryData() error {
+func (c *Country) GetCountryData() (*string, error) {
 	defer log.FunctionTimer()()
 	if c != nil && c.URL != nil && c.Country != nil && GrowSTLGo.DataDir != nil {
 		fileName := filepath.Join(*GrowSTLGo.DataDir, fmt.Sprintf("%s.zip", *c.Country))
 		url, urlErr := url.JoinPath(*c.URL, fmt.Sprintf("%s.zip", *c.Country))
 		if urlErr != nil {
-			return urlErr
+			return nil, urlErr
 		}
 		statusCode, downloadErr := DownloadFile(url, http.MethodGet, fileName, nil)
 		if downloadErr != nil {
-			return downloadErr
+			return nil, downloadErr
 		}
-		log.Info(*statusCode)
-		return nil
+		if statusCode != nil && *statusCode < 300 {
+			c.ZipFile = &fileName
+			return &fileName, nil
+		}
+		return nil, fmt.Errorf("error code returned from endpoint.  HTTP Status: %d", *statusCode)
 	}
-	return errors.New("invalid country configuration cannot retrieve data")
+	return nil, errors.New("invalid country configuration cannot retrieve data")
 }
