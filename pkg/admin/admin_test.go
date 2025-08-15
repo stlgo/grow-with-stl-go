@@ -34,7 +34,7 @@ func initConfigTest() {
 func TestConfigFunctions(t *testing.T) {
 	initConfigTest()
 	t.Run("Test getting user data from the db", func(t *testing.T) {
-		data, err := pageLoad()
+		data, err := pageLoad(true)
 		require.NoError(t, err)
 		require.NotEmpty(t, data)
 

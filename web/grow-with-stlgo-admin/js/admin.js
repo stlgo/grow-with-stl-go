@@ -12,7 +12,6 @@
 # limitations under the License.
 */
 
-
 class Admin {
     constructor(ws, log) {
         this.ws = ws;
@@ -20,6 +19,8 @@ class Admin {
 
         this.route = this.constructor.name.toLowerCase();
         this.ws.registerHandlers(this.route, this);
+
+        this.locationTypeAhead = null;
 
         document.addEventListener('admin', () => {
             this.ws.sendMessage({
@@ -218,6 +219,9 @@ class Admin {
                         }
 
                         switch (tagElement.id) {
+                        case `${userID}-UserLegend`:
+                            tagElement.innerHTML = `Update ${userID}`;
+                            break;
                         case `${userID}-UserIDInput`:
                             tagElement.value = userID;
                             tagElement.disabled = true;
@@ -419,6 +423,12 @@ class Admin {
                 this.bindButtons();
                 if (Object.prototype.hasOwnProperty.call(json.data, 'version')) {
                     document.getElementById('VersionDiv').innerHTML = `Current Version: ${json.data.version}`;
+                }
+                if (Object.prototype.hasOwnProperty.call(json.data, 'zipCodes')) {
+                    if (this.locationTypeAhead !== null) {
+                        delete this.locationTypeAhead;
+                    }
+                    // this.locationTypeAhead = new TypeAhead(this, 'LocationInput', json.data.zipCodes);
                 }
                 break;
             case 'generatePassword':

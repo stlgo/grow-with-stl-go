@@ -7,7 +7,7 @@
     </div>
 </fieldset>
 <fieldset id="NewUserFieldset">
-    <legend>New User</legend>
+    <legend id="UserLegend">New User</legend>
     <table>
         <tr>
             <td><b>User ID:</b></td>
@@ -25,6 +25,12 @@
             </td>
             <td>
                 <button class="btn btn-outline-primary" id="RefreshPassword" title="Generate new password"><i class="fa fa-refresh"></i></button>
+            </td>
+        </tr>
+        <tr>
+            <td><b>Location:</b></td>
+            <td>
+                <input type="text" class="autocomplete" id="LocationInput" size="70" placeholder="City, State. Zip">
             </td>
         </tr>
         <tr>

@@ -116,7 +116,7 @@ func (session *session) onMessage() {
 
 		// this has to be a go routine otherwise it will block any incoming messages waiting for a command return
 		go func() {
-			transaction := audit.NewWSTransaction(session.requestHost, session.user, &request)
+			transaction := audit.NewWSTransaction(session.Vhost, session.user, &request)
 			request.IsAdmin = session.isAdmin
 			// test the auth token for request validity on non auth requests
 			if request.Route != nil && !strings.EqualFold(*request.Route, configs.WebsocketClient) &&
@@ -301,18 +301,18 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 		configs.GrowSTLGo.APIUsersMutex.Unlock()
 		if ok && user.Active != nil && *user.Active && request.Vhost != nil {
 			if !slices.Contains(user.Vhosts, *request.Vhost) {
-				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
+				go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", false)
 				return user.Authentication.ID, fmt.Errorf("user %s not authorized for vhost %s", *request.Authentication.ID, *request.Vhost)
 			}
 
 			if err := user.Authentication.ValidateAuthentication(request.Authentication.Password); err != nil {
-				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
+				go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", false)
 				return user.Authentication.ID, fmt.Errorf("bad password attempt for user %s.  Error: %s", *request.Authentication.ID, err)
 			}
 
 			token, validTill, err := createJWTToken(request.Authentication.ID, request.SessionID)
 			if err != nil || token == nil {
-				go audit.RecordLogin(user.Authentication.ID, "WebSocket", false)
+				go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", false)
 				return user.Authentication.ID, err
 			}
 
@@ -331,7 +331,7 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 			response.IsAdmin = user.Admin
 			response.Error = nil
 
-			go audit.RecordLogin(user.Authentication.ID, "WebSocket", true)
+			go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", true)
 			return user.Authentication.ID, nil
 		}
 		return request.Authentication.ID, errors.New("user not found")
@@ -397,7 +397,6 @@ func getPagelet(request, response *configs.WsMessage) {
 			session, ok := sessions[*request.SessionID]
 			sessionsMutex.Unlock()
 			if ok && session.Vhost != nil {
-				log.Info(*session.Vhost)
 				if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[*session.Vhost]; ok && webRoot != nil {
 					fileName := filepath.Join(*webRoot, "pagelets", fmt.Sprintf("%s.html", *request.Component))
 					_, err := os.Stat(fileName)

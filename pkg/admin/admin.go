@@ -24,6 +24,7 @@ import (
 
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/locations"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/webservice"
 )
@@ -44,7 +45,7 @@ const (
 func Init() error {
 	webservice.AppendToWebsocketFunctionMap("admin", handleMessage)
 	// warm up the db connection so when we hit the page the first time it's faster
-	if _, err := pageLoad(); err != nil {
+	if _, err := pageLoad(false); err != nil {
 		return err
 	}
 	return nil
@@ -55,7 +56,7 @@ func handleMessage(request, response *configs.WsMessage) {
 		var err error
 		switch *request.Type {
 		case pageLoadKey:
-			response.Data, err = pageLoad()
+			response.Data, err = pageLoad(true)
 		case generatePassword:
 			response.Data = map[string]*string{
 				"password": configs.GeneratePassword(),
@@ -151,7 +152,7 @@ func userAction(request, response *configs.WsMessage) *configs.WsMessage {
 			return response
 		}
 
-		data, err := pageLoad()
+		data, err := pageLoad(false)
 		if err != nil {
 			log.Error(err)
 			e := err.Error()
@@ -164,7 +165,7 @@ func userAction(request, response *configs.WsMessage) *configs.WsMessage {
 	return nil
 }
 
-func pageLoad() (map[string]interface{}, error) {
+func pageLoad(initialLoad bool) (map[string]interface{}, error) {
 	users := make(map[string]interface{})
 	err := audit.GetLastLogins()
 	if err != nil {
@@ -185,6 +186,9 @@ func pageLoad() (map[string]interface{}, error) {
 			"users":   users,
 			"vhosts":  slices.AppendSeq(make([]string, 0, len(configs.GrowSTLGo.WebService.Vhosts)), maps.Keys(configs.GrowSTLGo.WebService.Vhosts)),
 			"version": configs.Version,
+		}
+		if initialLoad {
+			data["zipCodes"] = locations.ZipCodeTypeahead
 		}
 		return data, nil
 	}

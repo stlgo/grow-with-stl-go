@@ -28,6 +28,7 @@ import (
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/utils"
 
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -96,23 +97,16 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 
 	var path string
 	var exists bool
-	var fileExistsErr error
 	if configs.GrowSTLGo != nil && configs.GrowSTLGo.WebService != nil {
 		if configs.GrowSTLGo.WebService.WebDir != nil && staticCommonPrefixes.MatchString(r.RequestURI) {
 			path = filepath.Join(*configs.GrowSTLGo.WebService.WebDir, r.URL.Path)
-			exists, fileExistsErr = fileExists(path)
+			exists = fileExists(path)
 		} else if !webDenialPrefixes.MatchString(uri) && configs.GrowSTLGo.WebService.Vhosts != nil {
 			if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[strings.Split(r.Host, ":")[0]]; ok && webRoot != nil {
 				path = filepath.Join(*webRoot, uri)
-				exists, fileExistsErr = fileExists(path)
+				exists = fileExists(path)
 			}
 		}
-	}
-
-	if fileExistsErr != nil {
-		log.Error(fileExistsErr)
-		http.Error(w, fileExistsErr.Error(), http.StatusNotFound)
-		return
 	}
 
 	if exists {
@@ -124,12 +118,11 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/index.html", http.StatusFound)
 }
 
-func fileExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err != nil {
-		return false, err
+func fileExists(path string) bool {
+	if _, err := os.Stat(path); err != nil {
+		return false
 	}
-	return true, nil
+	return true
 }
 
 func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
@@ -143,10 +136,12 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		id, err := validateAPIUser(r.Host, body)
+
+		vhost := utils.StringPointer(r.Host)
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.UnauthorizedError, http.StatusUnauthorized)
-			go audit.RecordLogin(id, "REST", false)
+			go audit.RecordLogin(id, vhost, "REST", false)
 			return
 		}
 
@@ -155,7 +150,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
-			go audit.RecordLogin(id, "REST", false)
+			go audit.RecordLogin(id, vhost, "REST", false)
 			return
 		}
 
@@ -163,7 +158,7 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
-			go audit.RecordLogin(id, "REST", false)
+			go audit.RecordLogin(id, vhost, "REST", false)
 			return
 		}
 
@@ -172,12 +167,12 @@ func handelRESTAuthRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error(err)
 			http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
-			go audit.RecordLogin(id, "REST", false)
+			go audit.RecordLogin(id, vhost, "REST", false)
 			return
 		}
 
 		log.Infof("Token authentication %s successful for %s session %s", r.Method, *id, sessionID)
-		go audit.RecordLogin(id, "REST", true)
+		go audit.RecordLogin(id, vhost, "REST", true)
 		return
 	}
 	log.Error("http request was nil")

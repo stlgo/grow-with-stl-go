@@ -18,8 +18,11 @@ import (
 	"archive/zip"
 	"encoding/csv"
 	"errors"
+	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -33,8 +36,12 @@ import (
 var (
 	// ZipcodeCache will expose the zip code info for use in other packages
 	ZipcodeCache = make(map[int]*ZipCode)
+	// ZipcodeLookup is a lookup for the typeahead
+	ZipcodeLookup = make(map[string]*ZipCode)
 	// ZipCodeCacheMutex is the controlling mutex for ZipCodeCache
 	ZipCodeCacheMutex sync.Mutex
+	// ZipCodeTypeahead used by the UI to do type ahead for locations
+	ZipCodeTypeahead = []string{}
 )
 
 // ZipCode contains the extracted city & location details for the data extracted from https://download.geonames.org/export/zip/
@@ -75,7 +82,7 @@ func getLocations() error {
 	return errors.New("invalid country config cannot get locations")
 }
 
-// unzipFile will extract a zip file
+// extractLocationData will extract a zip with country locations, obviously this is US centric and will need to be modified for other countries
 func extractLocationData(fileName, country *string) error {
 	defer log.FunctionTimer()()
 	if fileName != nil && country != nil {
@@ -115,6 +122,7 @@ func extractLocationData(fileName, country *string) error {
 
 				for _, record := range rows {
 					if len(record) == 12 {
+						// limit the us territories
 						zipCode, zipCodeErr := strconv.Atoi(record[1])
 						if zipCodeErr != nil {
 							log.Error(zipCode)
@@ -130,8 +138,8 @@ func extractLocationData(fileName, country *string) error {
 							log.Error(longitudeErr)
 							continue
 						}
-						ZipCodeCacheMutex.Lock()
-						ZipcodeCache[zipCode] = &ZipCode{
+
+						zc := &ZipCode{
 							Country:           utils.StringPointer(record[0]),
 							ZipCode:           &zipCode,
 							City:              utils.StringPointer(record[2]),
@@ -141,11 +149,17 @@ func extractLocationData(fileName, country *string) error {
 							Latitude:          &latitude,
 							Longitude:         &longitude,
 						}
+						ZipCodeCacheMutex.Lock()
+						ZipcodeCache[zipCode] = zc
+						ZipcodeLookup[fmt.Sprintf("%s, %s. %d", record[2], record[4], zipCode)] = zc
 						ZipCodeCacheMutex.Unlock()
 					}
 				}
 			}
 		}
+		ZipCodeCacheMutex.Lock()
+		ZipCodeTypeahead = slices.Collect(maps.Keys(ZipcodeLookup))
+		ZipCodeCacheMutex.Unlock()
 		log.Tracef("finished extracting location information from the %s archive.  There are %s zip codes in the cache",
 			*fileName, utils.FormatNumber(len(ZipcodeCache)))
 		return nil

@@ -27,11 +27,12 @@ import (
 
 // WSTransaction will be used to record WebSocket transactions and record them to the db
 type WSTransaction struct {
+	User         *string
 	Host         *string
+	Route        *string
+	Type         *string
 	Component    *string
 	SubComponent *string
-	User         *string
-	Type         *string
 	Start        *int64
 	Elapsed      *int64
 	Recordable   *bool
@@ -56,6 +57,7 @@ var (
 			CreateSQL: `CREATE TABLE IF NOT EXISTS WebSocket (
 				host varchar(1024) NOT NULL,
 				user varchar(256) NOT NULL,
+				route varchar(128) NOT NULL,
 				type varchar(128) NOT NULL,
 				component varcar(128) NOT NULL,
 				subcomponent varchar(128),
@@ -63,10 +65,11 @@ var (
 				start bigint NOT NULL,
 				stop bigint NOT NULL,
 				elapsed bigint NOT NULL)`,
-			InsertSQL: "INSERT INTO WebSocket values(?,?,?,?,?,?,?,?,?)",
+			InsertSQL: "INSERT INTO WebSocket values(?,?,?,?,?,?,?,?,?,?)",
 			Indices: []string{
 				"CREATE INDEX IF NOT EXISTS wshost on WebSocket(host)",
 				"CREATE INDEX IF NOT EXISTS wsuser on WebSocket(user)",
+				"CREATE INDEX IF NOT EXISTS wsroute on WebSocket(route)",
 				"CREATE INDEX IF NOT EXISTS wstype on WebSocket(type)",
 				"CREATE INDEX IF NOT EXISTS wscomponent on WebSocket(component)",
 				"CREATE INDEX IF NOT EXISTS wssubcomponent on WebSocket(subcomponent)",
@@ -94,10 +97,11 @@ var (
 		"user": {
 			CreateSQL: `CREATE TABLE IF NOT EXISTS user (
 				user varchar(128) NOT NULL,
+				vhost varchar(1024) NOT NULL,
 				protocol TEXT CHECK(protocol IN ('WebSocket', 'REST')) NOT NULL,
 				success tinyint(1) NOT NULL default 0,
 				observed bigint NOT NULL)`,
-			InsertSQL: "INSERT INTO user values(?,?,?,?)",
+			InsertSQL: "INSERT INTO user values(?,?,?,?,?)",
 		},
 	}
 )
@@ -115,12 +119,12 @@ func Init() error {
 }
 
 // RecordLogin will insert a record into the users table once a user attempts a login
-func RecordLogin(userID *string, protocol string, goodLogin bool) {
+func RecordLogin(userID, vhost *string, protocol string, goodLogin bool) {
 	db, dbErr := configs.GetSQLiteConnection()
 	if dbErr != nil {
 		log.Errorf("unable to record login, sqlite error: %s", dbErr)
 	}
-	if table, ok := auditTables["user"]; db != nil && ok && table != nil && userID != nil {
+	if table, ok := auditTables["user"]; db != nil && ok && table != nil && userID != nil && vhost != nil {
 		stmt, err := db.Prepare(table.InsertSQL)
 		if err != nil {
 			log.Error(err)
@@ -138,6 +142,7 @@ func RecordLogin(userID *string, protocol string, goodLogin bool) {
 		defer table.WriteMutex.Unlock()
 		result, err := stmt.Exec(
 			userID,
+			vhost,
 			protocol,
 			success,
 			observed)
@@ -153,7 +158,7 @@ func RecordLogin(userID *string, protocol string, goodLogin bool) {
 			return
 		}
 
-		log.Tracef("%d rows inserted into user", rows)
+		log.Tracef("%d rows inserted into user for '%s' on '%s', user was able to log in: %t.", rows, *userID, *vhost, goodLogin)
 		return
 	}
 	log.Trace("did not meet the requirements to record the login")
@@ -193,6 +198,7 @@ func GetLastLogins() error {
 func NewWSTransaction(host, user *string, request *configs.WsMessage) *WSTransaction {
 	return &WSTransaction{
 		Host:         host,
+		Route:        request.Route,
 		Type:         request.Type,
 		Component:    request.Component,
 		SubComponent: request.SubComponent,
@@ -219,8 +225,8 @@ func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 	if dbErr != nil {
 		return fmt.Errorf("unable to record the complete transaction, sqlite error: %s", dbErr)
 	}
-	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && db != nil &&
-		transaction.Component != nil && transaction.Type != nil && !strings.EqualFold(*transaction.Type, "keepalive") {
+	if transaction.Recordable != nil && *transaction.Recordable && transaction.User != nil && transaction.Start != nil && db != nil && transaction.Host != nil &&
+		transaction.Route != nil && transaction.Component != nil && transaction.Type != nil && !strings.EqualFold(*transaction.Type, "keepalive") {
 		if table, ok := auditTables["WebSocket"]; ok && table != nil {
 			stmt, err := db.Prepare(table.InsertSQL)
 			if err != nil {
@@ -240,6 +246,7 @@ func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 			result, err := stmt.Exec(
 				transaction.Host,
 				transaction.User,
+				transaction.Route,
 				transaction.Type,
 				transaction.Component,
 				transaction.SubComponent,
@@ -257,7 +264,7 @@ func (transaction *WSTransaction) Complete(errorMessagePresent bool) error {
 				return err
 			}
 
-			log.Tracef("%d rows inserted into websocket", rows)
+			log.Tracef("%d rows inserted into websocket for '%s' on '%s' using '%s' route", rows, *transaction.User, *transaction.Host, *transaction.Route)
 			return nil
 		}
 	}
