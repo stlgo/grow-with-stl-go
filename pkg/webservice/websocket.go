@@ -392,7 +392,7 @@ func getPagelet(request, response *configs.WsMessage) {
 			return
 		}
 		// everyone else is free to move about the cabin
-		if request.SessionID != nil {
+		if request.SessionID != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.WebService != nil && configs.GrowSTLGo.WebService.Vhosts != nil {
 			sessionsMutex.Lock()
 			session, ok := sessions[*request.SessionID]
 			sessionsMutex.Unlock()

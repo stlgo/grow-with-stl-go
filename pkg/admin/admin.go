@@ -64,11 +64,13 @@ func handleMessage(request, response *configs.WsMessage) {
 			userAction(request, response)
 		case getUserDetails:
 			if request.Component != nil {
-				configs.GrowSTLGo.APIUsersMutex.Lock()
-				apiUser, ok := configs.GrowSTLGo.APIUsers[*request.Component]
-				configs.GrowSTLGo.APIUsersMutex.Unlock()
-				if ok {
-					response.Data = apiUser.Vhosts
+				if configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
+					configs.GrowSTLGo.APIUsersMutex.Lock()
+					apiUser, ok := configs.GrowSTLGo.APIUsers[*request.Component]
+					configs.GrowSTLGo.APIUsersMutex.Unlock()
+					if ok {
+						response.Data = apiUser.Vhosts
+					}
 				}
 			}
 		default:
@@ -93,7 +95,7 @@ func handleMessage(request, response *configs.WsMessage) {
 }
 
 func updateUserActive(userID, active *string) error {
-	if userID != nil && active != nil {
+	if userID != nil && active != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
 		b, err := strconv.ParseBool(*active)
 		if err != nil {
 			return err
@@ -109,7 +111,7 @@ func updateUserActive(userID, active *string) error {
 }
 
 func updateUserAdmin(userID, admin *string) error {
-	if userID != nil && admin != nil {
+	if userID != nil && admin != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
 		b, err := strconv.ParseBool(*admin)
 		if err != nil {
 			return err
@@ -168,20 +170,23 @@ func pageLoad() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	configs.GrowSTLGo.APIUsersMutex.Lock()
-	for userID, apiUser := range configs.GrowSTLGo.APIUsers {
-		users[userID] = map[string]interface{}{
-			"lastLogin": apiUser.LastLogin,
-			"active":    apiUser.Active,
-			"admin":     apiUser.Admin,
+	if configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil && configs.GrowSTLGo.WebService != nil && configs.GrowSTLGo.WebService.Vhosts != nil {
+		configs.GrowSTLGo.APIUsersMutex.Lock()
+		for userID, apiUser := range configs.GrowSTLGo.APIUsers {
+			users[userID] = map[string]interface{}{
+				"lastLogin": apiUser.LastLogin,
+				"active":    apiUser.Active,
+				"admin":     apiUser.Admin,
+			}
 		}
-	}
-	configs.GrowSTLGo.APIUsersMutex.Unlock()
+		configs.GrowSTLGo.APIUsersMutex.Unlock()
 
-	data := map[string]interface{}{
-		"users":   users,
-		"vhosts":  slices.AppendSeq(make([]string, 0, len(configs.GrowSTLGo.WebService.Vhosts)), maps.Keys(configs.GrowSTLGo.WebService.Vhosts)),
-		"version": configs.Version,
+		data := map[string]interface{}{
+			"users":   users,
+			"vhosts":  slices.AppendSeq(make([]string, 0, len(configs.GrowSTLGo.WebService.Vhosts)), maps.Keys(configs.GrowSTLGo.WebService.Vhosts)),
+			"version": configs.Version,
+		}
+		return data, nil
 	}
-	return data, nil
+	return nil, errors.New("invalid configuration cannot load page data")
 }

@@ -15,6 +15,8 @@
 package utils
 
 import (
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -32,4 +34,23 @@ func BoolPointer(b bool) *bool {
 // StringPointer return a pointer of a string as a convenience function
 func StringPointer(s string) *string {
 	return &s
+}
+
+// FormatNumber will put commas in the number for easier reading
+func FormatNumber(i interface{}) string {
+	output := fmt.Sprintf("%v", i)
+	offset := 3
+
+	// account for negative numbers
+	if strings.HasPrefix(output, "-") {
+		offset++
+	}
+
+	// add commas
+	for outputIndex := len(output); outputIndex > offset; {
+		outputIndex -= 3
+		output = fmt.Sprintf("%s,%s", output[:outputIndex], output[outputIndex:])
+	}
+
+	return output
 }

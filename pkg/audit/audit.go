@@ -165,7 +165,7 @@ func GetLastLogins() error {
 	if dbErr != nil {
 		return fmt.Errorf("unable to get last logins, sqlite error: %s", dbErr)
 	}
-	if db != nil {
+	if db != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
 		rows, err := db.Query("select user, max(observed) from user where success = 1 group by user")
 		if err != nil {
 			return err

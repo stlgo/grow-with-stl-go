@@ -26,8 +26,9 @@ func TestZipFunctions(t *testing.T) {
 	t.Skip()
 	t.Run("Test now timestamp pointer", func(t *testing.T) {
 		file := "C:\\Users\\root\\AppData\\Local\\Temp\\gwstlg500524809\\US.zip"
+		country := "US"
 
-		err := extractLocationData(&file)
+		err := extractLocationData(&file, &country)
 		if err != nil {
 			log.Error(err)
 		}

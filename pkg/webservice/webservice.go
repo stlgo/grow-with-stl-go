@@ -97,13 +97,15 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 	var path string
 	var exists bool
 	var fileExistsErr error
-	if configs.GrowSTLGo.WebService.WebDir != nil && staticCommonPrefixes.MatchString(r.RequestURI) {
-		path = filepath.Join(*configs.GrowSTLGo.WebService.WebDir, r.URL.Path)
-		exists, fileExistsErr = fileExists(path)
-	} else if !webDenialPrefixes.MatchString(uri) {
-		if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[strings.Split(r.Host, ":")[0]]; ok && webRoot != nil {
-			path = filepath.Join(*webRoot, uri)
+	if configs.GrowSTLGo != nil && configs.GrowSTLGo.WebService != nil {
+		if configs.GrowSTLGo.WebService.WebDir != nil && staticCommonPrefixes.MatchString(r.RequestURI) {
+			path = filepath.Join(*configs.GrowSTLGo.WebService.WebDir, r.URL.Path)
 			exists, fileExistsErr = fileExists(path)
+		} else if !webDenialPrefixes.MatchString(uri) && configs.GrowSTLGo.WebService.Vhosts != nil {
+			if webRoot, ok := configs.GrowSTLGo.WebService.Vhosts[strings.Split(r.Host, ":")[0]]; ok && webRoot != nil {
+				path = filepath.Join(*webRoot, uri)
+				exists, fileExistsErr = fileExists(path)
+			}
 		}
 	}
 
