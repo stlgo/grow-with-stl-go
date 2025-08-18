@@ -218,6 +218,20 @@ class WebSocketClient {
         });
     }
 
+    showSnackbarMessage(message) {
+        let div = document.getElementById('SnackbarDiv');
+        div.innerHTML = `${message}<br><span class="close" id="SnackClose">&times;</span>`;
+        div.classList.add('show-bar');
+
+        document.getElementById('SnackClose').onclick = () => {
+            div.className = div.className.replace('show-bar', '');
+        };
+
+        setTimeout(() => {
+            div.className = div.className.replace('show-bar', '');
+        }, 10000);
+    }
+
     displayHelper(elements, display) {
         elements.forEach((elementID) => {
             let element = document.getElementById(elementID);

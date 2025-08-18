@@ -15,6 +15,7 @@
 package admin
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -26,6 +27,7 @@ import (
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/locations"
 	"stl-go/grow-with-stl-go/pkg/log"
+	"stl-go/grow-with-stl-go/pkg/utils"
 	"stl-go/grow-with-stl-go/pkg/webservice"
 )
 
@@ -65,12 +67,15 @@ func handleMessage(request, response *configs.WsMessage) {
 			userAction(request, response)
 		case getUserDetails:
 			if request.Component != nil {
-				if configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
-					configs.GrowSTLGo.APIUsersMutex.Lock()
-					apiUser, ok := configs.GrowSTLGo.APIUsers[*request.Component]
-					configs.GrowSTLGo.APIUsersMutex.Unlock()
+				if configs.GrowSTLGo != nil && configs.GrowSTLGo.Users != nil {
+					configs.GrowSTLGo.UsersMutex.Lock()
+					currentUser, ok := configs.GrowSTLGo.Users[*request.Component]
+					configs.GrowSTLGo.UsersMutex.Unlock()
 					if ok {
-						response.Data = apiUser.Vhosts
+						response.Data = map[string]interface{}{
+							"location": currentUser.Location,
+							"vhosts":   currentUser.Vhosts,
+						}
 					}
 				}
 			}
@@ -96,32 +101,32 @@ func handleMessage(request, response *configs.WsMessage) {
 }
 
 func updateUserActive(userID, active *string) error {
-	if userID != nil && active != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
+	if userID != nil && active != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.Users != nil {
 		b, err := strconv.ParseBool(*active)
 		if err != nil {
 			return err
 		}
-		configs.GrowSTLGo.APIUsersMutex.Lock()
-		apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]
-		configs.GrowSTLGo.APIUsersMutex.Unlock()
+		configs.GrowSTLGo.UsersMutex.Lock()
+		currentUser, ok := configs.GrowSTLGo.Users[*userID]
+		configs.GrowSTLGo.UsersMutex.Unlock()
 		if ok {
-			return apiUser.ToggleActive(&b)
+			return currentUser.ToggleActive(&b)
 		}
 	}
 	return errors.New("cannot update user active flag")
 }
 
 func updateUserAdmin(userID, admin *string) error {
-	if userID != nil && admin != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
+	if userID != nil && admin != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.Users != nil {
 		b, err := strconv.ParseBool(*admin)
 		if err != nil {
 			return err
 		}
-		configs.GrowSTLGo.APIUsersMutex.Lock()
-		apiUser, ok := configs.GrowSTLGo.APIUsers[*userID]
-		configs.GrowSTLGo.APIUsersMutex.Unlock()
+		configs.GrowSTLGo.UsersMutex.Lock()
+		currentUser, ok := configs.GrowSTLGo.Users[*userID]
+		configs.GrowSTLGo.UsersMutex.Unlock()
 		if ok {
-			return apiUser.ToggleAdmin(&b)
+			return currentUser.ToggleAdmin(&b)
 		}
 	}
 	return errors.New("cannot update user admin flag")
@@ -132,15 +137,15 @@ func userAction(request, response *configs.WsMessage) *configs.WsMessage {
 		var err error
 		switch *request.Type {
 		case addUser:
-			err = configs.AddUser(request.Component, request.Data)
+			err = AddUser(request.Component, request.Data)
 		case updateUser:
-			err = configs.UpdateUser(request.Component, request.Data)
+			err = UpdateUser(request.Component, request.Data)
 		case updateActive:
 			err = updateUserActive(request.Component, request.SubComponent)
 		case updateAdmin:
 			err = updateUserAdmin(request.Component, request.SubComponent)
 		case removeUser:
-			err = configs.RemoveUser(request.Component)
+			err = RemoveUser(request.Component)
 		default:
 			err = fmt.Errorf("component %s not implemented", *request.Component)
 		}
@@ -171,16 +176,16 @@ func pageLoad(initialLoad bool) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil && configs.GrowSTLGo.WebService != nil && configs.GrowSTLGo.WebService.Vhosts != nil {
-		configs.GrowSTLGo.APIUsersMutex.Lock()
-		for userID, apiUser := range configs.GrowSTLGo.APIUsers {
+	if configs.GrowSTLGo != nil && configs.GrowSTLGo.Users != nil && configs.GrowSTLGo.WebService != nil && configs.GrowSTLGo.WebService.Vhosts != nil {
+		configs.GrowSTLGo.UsersMutex.Lock()
+		for userID, currentUser := range configs.GrowSTLGo.Users {
 			users[userID] = map[string]interface{}{
-				"lastLogin": apiUser.LastLogin,
-				"active":    apiUser.Active,
-				"admin":     apiUser.Admin,
+				"lastLogin": currentUser.LastLogin,
+				"active":    currentUser.Active,
+				"admin":     currentUser.Admin,
 			}
 		}
-		configs.GrowSTLGo.APIUsersMutex.Unlock()
+		configs.GrowSTLGo.UsersMutex.Unlock()
 
 		data := map[string]interface{}{
 			"users":   users,
@@ -193,4 +198,96 @@ func pageLoad(initialLoad bool) (map[string]interface{}, error) {
 		return data, nil
 	}
 	return nil, errors.New("invalid configuration cannot load page data")
+}
+
+// AddUser will add a new user to the configs
+func AddUser(userID *string, data interface{}) error {
+	if userID != nil && data != nil {
+		if bytes, err := json.Marshal(data); err == nil {
+			var user configs.User
+			if err := json.Unmarshal(bytes, &user); err == nil && user.Authentication != nil && user.Authentication.ID != nil && user.Authentication.Password != nil {
+				if err := user.Authentication.HashAuthentication(); err == nil {
+					configs.GrowSTLGo.UsersMutex.Lock()
+					_, ok := configs.GrowSTLGo.Users[*userID]
+					configs.GrowSTLGo.UsersMutex.Unlock()
+					if !ok {
+						newUser := &configs.User{
+							Active:         utils.BoolPointer(true),
+							Authentication: user.Authentication,
+						}
+
+						if user.Vhosts != nil {
+							for _, vhost := range user.Vhosts {
+								if _, ok := configs.GrowSTLGo.WebService.Vhosts[vhost]; ok {
+									newUser.Vhosts = append(newUser.Vhosts, vhost)
+								}
+							}
+						}
+
+						configs.GrowSTLGo.UsersMutex.Lock()
+						configs.GrowSTLGo.Users[*userID] = newUser
+						configs.GrowSTLGo.UsersMutex.Unlock()
+						return configs.GrowSTLGo.Persist()
+					}
+				}
+			}
+		}
+	}
+	return errors.New("cannot add user")
+}
+
+// UpdateUser will add a new user to the configs
+func UpdateUser(userID *string, data interface{}) error {
+	if userID != nil && data != nil {
+		if bytes, err := json.Marshal(data); err == nil {
+			var user configs.User
+			err := json.Unmarshal(bytes, &user)
+			if err != nil {
+				return fmt.Errorf("user input, cannot update user.  Error: %s", err)
+			}
+			configs.GrowSTLGo.UsersMutex.Lock()
+			currentUser, ok := configs.GrowSTLGo.Users[*userID]
+			configs.GrowSTLGo.UsersMutex.Unlock()
+			if ok {
+				if user.Authentication != nil {
+					if err := user.Authentication.HashAuthentication(); err != nil {
+						return fmt.Errorf("bad password, cannot update user.  Error: %s", err)
+					}
+					currentUser.Authentication = user.Authentication
+				}
+				if user.Vhosts != nil {
+					currentUser.Vhosts = []string{}
+					for _, vhost := range user.Vhosts {
+						if _, ok := configs.GrowSTLGo.WebService.Vhosts[vhost]; ok {
+							currentUser.Vhosts = append(currentUser.Vhosts, vhost)
+						}
+					}
+				}
+				if user.Location != nil {
+					locations.ZipCodeCacheMutex.Lock()
+					_, zipOk := locations.ZipcodeLookup[*user.Location]
+					locations.ZipCodeCacheMutex.Unlock()
+					if zipOk {
+						currentUser.Location = user.Location
+					}
+				}
+				return configs.GrowSTLGo.Persist()
+			}
+		}
+	}
+	return errors.New("cannot update user")
+}
+
+// RemoveUser will permanently delete the user from the configs
+func RemoveUser(userID *string) error {
+	if userID != nil {
+		configs.GrowSTLGo.UsersMutex.Lock()
+		_, ok := configs.GrowSTLGo.Users[*userID]
+		configs.GrowSTLGo.UsersMutex.Unlock()
+		if ok {
+			delete(configs.GrowSTLGo.Users, *userID)
+			return configs.GrowSTLGo.Persist()
+		}
+	}
+	return errors.New("cannot remove user")
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /*
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +20,7 @@ class Admin {
 
         this.route = this.constructor.name.toLowerCase();
         this.ws.registerHandlers(this.route, this);
+        this.typeaheadData = null;
 
         this.locationTypeAhead = null;
 
@@ -76,6 +78,14 @@ class Admin {
 
     updateUser(userID) {
         let passwordInput = document.getElementById(`${userID}-GeneratedPasswd`);
+        let password = null;
+        if (passwordInput.value.length > 0) {
+            password = passwordInput.value;
+        }
+        let location = null;
+        if (document.getElementById(`${userID}-LocationInput`).value.length > 0) {
+            location = document.getElementById(`${userID}-LocationInput`).value;
+        }
 
         const vhosts = [];
         for (const row of document.getElementById(`${userID}-VhostTable`).rows) {
@@ -85,19 +95,18 @@ class Admin {
             }
         }
 
-        if (passwordInput.value.length >= 10) {
-            this.ws.sendMessage({
-                route: this.route,
-                type: 'updateUser',
-                component: userID,
-                data: {
-                    id: userID,
-                    password: passwordInput.value,
-                    vhosts: vhosts
-                }
-            });
-            passwordInput.value = '';
-        }
+        this.ws.sendMessage({
+            route: this.route,
+            type: 'updateUser',
+            component: userID,
+            data: {
+                id: userID,
+                location: location,
+                password: password,
+                vhosts: vhosts
+            }
+        });
+        passwordInput.value = '';
     }
 
     generatePassword(userType) {
@@ -196,17 +205,16 @@ class Admin {
             let row = table.row(tr);
             const userID = row.data()[1];
             const details = document.getElementById(`${userID}-details`);
-
-            this.ws.sendMessage({
-                route: this.route,
-                type: 'getUserDetails',
-                component: userID,
-            });
-
             if (details.innerHTML.includes('color:maroon')) {
                 row.child.hide();
                 details.innerHTML = '<i class="fa fa-plus-circle fa-lg details-control" style="color:green"></i>';
             } else {
+                this.ws.sendMessage({
+                    route: this.route,
+                    type: 'getUserDetails',
+                    component: userID,
+                });
+
                 const clone = document.getElementById('NewUserFieldset').cloneNode(true);
                 clone.id = `${userID}-details`;
 
@@ -397,12 +405,44 @@ class Admin {
         });
     }
 
-    showUserVhosts(user, vhosts) {
-        vhosts.forEach((vhost) => {
+    showUserInfo(user, data) {
+        data.vhosts.forEach((vhost) => {
             let element = document.getElementById(`${user}-${vhost}`);
             if (typeof element !== 'undefined' && element !== null) {
                 element.checked = true;
             }
+        });
+        if (Object.prototype.hasOwnProperty.call(data, 'location')) {
+            document.getElementById(`${user}-LocationInput`).value = data.location;
+        }
+
+        $(`#${user}-LocationInput`).typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 3
+        },
+        {
+            name: 'Locations',
+            source: this.typeaheadData
+        });
+    }
+
+    bindTypeAhead(data) {
+        this.typeaheadData = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.whitespace,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            // `states` is an array of state names defined in "The Basics"
+            local: data
+        });
+
+        $('#LocationInput').typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 3
+        },
+        {
+            name: 'Locations',
+            source: this.typeaheadData
         });
     }
 
@@ -425,17 +465,14 @@ class Admin {
                     document.getElementById('VersionDiv').innerHTML = `Current Version: ${json.data.version}`;
                 }
                 if (Object.prototype.hasOwnProperty.call(json.data, 'zipCodes')) {
-                    if (this.locationTypeAhead !== null) {
-                        delete this.locationTypeAhead;
-                    }
-                    // this.locationTypeAhead = new TypeAhead(this, 'LocationInput', json.data.zipCodes);
+                    this.bindTypeAhead(json.data.zipCodes);
                 }
                 break;
             case 'generatePassword':
                 this.populatePassword(json.component, json.data);
                 break;
             case 'getUserDetails':
-                this.showUserVhosts(json.component, json.data);
+                this.showUserInfo(json.component, json.data);
                 break;
             default:
                 this.log.error(`Cannot handle type '${json.type}' for ${this.route}`);

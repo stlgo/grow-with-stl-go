@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.0.1",
+    "corejs-typeahead": "^1.3.4",
     "datatables.net": "^2.0.0",
     "datatables.net-autofill": "^2.7.0",
     "datatables.net-buttons": "^3.0.0",

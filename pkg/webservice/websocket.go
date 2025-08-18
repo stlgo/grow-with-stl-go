@@ -296,9 +296,9 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 
 	if request.Component != nil && strings.EqualFold(*request.Component, configs.Authenticate) && request.SessionID != nil &&
 		request.Authentication != nil && request.Authentication.ID != nil && request.Authentication.Password != nil {
-		configs.GrowSTLGo.APIUsersMutex.Lock()
-		user, ok := configs.GrowSTLGo.APIUsers[*request.Authentication.ID]
-		configs.GrowSTLGo.APIUsersMutex.Unlock()
+		configs.GrowSTLGo.UsersMutex.Lock()
+		user, ok := configs.GrowSTLGo.Users[*request.Authentication.ID]
+		configs.GrowSTLGo.UsersMutex.Unlock()
 		if ok && user.Active != nil && *user.Active && request.Vhost != nil {
 			if !slices.Contains(user.Vhosts, *request.Vhost) {
 				go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", false)

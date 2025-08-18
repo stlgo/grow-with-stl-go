@@ -170,7 +170,7 @@ func GetLastLogins() error {
 	if dbErr != nil {
 		return fmt.Errorf("unable to get last logins, sqlite error: %s", dbErr)
 	}
-	if db != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.APIUsers != nil {
+	if db != nil && configs.GrowSTLGo != nil && configs.GrowSTLGo.Users != nil {
 		rows, err := db.Query("select user, max(observed) from user where success = 1 group by user")
 		if err != nil {
 			return err
@@ -182,9 +182,9 @@ func GetLastLogins() error {
 			if err := rows.Scan(&userID, &lastLogin); err != nil {
 				return err
 			}
-			configs.GrowSTLGo.APIUsersMutex.Lock()
-			user, ok := configs.GrowSTLGo.APIUsers[userID]
-			configs.GrowSTLGo.APIUsersMutex.Unlock()
+			configs.GrowSTLGo.UsersMutex.Lock()
+			user, ok := configs.GrowSTLGo.Users[userID]
+			configs.GrowSTLGo.UsersMutex.Unlock()
 			if ok {
 				user.LastLogin = lastLogin
 			}

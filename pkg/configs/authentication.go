@@ -63,7 +63,7 @@ func (auth *Authentication) GeneratePassword() (*string, error) {
 	passwd := GeneratePassword()
 	auth.Password = passwd
 
-	if err := auth.hashAuthentication(); err != nil {
+	if err := auth.HashAuthentication(); err != nil {
 		return nil, err
 	}
 
@@ -71,7 +71,7 @@ func (auth *Authentication) GeneratePassword() (*string, error) {
 }
 
 // HashAuthentication will hash the password for the Authentication object
-func (auth *Authentication) hashAuthentication() error {
+func (auth *Authentication) HashAuthentication() error {
 	if auth != nil && auth.Password != nil {
 		hashText, err := cryptography.HashPassword(auth.Password)
 		if err != nil {

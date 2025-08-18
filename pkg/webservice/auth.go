@@ -49,9 +49,9 @@ func validateAPIUser(vhost string, body []byte) (*string, error) {
 		return authRequest.ID, errors.New("bad request body")
 	}
 
-	configs.GrowSTLGo.APIUsersMutex.Lock()
-	apiUser, ok := configs.GrowSTLGo.APIUsers[*authRequest.ID]
-	configs.GrowSTLGo.APIUsersMutex.Unlock()
+	configs.GrowSTLGo.UsersMutex.Lock()
+	apiUser, ok := configs.GrowSTLGo.Users[*authRequest.ID]
+	configs.GrowSTLGo.UsersMutex.Unlock()
 	if !ok || apiUser == nil || apiUser.Active == nil || !*apiUser.Active {
 		log.Errorf("User %s not found or is inactive", *authRequest.ID)
 		return nil, errors.New("Unauthorized")

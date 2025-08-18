@@ -52,19 +52,19 @@ var (
 
 // Config contains the basis of the web service
 type Config struct {
-	APIUsers      map[string]*APIUser `json:"apiUsers,omitempty"`
-	APIUsersMutex sync.Mutex          `json:"-"`
-	Country       *Country            `json:"country,omitempty"`
-	DataDir       *string             `json:"data_dir,omitempty"`
-	Proxy         *Proxy              `json:"proxy,omitempty"`
-	Secret        *string             `json:"secret,omitempty"`
-	SQLite        *SQLite             `json:"sqlite,omitempty"`
-	WebService    *WebService         `json:"webService,omitempty"`
+	Users      map[string]*User `json:"users,omitempty"`
+	UsersMutex sync.Mutex       `json:"-"`
+	Country    *Country         `json:"country,omitempty"`
+	DataDir    *string          `json:"data_dir,omitempty"`
+	Proxy      *Proxy           `json:"proxy,omitempty"`
+	Secret     *string          `json:"secret,omitempty"`
+	SQLite     *SQLite          `json:"sqlite,omitempty"`
+	WebService *WebService      `json:"webService,omitempty"`
 }
 
 func (c *Config) checkConfig() error {
 	if c != nil {
-		checkAPIUsers()
+		checkUsers()
 
 		for _, function := range []func() error{c.checkDataDir, c.checkCountry, c.checkWebService, c.checkSQLite, c.testRewriteConfig} {
 			if err := function(); err != nil {
@@ -101,7 +101,7 @@ func (c *Config) checkDataDir() error {
 func (c *Config) testRewriteConfig() error {
 	if c != nil {
 		if rewriteConfig {
-			if err := c.persist(); err != nil {
+			if err := c.Persist(); err != nil {
 				return err
 			}
 		}
@@ -110,7 +110,8 @@ func (c *Config) testRewriteConfig() error {
 	return errors.New("invalid config cannot check rewrite condition")
 }
 
-func (c *Config) persist() error {
+// Persist will write the config to disk
+func (c *Config) Persist() error {
 	if c != nil {
 		// lets's make sure we can kick the JSON out of the config
 		bytes, err := json.Marshal(GrowSTLGo)
