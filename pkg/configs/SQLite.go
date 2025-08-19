@@ -193,7 +193,7 @@ func (table *Table) CreateTable(tableName *string) error {
 				}
 			}
 			GrowSTLGo.SQLite.PopulatedTables[*tableName] = struct{}{}
-			if err := GrowSTLGo.Persist(); err != nil {
+			if err := GrowSTLGo.persist(); err != nil {
 				return err
 			}
 		}

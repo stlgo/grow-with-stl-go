@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -60,13 +61,14 @@ type Config struct {
 	Secret     *string          `json:"secret,omitempty"`
 	SQLite     *SQLite          `json:"sqlite,omitempty"`
 	WebService *WebService      `json:"webService,omitempty"`
+	WeatherAPI *string          `json:"weather_api,omitempty"`
 }
 
 func (c *Config) checkConfig() error {
 	if c != nil {
 		checkUsers()
 
-		for _, function := range []func() error{c.checkDataDir, c.checkCountry, c.checkWebService, c.checkSQLite, c.testRewriteConfig} {
+		for _, function := range []func() error{c.checkWeatherAPI, c.checkDataDir, c.checkCountry, c.checkWebService, c.checkSQLite, c.testRewriteConfig} {
 			if err := function(); err != nil {
 				log.Errorf("error calling function %s", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
 			}
@@ -98,10 +100,24 @@ func (c *Config) checkDataDir() error {
 	return errors.New("invalid config cannot check data dir")
 }
 
+func (c *Config) checkWeatherAPI() error {
+	if c != nil {
+		url, err := url.Parse("https://api.weather.gov")
+		if err != nil {
+			return err
+		}
+		s := url.String()
+		c.WeatherAPI = &s
+		rewriteConfig = true
+		return nil
+	}
+	return errors.New("invalid config cannot check weather api")
+}
+
 func (c *Config) testRewriteConfig() error {
 	if c != nil {
 		if rewriteConfig {
-			if err := c.Persist(); err != nil {
+			if err := c.persist(); err != nil {
 				return err
 			}
 		}
@@ -111,7 +127,7 @@ func (c *Config) testRewriteConfig() error {
 }
 
 // Persist will write the config to disk
-func (c *Config) Persist() error {
+func (c *Config) persist() error {
 	if c != nil {
 		// lets's make sure we can kick the JSON out of the config
 		bytes, err := json.Marshal(GrowSTLGo)

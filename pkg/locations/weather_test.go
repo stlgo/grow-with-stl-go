@@ -12,4 +12,4 @@
  limitations under the License.
 */
 
-package admin
+package locations

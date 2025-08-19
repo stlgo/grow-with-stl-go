@@ -84,7 +84,7 @@ func handleMessage(request, response *configs.WsMessage) {
 		}
 
 		if response.Data == nil {
-			e := "no data round"
+			e := "no data found"
 			log.Error(e)
 			response.Error = &e
 		}
@@ -224,10 +224,8 @@ func AddUser(userID *string, data interface{}) error {
 							}
 						}
 
-						configs.GrowSTLGo.UsersMutex.Lock()
-						configs.GrowSTLGo.Users[*userID] = newUser
-						configs.GrowSTLGo.UsersMutex.Unlock()
-						return configs.GrowSTLGo.Persist()
+						newUser.Location = user.Location
+						return newUser.Persist(userID)
 					}
 				}
 			}
@@ -249,7 +247,7 @@ func UpdateUser(userID *string, data interface{}) error {
 			currentUser, ok := configs.GrowSTLGo.Users[*userID]
 			configs.GrowSTLGo.UsersMutex.Unlock()
 			if ok {
-				if user.Authentication != nil {
+				if user.Authentication != nil && user.Authentication.Password != nil {
 					if err := user.Authentication.HashAuthentication(); err != nil {
 						return fmt.Errorf("bad password, cannot update user.  Error: %s", err)
 					}
@@ -271,7 +269,7 @@ func UpdateUser(userID *string, data interface{}) error {
 						currentUser.Location = user.Location
 					}
 				}
-				return configs.GrowSTLGo.Persist()
+				return currentUser.Persist(userID)
 			}
 		}
 	}
@@ -282,11 +280,10 @@ func UpdateUser(userID *string, data interface{}) error {
 func RemoveUser(userID *string) error {
 	if userID != nil {
 		configs.GrowSTLGo.UsersMutex.Lock()
-		_, ok := configs.GrowSTLGo.Users[*userID]
+		user, ok := configs.GrowSTLGo.Users[*userID]
 		configs.GrowSTLGo.UsersMutex.Unlock()
 		if ok {
-			delete(configs.GrowSTLGo.Users, *userID)
-			return configs.GrowSTLGo.Persist()
+			return user.Remove(userID)
 		}
 	}
 	return errors.New("cannot remove user")

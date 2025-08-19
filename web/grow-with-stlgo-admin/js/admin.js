@@ -60,14 +60,22 @@ class Admin {
             }
         }
 
+        let location = null;
+        if (document.getElementById('LocationInput').value.length > 0) {
+            location = document.getElementById('LocationInput').value;
+        }
+
         if (userIDInput.validity.valid && passwordInput.value.length >= 10) {
             this.ws.sendMessage({
                 route: this.route,
                 type: 'addUser',
                 component: userIDInput.value,
                 data: {
-                    id: userIDInput.value,
-                    password: passwordInput.value,
+                    authentication: {
+                        id: userIDInput.value,
+                        password: passwordInput.value,
+                    },
+                    location: location,
                     vhosts: vhosts
                 }
             });
@@ -100,9 +108,11 @@ class Admin {
             type: 'updateUser',
             component: userID,
             data: {
-                id: userID,
+                authentication: {
+                    id: userID,
+                    password: password,
+                },
                 location: location,
-                password: password,
                 vhosts: vhosts
             }
         });
@@ -160,7 +170,6 @@ class Admin {
             } else {
                 tr.insertCell(-1).innerHTML = new Date(data[userID].lastLogin).toLocaleString('en-us', { timeZoneName: 'short' });
             }
-
 
             let activeChk = document.createElement('input');
             activeChk.type = 'checkbox';

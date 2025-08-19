@@ -63,6 +63,7 @@ func Init() error {
 
 func handleWebsocketRequest(request, response *configs.WsMessage) {
 	if request.Type != nil && response != nil {
+		log.Info(*request.Type)
 		var err error
 		switch *request.Type {
 		case getInventoryRequestKey:

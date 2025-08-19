@@ -34,8 +34,6 @@ import (
 )
 
 var (
-	// ZipcodeCache will expose the zip code info for use in other packages
-	ZipcodeCache = make(map[int]*ZipCode)
 	// ZipcodeLookup is a lookup for the typeahead
 	ZipcodeLookup = make(map[string]*ZipCode)
 	// ZipCodeCacheMutex is the controlling mutex for ZipCodeCache
@@ -55,6 +53,11 @@ type ZipCode struct {
 	County            *string  `json:"county,omitempty"`
 	Latitude          *float64 `json:"latitude,omitempty"`
 	Longitude         *float64 `json:"longitude,omitempty"`
+
+	Mutex sync.Mutex `json:"-"`
+
+	// stuff we're using for weather lookups
+	Forecast *Forecast `json:"forecast,omitempty"`
 }
 
 // Init is different than the standard init because it is called outside of the object load
@@ -73,6 +76,10 @@ func getLocations() error {
 				return
 			}
 			if err := extractLocationData(fileName, configs.GrowSTLGo.Country.Country); err != nil {
+				log.Error(err)
+			}
+
+			if err := getWeather(); err != nil {
 				log.Error(err)
 			}
 		}()
@@ -150,7 +157,6 @@ func extractLocationData(fileName, country *string) error {
 							Longitude:         &longitude,
 						}
 						ZipCodeCacheMutex.Lock()
-						ZipcodeCache[zipCode] = zc
 						ZipcodeLookup[fmt.Sprintf("%s, %s. %d", record[2], record[4], zipCode)] = zc
 						ZipCodeCacheMutex.Unlock()
 					}
@@ -161,7 +167,7 @@ func extractLocationData(fileName, country *string) error {
 		ZipCodeTypeahead = slices.Collect(maps.Keys(ZipcodeLookup))
 		ZipCodeCacheMutex.Unlock()
 		log.Tracef("finished extracting location information from the %s archive.  There are %s zip codes in the cache",
-			*fileName, utils.FormatNumber(len(ZipcodeCache)))
+			*fileName, utils.FormatNumber(len(ZipcodeLookup)))
 		return nil
 	}
 	return errors.New("invalid input file")
@@ -172,8 +178,8 @@ func timedTask() {
 	log.Infof("location timed tasks will start at %s", time.Now().Add(seconds).Format(configs.HHMMSS))
 
 	for range time.NewTicker(1 * time.Minute).C {
-		minute := time.Now().Minute()
-		if minute%10 == 0 {
+		// hit it at the top of every hour
+		if time.Now().Minute() == 0 {
 			go func() {
 				if err := getLocations(); err != nil {
 					log.Errorf("error refreshing locations: %s", err)

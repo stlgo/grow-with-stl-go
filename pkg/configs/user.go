@@ -38,11 +38,11 @@ func checkUsers() {
 				Admin:    utils.BoolPointer(true),
 				Location: utils.StringPointer("Saint Louis, MO. 63101"),
 			},
-			"user 1": {
+			"user1": {
 				Admin:    utils.BoolPointer(false),
 				Location: utils.StringPointer("Springfield, IL. 62764"),
 			},
-			"user 2": {
+			"user2": {
 				Admin:    utils.BoolPointer(false),
 				Location: utils.StringPointer("Springfield, MO. 65890"),
 			},
@@ -51,12 +51,11 @@ func checkUsers() {
 		GrowSTLGo.Users = map[string]*User{}
 
 		for id, protoUser := range ids {
-			localID := id
 			user := User{
 				Active: utils.BoolPointer(true),
 				Admin:  protoUser.Admin,
 				Authentication: &Authentication{
-					ID: &localID,
+					ID: &id,
 				},
 				Location: protoUser.Location,
 				Vhosts:   []string{"localhost", "grow-with-stlgo.localdev.org"},
@@ -67,10 +66,10 @@ func checkUsers() {
 			}
 
 			if password, err := user.Authentication.GeneratePassword(); err == nil && password != nil {
-				log.Warnf("Password generated for user '%s', password %s - DO NOT USE THIS FOR PRODUCTION", localID, *password)
+				log.Warnf("Password generated for user '%s', password %s - DO NOT USE THIS FOR PRODUCTION", id, *password)
 
 				GrowSTLGo.UsersMutex.Lock()
-				GrowSTLGo.Users[localID] = &user
+				GrowSTLGo.Users[id] = &user
 				GrowSTLGo.UsersMutex.Unlock()
 			}
 		}
@@ -79,33 +78,54 @@ func checkUsers() {
 }
 
 // ResetPassword will reset the password of a given user
-func (apiUser *User) ResetPassword(password *string) error {
-	if apiUser != nil && apiUser.Authentication != nil && password != nil {
-		backupAuth := apiUser.Authentication
-		apiUser.Authentication.Password = password
-		if err := apiUser.Authentication.HashAuthentication(); err != nil {
-			apiUser.Authentication = backupAuth
+func (u *User) ResetPassword(password *string) error {
+	if u != nil && u.Authentication != nil && password != nil {
+		backupAuth := u.Authentication
+		u.Authentication.Password = password
+		if err := u.Authentication.HashAuthentication(); err != nil {
+			u.Authentication = backupAuth
 			return err
 		}
-		return GrowSTLGo.Persist()
+		return GrowSTLGo.persist()
 	}
 	return errors.New("unable to reset password: nil api user or nill password")
 }
 
 // ToggleActive will set user to enabled / disabled based on input
-func (apiUser *User) ToggleActive(active *bool) error {
-	if apiUser != nil && active != nil {
-		apiUser.Active = active
-		return GrowSTLGo.Persist()
+func (u *User) ToggleActive(active *bool) error {
+	if u != nil && active != nil {
+		u.Active = active
+		return GrowSTLGo.persist()
 	}
 	return errors.New("unable to set activity: nil api user or nil active boolean")
 }
 
 // ToggleAdmin will set user to enabled / disabled based on input
-func (apiUser *User) ToggleAdmin(admin *bool) error {
-	if apiUser != nil && admin != nil {
-		apiUser.Admin = admin
-		return GrowSTLGo.Persist()
+func (u *User) ToggleAdmin(admin *bool) error {
+	if u != nil && admin != nil {
+		u.Admin = admin
+		return GrowSTLGo.persist()
 	}
 	return errors.New("unable to set admin: nil api user or nil active boolean")
+}
+
+// Remove will remove the user
+func (u *User) Remove(userID *string) error {
+	if u != nil && userID != nil {
+		delete(GrowSTLGo.Users, *userID)
+		log.Tracef("user '%s' has been removed", *userID)
+		return GrowSTLGo.persist()
+	}
+	return errors.New("unable to remove user")
+}
+
+// Persist will set the user
+func (u *User) Persist(userID *string) error {
+	if u != nil && userID != nil {
+		GrowSTLGo.UsersMutex.Lock()
+		GrowSTLGo.Users[*userID] = u
+		GrowSTLGo.UsersMutex.Unlock()
+		return GrowSTLGo.persist()
+	}
+	return errors.New("persist user")
 }

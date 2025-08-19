@@ -168,9 +168,7 @@ func (session *session) onClose() {
 		}
 		log.Infof("closing websocket for %s session %s", user, *session.sessionID)
 		session.ws.Close()
-		sessionsMutex.Lock()
 		delete(sessions, *session.sessionID)
-		sessionsMutex.Unlock()
 	}
 }
 
@@ -322,17 +320,17 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 			if ok {
 				session.jwt = token
 				session.isAdmin = user.Admin
+
+				approved := configs.Approved
+				response.SubComponent = &approved
+				response.ValidTill = validTill
+				response.Token = token
+				response.IsAdmin = user.Admin
+				response.Error = nil
+
+				go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", true)
+				return user.Authentication.ID, nil
 			}
-
-			approved := configs.Approved
-			response.SubComponent = &approved
-			response.ValidTill = validTill
-			response.Token = token
-			response.IsAdmin = user.Admin
-			response.Error = nil
-
-			go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", true)
-			return user.Authentication.ID, nil
 		}
 		return request.Authentication.ID, errors.New("user not found")
 	}
@@ -381,7 +379,6 @@ func handleMessage(request, response *configs.WsMessage) {
 }
 
 func getPagelet(request, response *configs.WsMessage) {
-	defer log.FunctionTimer()()
 	err := errors.New(configs.NotFoundError).Error()
 	response.Error = &err
 
