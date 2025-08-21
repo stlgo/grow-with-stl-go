@@ -25,9 +25,9 @@ import (
 
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
-	"stl-go/grow-with-stl-go/pkg/locations"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/utils"
+	"stl-go/grow-with-stl-go/pkg/weather"
 	"stl-go/grow-with-stl-go/pkg/webservice"
 )
 
@@ -193,7 +193,7 @@ func pageLoad(initialLoad bool) (map[string]interface{}, error) {
 			"version": configs.Version,
 		}
 		if initialLoad {
-			data["zipCodes"] = locations.ZipCodeTypeahead
+			data["zipCodes"] = weather.ZipCodeTypeahead
 		}
 		return data, nil
 	}
@@ -262,9 +262,9 @@ func UpdateUser(userID *string, data interface{}) error {
 					}
 				}
 				if user.Location != nil {
-					locations.ZipCodeCacheMutex.Lock()
-					_, zipOk := locations.ZipcodeLookup[*user.Location]
-					locations.ZipCodeCacheMutex.Unlock()
+					weather.ZipCodeCacheMutex.Lock()
+					_, zipOk := weather.ZipcodeLookup[*user.Location]
+					weather.ZipCodeCacheMutex.Unlock()
 					if zipOk {
 						currentUser.Location = user.Location
 					}

@@ -12,7 +12,7 @@
  limitations under the License.
 */
 
-package locations
+package weather
 
 import (
 	"encoding/json"
@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/log"
 )
 
 type latLongLookup struct {
@@ -61,6 +63,12 @@ type Forecast struct {
 type probabilityOfPrecipitation struct {
 	UnitCode *string `json:"unitCode,omitempty"`
 	Value    *int    `json:"value,omitempty"`
+}
+
+// Init is different than the standard init because it is called outside of the object load
+func Init() error {
+	go timedTask()
+	return getLocations()
 }
 
 func getWeather() error {
@@ -142,4 +150,20 @@ func getForecast(url *string, zip *ZipCode) error {
 		return nil
 	}
 	return errors.New("invalid url or zip cannot get weather forecast")
+}
+
+func timedTask() {
+	seconds := time.Duration((60-time.Now().Local().Second())+120) * time.Second
+	log.Infof("location timed tasks will start at %s", time.Now().Add(seconds).Format(configs.HHMMSS))
+
+	for range time.NewTicker(1 * time.Minute).C {
+		// hit it at the top of every hour
+		if time.Now().Minute() == 0 {
+			go func() {
+				if err := getLocations(); err != nil {
+					log.Errorf("error refreshing locations: %s", err)
+				}
+			}()
+		}
+	}
 }

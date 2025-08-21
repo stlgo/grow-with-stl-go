@@ -12,7 +12,7 @@
  limitations under the License.
 */
 
-package locations
+package weather
 
 import (
 	"archive/zip"
@@ -26,7 +26,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
@@ -58,12 +57,6 @@ type ZipCode struct {
 
 	// stuff we're using for weather lookups
 	Forecast *Forecast `json:"forecast,omitempty"`
-}
-
-// Init is different than the standard init because it is called outside of the object load
-func Init() error {
-	go timedTask()
-	return getLocations()
 }
 
 func getLocations() error {
@@ -171,20 +164,4 @@ func extractLocationData(fileName, country *string) error {
 		return nil
 	}
 	return errors.New("invalid input file")
-}
-
-func timedTask() {
-	seconds := time.Duration((60-time.Now().Local().Second())+120) * time.Second
-	log.Infof("location timed tasks will start at %s", time.Now().Add(seconds).Format(configs.HHMMSS))
-
-	for range time.NewTicker(1 * time.Minute).C {
-		// hit it at the top of every hour
-		if time.Now().Minute() == 0 {
-			go func() {
-				if err := getLocations(); err != nil {
-					log.Errorf("error refreshing locations: %s", err)
-				}
-			}()
-		}
-	}
 }

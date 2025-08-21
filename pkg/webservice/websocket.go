@@ -29,6 +29,7 @@ import (
 	"stl-go/grow-with-stl-go/pkg/configs"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/utils"
+	"stl-go/grow-with-stl-go/pkg/weather"
 
 	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -327,6 +328,15 @@ func handleWebSocketAuth(request, response *configs.WsMessage) (*string, error) 
 				response.Token = token
 				response.IsAdmin = user.Admin
 				response.Error = nil
+
+				if user.Location != nil {
+					weather.ZipCodeCacheMutex.Lock()
+					zipCode, ok := weather.ZipcodeLookup[*user.Location]
+					weather.ZipCodeCacheMutex.Unlock()
+					if ok && zipCode.Forecast != nil {
+						response.Data = zipCode
+					}
+				}
 
 				go audit.RecordLogin(user.Authentication.ID, request.Vhost, "WebSocket", true)
 				return user.Authentication.ID, nil

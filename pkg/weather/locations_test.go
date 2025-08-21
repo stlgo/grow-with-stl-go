@@ -12,7 +12,7 @@
  limitations under the License.
 */
 
-package locations
+package weather
 
 import (
 	"testing"

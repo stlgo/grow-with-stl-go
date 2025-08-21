@@ -27,9 +27,9 @@ import (
 	"stl-go/grow-with-stl-go/pkg/admin"
 	"stl-go/grow-with-stl-go/pkg/audit"
 	"stl-go/grow-with-stl-go/pkg/configs"
-	"stl-go/grow-with-stl-go/pkg/locations"
 	"stl-go/grow-with-stl-go/pkg/log"
 	"stl-go/grow-with-stl-go/pkg/seeds"
+	"stl-go/grow-with-stl-go/pkg/weather"
 	"stl-go/grow-with-stl-go/pkg/webservice"
 )
 
@@ -89,7 +89,7 @@ func launch(_ *cobra.Command, _ []string) {
 	}
 
 	// kick off the init functions for the various packages
-	for _, function := range []func() error{audit.Init, seeds.Init, admin.Init, locations.Init} {
+	for _, function := range []func() error{audit.Init, seeds.Init, admin.Init, weather.Init} {
 		if err := function(); err != nil {
 			log.Fatalf("error calling function %s cannot continue to start", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
 		}

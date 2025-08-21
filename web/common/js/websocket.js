@@ -128,6 +128,12 @@ class WebSocketClient {
             if (Object.prototype.hasOwnProperty.call(json, 'isAdmin') && json.isAdmin !== undefined && json.isAdmin) {
                 this.displayHelper([ 'AdminNavLink' ], '');
             }
+            if (Object.prototype.hasOwnProperty.call(json, 'data') && json.data !== undefined && json.data.forecast !== undefined) {
+                let div = document.getElementById('NavbarDivWeather');
+                div.innerHTML = `${json.data.forecast.temperature}&#176;`;
+                div.title = `${json.data.city}, ${json.data.state} - ${json.data.forecast.detailedForecast}`;
+                this.displayHelper([ 'NavbarDivWeather' ], '');
+            }
             document.dispatchEvent(new Event('AuthComplete'));
             break;
         case 'refresh':
@@ -192,6 +198,9 @@ class WebSocketClient {
             this.log.info('Web Socket Closed: unknown error code: ', code);
             break;
         }
+
+        document.getElementById('NavbarDivWeather').innerHTML = '';
+        this.displayHelper([ 'NavbarDivWeather' ], 'none');
 
         this.ws = null;
         this.token = null;
