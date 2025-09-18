@@ -18,9 +18,12 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"reflect"
 	"runtime"
+	"runtime/pprof"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -41,6 +44,9 @@ var (
 		Run:     launch,
 		Version: Version(),
 	}
+
+	cpuProfile bool
+	memProfile bool
 )
 
 func init() {
@@ -67,6 +73,22 @@ func init() {
 		"This will set the location of the conf file needed to start the UI",
 	)
 
+	rootCmd.Flags().BoolVarP(
+		&cpuProfile,
+		"cpuProfile",
+		"C",
+		false,
+		"This will enable pprof CPU profile",
+	)
+
+	rootCmd.Flags().BoolVarP(
+		&memProfile,
+		"memProfile",
+		"m",
+		false,
+		"This will enable pprof memory profile",
+	)
+
 	// Add the logging level flag
 	rootCmd.Flags().IntVar(
 		&log.LogLevel,
@@ -82,10 +104,49 @@ func init() {
 	)
 }
 
+func setupProfile() error {
+	now := time.Now().UnixMilli()
+	if cpuProfile && configs.GrowSTLGo != nil && configs.GrowSTLGo.DataDir != nil {
+		cpuProfileFile := filepath.Join(*configs.GrowSTLGo.DataDir, fmt.Sprintf("cpuProfile.%d", now))
+		f, err := os.Create(cpuProfileFile)
+		if err != nil {
+			return fmt.Errorf("could not create CPU profile: %s.  Error: %s", cpuProfileFile, err)
+		}
+		defer f.Close()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return fmt.Errorf("could not start CPU profile: %s", err)
+		}
+		defer pprof.StopCPUProfile()
+		log.Infof("cpu profiling sent to file: %s", cpuProfileFile)
+	}
+
+	if memProfile && configs.GrowSTLGo != nil && configs.GrowSTLGo.DataDir != nil {
+		memProfileFile := filepath.Join(*configs.GrowSTLGo.DataDir, fmt.Sprintf("memProfile.%d", now))
+		f, err := os.Create(memProfileFile)
+		if err != nil {
+			return fmt.Errorf("could not create memory profile: %s.  Error: %s", memProfileFile, err)
+		}
+		runtime.GC() // get up-to-date statistics
+		// Lookup("allocs") creates a profile similar to go test -memprofile.
+		// Alternatively, use Lookup("heap") for a profile
+		// that has inuse_space as the default index.
+		if err := pprof.Lookup("allocs").WriteTo(f, 0); err != nil {
+			return fmt.Errorf("could not write memory profile: %s", err)
+		}
+		defer f.Close()
+		log.Infof("memory profiling sent to file: %s", memProfileFile)
+	}
+	return nil
+}
+
 func launch(_ *cobra.Command, _ []string) {
 	// read the config file
 	if err := configs.SetGrowSTLGoConfig(); err != nil {
 		log.Fatalf("error in config %s: %s", *configs.ConfigFile, err)
+	}
+
+	if err := setupProfile(); err != nil {
+		log.Fatalf("error setting up profiling: %s", err)
 	}
 
 	// kick off the init functions for the various packages
