@@ -51,9 +51,9 @@ build: backend-build
 ```makefile
 .PHONY: frontend-build
 frontend-build:
-	@echo "Executing frontend build steps..."
-	@cd $(WEB_DIR) && npm install && cd ..
-	@echo "Frontend build completed successfully"
+ @echo "Executing frontend build steps..."
+ @cd $(WEB_DIR) && npm install && cd ..
+ @echo "Frontend build completed successfully"
 ```
 
 #### Backend Build
@@ -61,10 +61,10 @@ frontend-build:
 ```makefile
 .PHONY: backend-build
 backend-build:
-	@echo "Executing backend build steps..."
-	@mkdir -p $(BUILD_DIR)
-	@go build -o $(MAIN)$(EXTENSION) $(GO_FLAGS) cmd/main.go
-	@echo "Backend build completed successfully"
+ @echo "Executing backend build steps..."
+ @mkdir -p $(BUILD_DIR)
+ @go build -o $(MAIN)$(EXTENSION) $(GO_FLAGS) cmd/main.go
+ @echo "Backend build completed successfully"
 ```
 
 ## Lint
@@ -81,7 +81,7 @@ Checking that go.mod is up to date...
 go.mod check completed successfully
 Running frontend linting step...
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\common\js\seeds.js
+/go-learning-series/web/grow-with-stlgo-admin/js/seeds.js
    56:35  warning  Missing radix parameter                 radix
    66:58  warning  Identifier name 'c' is too short (< 2)  id-length
    72:33  warning  Missing radix parameter                 radix
@@ -91,16 +91,16 @@ D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\common\js\seeds.js
   152:21  warning  Identifier name 'p' is too short (< 2)  id-length
   153:17  warning  Identifier name 'p' is too short (< 2)  id-length
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\grow-with-stlgo-admin\js\admin.js
+/go-learning-series/web/grow-with-stlgo-admin/js/admin.js
   196:42  warning  A function with a name starting with an uppercase letter should only be used as a constructor  new-cap
   212:48  warning  Identifier name 'e' is too short (< 2)                                                         id-length
   407:26  warning  A function with a name starting with an uppercase letter should only be used as a constructor  new-cap
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\grow-with-stlgo-admin\js\main.js
+/go-learning-series/web/grow-with-stlgo-admin/js/main.js
   54:23  warning  'admin' is assigned a value but never used  no-unused-vars
   55:23  warning  'seeds' is assigned a value but never used  no-unused-vars
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\grow-with-stlgo\js\main.js
+/go-learning-series/web/grow-with-stlgo-admin/js/main.js
   53:23  warning  'seeds' is assigned a value but never used  no-unused-vars
 
 ✖ 14 problems (0 errors, 14 warnings)
@@ -127,9 +127,9 @@ lint: backend-lint
 ```makefile
 .PHONY: tidy-lint
 tidy-lint:
-	@echo "Checking that go.mod is up to date..."
-	@go mod tidy
-	@echo "go.mod check completed successfully"
+ @echo "Checking that go.mod is up to date..."
+ @go mod tidy
+ @echo "go.mod check completed successfully"
 ```
 
 #### Frontend Lint
@@ -137,9 +137,9 @@ tidy-lint:
 ```makefile
 .PHONY: frontend-lint
 frontend-lint:
-	@echo "Running frontend linting step..."
-	@cd $(WEB_DIR) && npx eslint --fix . && cd ..
-	@echo "Frontend linting completed successfully"
+ @echo "Running frontend linting step..."
+ @cd $(WEB_DIR) && npx eslint --fix . && cd ..
+ @echo "Frontend linting completed successfully"
 ```
 
 #### Backend Lint
@@ -147,9 +147,9 @@ frontend-lint:
 ```makefile
 .PHONY: backend-lint
 backend-lint:
-	@echo "Running backend linting step..."
-	@$(LINTER) run --config $(LINTER_CONFIG)
-	@echo "Backend linting completed successfully"
+ @echo "Running backend linting step..."
+ @$(LINTER) run --config $(LINTER_CONFIG)
+ @echo "Backend linting completed successfully"
 ```
 
 ## Test
@@ -204,9 +204,9 @@ test: backend-unit-test
 ```makefile
 .PHONY: backend-unit-test
 backend-unit-test:
-	@echo "Performing backend unit test step..."
-	@go test -run $(TESTS) $(PKG) $(TESTFLAGS) $(COVER_FLAGS)
-	@echo "Backend unit tests completed successfully"
+ @echo "Performing backend unit test step..."
+ @go test -run $(TESTS) $(PKG) $(TESTFLAGS) $(COVER_FLAGS)
+ @echo "Backend unit tests completed successfully"
 ```
 
 ## Coverage
@@ -264,9 +264,9 @@ coverage: backend-coverage
 .PHONY: backend-coverage
 backend-coverage: TESTFLAGS = -covermode=atomic -coverprofile=fullcover.out
 backend-coverage: backend-unit-test
-	@echo "Generating backend coverage report..."
-	@grep -vE "$(COVER_EXCLUDE)" fullcover.out > $(COVER_PROFILE)
-	@echo "Backend coverage report completed successfully"
+ @echo "Generating backend coverage report..."
+ @grep -vE "$(COVER_EXCLUDE)" fullcover.out > $(COVER_PROFILE)
+ @echo "Backend coverage report completed successfully"
 ```
 
 ## Verify
@@ -322,7 +322,7 @@ Checking that go.mod is up to date...
 go.mod check completed successfully
 Running frontend linting step...
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\common\js\seeds.js
+go-learning-series/web/grow-with-stlgo-admin/js/seeds.js
    56:35  warning  Missing radix parameter                 radix
    66:58  warning  Identifier name 'c' is too short (< 2)  id-length
    72:33  warning  Missing radix parameter                 radix
@@ -332,16 +332,16 @@ D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\common\js\seeds.js
   152:21  warning  Identifier name 'p' is too short (< 2)  id-length
   153:17  warning  Identifier name 'p' is too short (< 2)  id-length
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\grow-with-stlgo-admin\js\admin.js
+/go-learning-series/web/grow-with-stlgo-admin/js/admin.js
   196:42  warning  A function with a name starting with an uppercase letter should only be used as a constructor  new-cap
   212:48  warning  Identifier name 'e' is too short (< 2)                                                         id-length
   407:26  warning  A function with a name starting with an uppercase letter should only be used as a constructor  new-cap
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\grow-with-stlgo-admin\js\main.js
+/go-learning-series/web/grow-with-stlgo-admin/js/main.js
   54:23  warning  'admin' is assigned a value but never used  no-unused-vars
   55:23  warning  'seeds' is assigned a value but never used  no-unused-vars
 
-D:\documents\bandgeekphotos.org\stl-go\go-learning-series\web\grow-with-stlgo\js\main.js
+/go-learning-series/web/grow-with-stlgo-admin/js/main.js
   53:23  warning  'seeds' is assigned a value but never used  no-unused-vars
 
 ✖ 14 problems (0 errors, 14 warnings)
@@ -413,14 +413,14 @@ This will call items already covered in this document
 ```makefile
 .PHONY: build-distribution
 build-distribution:
-	@echo "Executing distribution build steps..."
-	@mkdir -p $(DIST_DIR)
-	@mkdir -p $(DIST_DIR)/bin
-	@cp $(SCRIPT_DIR)/gwstlg.sh $(DIST_DIR)/bin/
-	@chmod 755 $(DIST_DIR)/bin/gwstlg.sh
-	@cp $(SCRIPT_DIR)/.gwstlg.service $(DIST_DIR)/bin/
-	@cp $(MAIN)$(EXTENSION) $(DIST_DIR)/bin/
-	@cp -R $(WEB_DIR) $(DIST_DIR)
-	@cd $(TMP_DIR) && tar cf - gwstlg-$(COMPILED_VERSION) | gzip -9 > gwstlg-$(COMPILED_VERSION).tar.gz
-	@echo "Distribution build completed successfully"
+ @echo "Executing distribution build steps..."
+ @mkdir -p $(DIST_DIR)
+ @mkdir -p $(DIST_DIR)/bin
+ @cp $(SCRIPT_DIR)/gwstlg.sh $(DIST_DIR)/bin/
+ @chmod 755 $(DIST_DIR)/bin/gwstlg.sh
+ @cp $(SCRIPT_DIR)/.gwstlg.service $(DIST_DIR)/bin/
+ @cp $(MAIN)$(EXTENSION) $(DIST_DIR)/bin/
+ @cp -R $(WEB_DIR) $(DIST_DIR)
+ @cd $(TMP_DIR) && tar cf - gwstlg-$(COMPILED_VERSION) | gzip -9 > gwstlg-$(COMPILED_VERSION).tar.gz
+ @echo "Distribution build completed successfully"
 ```
