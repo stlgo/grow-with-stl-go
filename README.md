@@ -131,7 +131,7 @@ We have some examples and some documentation on how to go from "hello world" to 
 
 Sometimes seeing things in context helps.  The next set of examples is included in the "Grow with stl-go" application example.  It is a fully functioning webservice with a UI and REST / WebSocket apis
 
-1. Makefile
+1. [Makefile](docs/makefile.md)
 2. [Linting](docs/linting.md)
 
 ## The "Grow with stl-go" example application
