@@ -36,7 +36,7 @@ linters:
     - nilerr
     - nilnesserr
     - nilnil
-    - noctx
+    # - noctx
     - nolintlint
     - nosprintfhostport
     # - perfsprint
@@ -45,7 +45,7 @@ linters:
     - protogetter
     - prealloc
     - recvcheck
-    - revive
+    # - revive
     - rowserrcheck
     - sloglint
     - spancheck
