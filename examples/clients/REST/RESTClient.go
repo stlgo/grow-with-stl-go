@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -284,14 +285,16 @@ func httpRequest(requestedURL, method string, headers map[string]string, payload
 	}
 
 	var request *http.Request
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	if payload != nil && strings.EqualFold(method, http.MethodPost) {
-		request, err = http.NewRequest(method, requestedURL, strings.NewReader(*payload))
+		request, err = http.NewRequestWithContext(ctx, method, requestedURL, strings.NewReader(*payload))
 		if err != nil {
 			return nil, nil, err
 		}
 		request.Header.Add("content-type", "application/json")
 	} else {
-		request, err = http.NewRequest(method, requestedURL, http.NoBody)
+		request, err = http.NewRequestWithContext(ctx, method, requestedURL, http.NoBody)
 		if err != nil {
 			return nil, nil, err
 		}

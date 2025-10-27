@@ -91,7 +91,7 @@ func launch(_ *cobra.Command, _ []string) {
 	// kick off the init functions for the various packages
 	for _, function := range []func() error{audit.Init, seeds.Init, admin.Init, weather.Init} {
 		if err := function(); err != nil {
-			log.Fatalf("error calling function %s cannot continue to start", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name())
+			log.Fatalf("error calling function %s cannot continue to start.  Error: %s", runtime.FuncForPC(reflect.ValueOf(function).Pointer()).Name(), err)
 		}
 	}
 

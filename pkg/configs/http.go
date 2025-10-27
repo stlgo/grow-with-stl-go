@@ -16,6 +16,7 @@ package configs
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -88,14 +89,16 @@ func HTTPRequest(url, method string, payload *string) (responseText *string, htt
 	startTime := time.Now()
 
 	var request *http.Request
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	if payload != nil {
-		request, err = http.NewRequest(method, url, strings.NewReader(*payload))
+		request, err = http.NewRequestWithContext(ctx, method, url, strings.NewReader(*payload))
 		if err != nil {
 			return nil, nil, err
 		}
 		request.Header.Add("content-type", "application/json")
 	} else {
-		request, err = http.NewRequest(method, url, nil)
+		request, err = http.NewRequestWithContext(ctx, method, url, nil)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -118,14 +121,16 @@ func DownloadFile(url, method, fileName string, payload *string) (httpStatusCode
 	defer file.Close()
 
 	var request *http.Request
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	if payload != nil {
-		request, err = http.NewRequest(method, url, strings.NewReader(*payload))
+		request, err = http.NewRequestWithContext(ctx, method, url, strings.NewReader(*payload))
 		if err != nil {
 			return nil, err
 		}
 		request.Header.Add("content-type", "application/json")
 	} else {
-		request, err = http.NewRequest(method, url, nil)
+		request, err = http.NewRequestWithContext(ctx, method, url, nil)
 		if err != nil {
 			return nil, err
 		}

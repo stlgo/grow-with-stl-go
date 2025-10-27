@@ -16,6 +16,7 @@ package configs
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -157,21 +158,18 @@ func (table *Table) CreateTable(tableName *string) error {
 
 	if db != nil && table != nil && tableName != nil {
 		log.Tracef("Audit table %s was created if it didn't already exist", *tableName)
-		stmt, err := db.Prepare(table.CreateSQL)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		stmt, err := db.PrepareContext(ctx, table.CreateSQL)
 		if err != nil {
 			return err
 		}
 		defer stmt.Close()
-		if _, err = stmt.Exec(); err != nil {
+		if _, err = stmt.ExecContext(ctx); err != nil {
 			return err
 		}
 		for _, index := range table.Indices {
-			stmt, err := db.Prepare(index)
-			if err != nil {
-				return err
-			}
-			defer stmt.Close()
-			if _, err = stmt.Exec(); err != nil {
+			if err := createHelper(db, index); err != nil {
 				return err
 			}
 		}
@@ -183,12 +181,7 @@ func (table *Table) CreateTable(tableName *string) error {
 		if _, ok := GrowSTLGo.SQLite.PopulatedTables[*tableName]; !ok && table.Defaults != nil {
 			for key, sql := range table.Defaults {
 				log.Tracef("Inserting default %s for table %s if it doesn't already exist", key, *tableName)
-				stmt, err := db.Prepare(sql)
-				if err != nil {
-					return err
-				}
-				defer stmt.Close()
-				if _, err = stmt.Exec(); err != nil {
+				if err := createHelper(db, sql); err != nil {
 					return err
 				}
 			}
@@ -200,4 +193,21 @@ func (table *Table) CreateTable(tableName *string) error {
 		return nil
 	}
 	return errors.New("tables is nil cannot create tables")
+}
+
+func createHelper(db *sql.DB, index string) error {
+	if db != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		stmt, err := db.PrepareContext(ctx, index)
+		if err != nil {
+			return fmt.Errorf("unable to prepare '%s'.  Error: %s", index, err)
+		}
+		defer stmt.Close()
+		if _, err = stmt.ExecContext(ctx); err != nil {
+			return fmt.Errorf("unable to create '%s'.  Error: %s", index, err)
+		}
+		return nil
+	}
+	return errors.New("db is nil cannot create item")
 }
