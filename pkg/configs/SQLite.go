@@ -158,8 +158,7 @@ func (table *Table) CreateTable(tableName *string) error {
 
 	if db != nil && table != nil && tableName != nil {
 		log.Tracef("Audit table %s was created if it didn't already exist", *tableName)
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stmt, err := db.PrepareContext(ctx, table.CreateSQL)
 		if err != nil {
 			return err
@@ -197,8 +196,7 @@ func (table *Table) CreateTable(tableName *string) error {
 
 func createHelper(db *sql.DB, index string) error {
 	if db != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stmt, err := db.PrepareContext(ctx, index)
 		if err != nil {
 			return fmt.Errorf("unable to prepare '%s'.  Error: %s", index, err)
