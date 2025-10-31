@@ -12,25 +12,34 @@
  limitations under the License.
 */
 
-package configs
+package weather
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"stl-go/grow-with-stl-go/pkg/configs"
+	"stl-go/grow-with-stl-go/pkg/log"
 )
 
-func TestCountryFunctions(t *testing.T) {
+func TestUSGSFunctions(t *testing.T) {
 	t.Skip()
-	InitTest()
-	t.Run("Download file", func(t *testing.T) {
-		err := SetGrowSTLGoConfig()
+	configs.InitTest()
+
+	t.Run("Test USGS Lookup", func(t *testing.T) {
+		lat := -90.194509984085
+		long := 38.627847981932
+		resp, err := usgsSiteNumberLookup(&lat, &long)
+
+		if err != nil {
+			log.Error(err)
+		}
 		require.NoError(t, err)
 
-		if GrowSTLGo.Country != nil {
-			fileName, err := GrowSTLGo.Country.GetCountryData()
-			require.NoError(t, err)
-			require.NotNil(t, fileName)
+		if resp != nil {
+			log.Info(*resp)
 		}
+		require.NotNil(t, resp)
 	})
 }

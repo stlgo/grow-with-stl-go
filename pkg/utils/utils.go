@@ -16,6 +16,7 @@ package utils
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -53,4 +54,14 @@ func FormatNumber(i interface{}) string {
 	}
 
 	return output
+}
+
+// URLParserHelper is just a helper method to reduce repeated code for parsing url strings
+func URLParserHelper(urlStr string) (*string, error) {
+	url, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse url '%s'.  Error: %s", urlStr, err)
+	}
+	s := url.String()
+	return &s, nil
 }

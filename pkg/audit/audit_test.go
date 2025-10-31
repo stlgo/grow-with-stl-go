@@ -26,11 +26,7 @@ import (
 )
 
 func initConfigTest() {
-	configFile := "../../etc/grow-with-stl-go.json"
-	configs.ConfigFile = &configFile
-	if err := configs.SetGrowSTLGoConfig(); err != nil {
-		log.Fatalf("config %s", err)
-	}
+	configs.InitTest()
 	if err := Init(); err != nil {
 		log.Fatalf("Error starting the audit db: %s", err)
 	}

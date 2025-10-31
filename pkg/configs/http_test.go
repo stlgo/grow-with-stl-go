@@ -25,7 +25,7 @@ import (
 
 func TestHTTPFunctions(t *testing.T) {
 	t.Skip()
-	initConfigTest()
+	InitTest()
 	t.Run("Download file", func(t *testing.T) {
 		err := SetGrowSTLGoConfig()
 		require.NoError(t, err)

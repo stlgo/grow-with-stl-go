@@ -90,10 +90,10 @@ func getWeather() error {
 }
 
 func getWeatherHelper(lookups map[string]*ZipCode) error {
-	if configs.GrowSTLGo != nil && configs.GrowSTLGo.WeatherAPI != nil {
+	if configs.GrowSTLGo != nil && configs.GrowSTLGo.Weather != nil && configs.GrowSTLGo.Weather.WeatherAPI != nil {
 		for _, zip := range lookups {
 			if zip.Latitude != nil && zip.Longitude != nil {
-				url, urlErr := url.JoinPath(*configs.GrowSTLGo.WeatherAPI, "points", fmt.Sprintf("%f,%f", *zip.Latitude, *zip.Longitude))
+				url, urlErr := url.JoinPath(*configs.GrowSTLGo.Weather.WeatherAPI, "points", fmt.Sprintf("%f,%f", *zip.Latitude, *zip.Longitude))
 				if urlErr != nil {
 					return urlErr
 				}

@@ -20,13 +20,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func initConfigTest() {
-	configFile := "../../etc/grow-with-stl-go.json"
-	ConfigFile = &configFile
-}
-
 func TestConfigFunctions(t *testing.T) {
-	initConfigTest()
+	InitTest()
 	t.Run("Test setting the config", func(t *testing.T) {
 		err := SetGrowSTLGoConfig()
 		require.NoError(t, err)
