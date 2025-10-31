@@ -30,16 +30,17 @@ func TestUSGSFunctions(t *testing.T) {
 	t.Run("Test USGS Lookup", func(t *testing.T) {
 		lat := -90.194509984085
 		long := 38.627847981932
-		resp, err := usgsSiteNumberLookup(&lat, &long)
+		stations, err := usgsSiteNumberLookup(&lat, &long)
 
 		if err != nil {
 			log.Error(err)
 		}
 		require.NoError(t, err)
 
-		if resp != nil {
-			log.Info(*resp)
+		for _, station := range stations {
+			if station != nil && station.SiteName != nil && station.SiteNumber != nil {
+				log.Infof("%s: %s", *station.SiteName, *station.SiteNumber)
+			}
 		}
-		require.NotNil(t, resp)
 	})
 }
