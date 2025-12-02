@@ -7,8 +7,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/spf13/cobra v1.10.1
-	github.com/stretchr/testify v1.10.0
-	golang.org/x/crypto v0.43.0
+	github.com/stretchr/testify v1.11.1
+	golang.org/x/crypto v0.45.0
 )
 
 require (
