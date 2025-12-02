@@ -70,11 +70,14 @@ func (c *Country) GetCountryData() (*string, error) {
 		if downloadErr != nil {
 			return nil, downloadErr
 		}
-		if statusCode != nil && *statusCode < 300 {
-			c.ZipFile = &fileName
-			return &fileName, nil
+		if statusCode != nil {
+			if *statusCode < 300 {
+				c.ZipFile = &fileName
+				return &fileName, nil
+			}
+			return nil, fmt.Errorf("error code returned from endpoint.  HTTP Status: %d", *statusCode)
 		}
-		return nil, fmt.Errorf("error code returned from endpoint.  HTTP Status: %d", *statusCode)
+		return nil, errors.New("error code returned from get country data endpoint")
 	}
 	return nil, errors.New("invalid country configuration cannot retrieve data")
 }
