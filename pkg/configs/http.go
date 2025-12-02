@@ -121,7 +121,7 @@ func DownloadFile(url, method, fileName string, payload *string) (httpStatusCode
 	defer file.Close()
 
 	var request *http.Request
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if payload != nil {
 		request, err = http.NewRequestWithContext(ctx, method, url, strings.NewReader(*payload))
