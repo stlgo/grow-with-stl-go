@@ -77,44 +77,66 @@ If for example you set your log level = 3 (warn) at the start of, or dynamically
 
 ### Example
 
-You can see this live in action in our [logging_example.go](logging_example.go) example.  To run this example:
+You can see this live in action in our [logging_test.go](../../pkg/log/log_test.go) example.  To run this example:
 
 ```bash
-go run examples/logging/logging_example.go
+go test -v ./pkg/log/log_test.go
 ```
 
 Output
 
 ```bash
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:118: [INFO] Sending all log attempts without fatal
-Example output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:57: [TRACE] Example trace output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:61: [DEBUG] Example debug output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level trace - log level 6
-Example output with message: Log attempt for level debug - log level 5
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:61: [DEBUG] Example debug output with message: Log attempt for level debug - log level 5
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level debug - log level 5
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level debug - log level 5
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level debug - log level 5
-Example output with message: Log attempt for level info - log level 4
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level info - log level 4
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level info - log level 4
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level info - log level 4
-Example output with message: Log attempt for level warn - log level 3
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level warn - log level 3
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level warn - log level 3
-Example output with message: Log attempt for level error - log level 2
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level error - log level 2
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:95: [TRACE] Function 'testWithoutFatal' completed in 3ms
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:122: [INFO] Sending all log attempts with fatal
-Example output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:57: [TRACE] Example trace output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:61: [DEBUG] Example debug output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:65: [INFO] Example info output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:69: [WARN] Example warn output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:73: [ERROR] Example error output with message: Log attempt for level trace - log level 6
-[stl-go] 2024/01/16 14:59:48 stl-go/go-learning-series/examples/logging/logging_example.go:77: [FATAL] Example fatal output with message: Log attempt for level trace - log level 6
-exit status 0xffffffff
+=== RUN   TestLoggingTrace
+=== RUN   TestLoggingTrace/TraceViewable
+[stl-go] 2026/01/05 14:02:24 D:/documents/bandgeekphotos.org/stl-go/go-learning-series/pkg/log/log.go:88: [TRACE] log level set to TRACE
+=== RUN   TestLoggingTrace/TracefViewable
+=== RUN   TestLoggingTrace/TraceNotViewable
+=== RUN   TestLoggingTrace/TracefNotViewable
+--- PASS: TestLoggingTrace (0.00s)
+    --- PASS: TestLoggingTrace/TraceViewable (0.00s)
+    --- PASS: TestLoggingTrace/TracefViewable (0.00s)
+    --- PASS: TestLoggingTrace/TraceNotViewable (0.00s)
+    --- PASS: TestLoggingTrace/TracefNotViewable (0.00s)
+=== RUN   TestLoggingDebug
+=== RUN   TestLoggingDebug/DebugViewable
+=== RUN   TestLoggingDebug/DebugfViewable
+=== RUN   TestLoggingDebug/DebugNotViewable
+=== RUN   TestLoggingDebug/DebugfNotViewable
+--- PASS: TestLoggingDebug (0.00s)
+    --- PASS: TestLoggingDebug/DebugViewable (0.00s)
+    --- PASS: TestLoggingDebug/DebugfViewable (0.00s)
+    --- PASS: TestLoggingDebug/DebugNotViewable (0.00s)
+    --- PASS: TestLoggingDebug/DebugfNotViewable (0.00s)
+=== RUN   TestLoggingInfo
+=== RUN   TestLoggingInfo/InfoViewable
+=== RUN   TestLoggingInfo/InfofViewable
+=== RUN   TestLoggingInfo/InfoNotViewable
+=== RUN   TestLoggingInfo/InfofNotViewable
+--- PASS: TestLoggingInfo (0.00s)
+    --- PASS: TestLoggingInfo/InfoViewable (0.00s)
+    --- PASS: TestLoggingInfo/InfofViewable (0.00s)
+    --- PASS: TestLoggingInfo/InfoNotViewable (0.00s)
+    --- PASS: TestLoggingInfo/InfofNotViewable (0.00s)
+=== RUN   TestLoggingWarn
+=== RUN   TestLoggingWarn/WarnViewable
+=== RUN   TestLoggingWarn/WarnfViewable
+=== RUN   TestLoggingWarn/WarnNotViewable
+=== RUN   TestLoggingWarn/WarnfNotViewable
+--- PASS: TestLoggingWarn (0.00s)
+    --- PASS: TestLoggingWarn/WarnViewable (0.00s)
+    --- PASS: TestLoggingWarn/WarnfViewable (0.00s)
+    --- PASS: TestLoggingWarn/WarnNotViewable (0.00s)
+    --- PASS: TestLoggingWarn/WarnfNotViewable (0.00s)
+=== RUN   TestLoggingError
+=== RUN   TestLoggingError/ErrorViewable
+=== RUN   TestLoggingError/ErrorfViewable
+=== RUN   TestLoggingError/ErrorNotViewable
+=== RUN   TestLoggingError/ErrorfNotViewable
+--- PASS: TestLoggingError (0.00s)
+    --- PASS: TestLoggingError/ErrorViewable (0.00s)
+    --- PASS: TestLoggingError/ErrorfViewable (0.00s)
+    --- PASS: TestLoggingError/ErrorNotViewable (0.00s)
+    --- PASS: TestLoggingError/ErrorfNotViewable (0.00s)
+PASS
+ok      command-line-arguments  0.448s
 ```

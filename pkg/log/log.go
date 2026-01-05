@@ -27,14 +27,21 @@ import (
 
 var (
 	// LogLevel can specify what level the system runs at
-	LogLevel = 6
-	levels   = map[int]string{
-		6: "TRACE",
-		5: "DEBUG",
-		4: "INFO",
-		3: "WARN",
-		2: "ERROR",
-		1: "FATAL",
+	logLevel    = 6
+	logLevelStr = "TRACE"
+	levels      = map[string]int{
+		"TRACE": 6,
+		"6":     6,
+		"DEBUG": 5,
+		"5":     5,
+		"INFO":  4,
+		"4":     4,
+		"WARN":  3,
+		"3":     3,
+		"ERROR": 2,
+		"2":     2,
+		"FATAL": 1,
+		"1":     1,
 	}
 	stlGoLog   = log.New(os.Stderr, "[stl-go] ", log.LstdFlags|log.Llongfile)
 	writeMutex sync.Mutex
@@ -71,9 +78,20 @@ func FunctionTimer() func() {
 	}
 }
 
+// SetLogLevel will set the log level by string
+func SetLogLevel(levelStr string) {
+	logLevel = 6
+	levelStr = strings.ToUpper(levelStr)
+	if level, ok := levels[levelStr]; ok {
+		logLevel = level
+		logLevelStr = levelStr
+	}
+	Debugf("log level set to %s", logLevelStr)
+}
+
 // Init initializes settings related to logging
-func Init(levelSet int, out io.Writer) {
-	LogLevel = levelSet
+func Init(levelStr string, out io.Writer) {
+	SetLogLevel(levelStr)
 	stlGoLog.SetOutput(out)
 }
 
@@ -152,11 +170,11 @@ func Logger() *log.Logger {
 // writeLog outputs the line to the configured output
 func writeLog(level int, v ...interface{}) {
 	// determine if we need to display the logs
-	if level <= LogLevel {
+	if level <= logLevel {
 		writeMutex.Lock()
 		defer writeMutex.Unlock()
 		// the origionall caller of this is 3 steps back, the output will display who called it
-		err := stlGoLog.Output(3, fmt.Sprintf("[%s] %v", levels[level], fmt.Sprint(v...)))
+		err := stlGoLog.Output(3, fmt.Sprintf("[%s] %v", logLevelStr, fmt.Sprint(v...)))
 		if err != nil {
 			stlGoLog.Print(v...)
 			stlGoLog.Print(err)

@@ -35,6 +35,8 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var (
+	logLevelStr string
+
 	rootCmd = &cobra.Command{
 		Use:     "grow-with-stl-go",
 		Short:   "grow-with-stl-go is a sample go application developed by stl-go for demonstration purposes",
@@ -68,21 +70,25 @@ func init() {
 	)
 
 	// Add the logging level flag
-	rootCmd.Flags().IntVar(
-		&log.LogLevel,
+	rootCmd.Flags().StringVarP(
+		&logLevelStr,
 		"loglevel",
-		4,
+		"l",
+		"INFO",
 		"This will set the log level, anything at or below that level will be viewed, all others suppressed\n"+
-			"  6 -- Trace\n"+
-			"  5 -- Debug\n"+
-			"  4 -- Info\n"+
-			"  3 -- Warn\n"+
-			"  2 -- Error\n"+
-			"  1 -- Fatal\n",
+			"  Trace\n"+
+			"  Debug\n"+
+			"  Info\n"+
+			"  Warn\n"+
+			"  Error\n"+
+			"  Fatal\n",
 	)
 }
 
 func launch(_ *cobra.Command, _ []string) {
+	// set the log level first
+	log.SetLogLevel(logLevelStr)
+
 	// read the config file
 	if err := configs.SetGrowSTLGoConfig(); err != nil {
 		log.Fatalf("error in config %s: %s", *configs.ConfigFile, err)

@@ -32,7 +32,7 @@ func TestLoggingTrace(t *testing.T) {
 
 	t.Run("TraceViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(6, output)
+		log.Init("TRACE", output)
 
 		log.Debug("TraceViewable args ", 5)
 		actual := output.String()
@@ -46,7 +46,7 @@ func TestLoggingTrace(t *testing.T) {
 
 	t.Run("TracefViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(6, output)
+		log.Init("TRACE", output)
 
 		log.Debugf("%s %d", "TracefViewable args", 5)
 		actual := output.String()
@@ -60,7 +60,7 @@ func TestLoggingTrace(t *testing.T) {
 
 	t.Run("TraceNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Debug("TraceNotViewable args ", 5)
 		require.Equal(t, "", output.String())
@@ -68,7 +68,7 @@ func TestLoggingTrace(t *testing.T) {
 
 	t.Run("TracefNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Debugf("%s %d", "TracefNotViewable args", 5)
 		require.Equal(t, "", output.String())
@@ -80,7 +80,7 @@ func TestLoggingDebug(t *testing.T) {
 
 	t.Run("DebugViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(5, output)
+		log.Init("DEBUG", output)
 
 		log.Debug("DebugViewable args ", 5)
 		actual := output.String()
@@ -94,7 +94,7 @@ func TestLoggingDebug(t *testing.T) {
 
 	t.Run("DebugfViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(5, output)
+		log.Init("DEBUG", output)
 
 		log.Debugf("%s %d", "DebugfViewable args", 5)
 		actual := output.String()
@@ -108,7 +108,7 @@ func TestLoggingDebug(t *testing.T) {
 
 	t.Run("DebugNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Debug("DebugNotViewable args ", 5)
 		require.Equal(t, "", output.String())
@@ -116,7 +116,7 @@ func TestLoggingDebug(t *testing.T) {
 
 	t.Run("DebugfNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Debugf("%s %d", "DebugfNotViewable args", 5)
 		require.Equal(t, "", output.String())
@@ -128,7 +128,7 @@ func TestLoggingInfo(t *testing.T) {
 
 	t.Run("InfoViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(4, output)
+		log.Init("INFO", output)
 
 		log.Info("InfoViewable args ", 5)
 		actual := output.String()
@@ -142,7 +142,7 @@ func TestLoggingInfo(t *testing.T) {
 
 	t.Run("InfofViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(4, output)
+		log.Init("INFO", output)
 
 		log.Infof("%s %d", "InfofViewable args", 5)
 		actual := output.String()
@@ -156,7 +156,7 @@ func TestLoggingInfo(t *testing.T) {
 
 	t.Run("InfoNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Info("InfoNotViewable args ", 5)
 		require.Equal(t, "", output.String())
@@ -164,7 +164,7 @@ func TestLoggingInfo(t *testing.T) {
 
 	t.Run("InfofNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Infof("%s %d", "InfofNotViewable args", 5)
 		require.Equal(t, "", output.String())
@@ -176,7 +176,7 @@ func TestLoggingWarn(t *testing.T) {
 
 	t.Run("WarnViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(3, output)
+		log.Init("WARN", output)
 
 		log.Warn("WarnViewable args ", 5)
 		actual := output.String()
@@ -190,7 +190,7 @@ func TestLoggingWarn(t *testing.T) {
 
 	t.Run("WarnfViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(3, output)
+		log.Init("WARN", output)
 
 		log.Warnf("%s %d", "WarnfViewable args", 5)
 		actual := output.String()
@@ -204,7 +204,7 @@ func TestLoggingWarn(t *testing.T) {
 
 	t.Run("WarnNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Warn("WarnNotViewable args ", 5)
 		require.Equal(t, "", output.String())
@@ -212,7 +212,7 @@ func TestLoggingWarn(t *testing.T) {
 
 	t.Run("WarnfNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Warnf("%s %d", "WarnfNotViewable args", 5)
 		require.Equal(t, "", output.String())
@@ -224,7 +224,7 @@ func TestLoggingError(t *testing.T) {
 
 	t.Run("ErrorViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(2, output)
+		log.Init("ERROR", output)
 
 		log.Error("ErrorViewable args ", 5)
 		actual := output.String()
@@ -238,7 +238,7 @@ func TestLoggingError(t *testing.T) {
 
 	t.Run("ErrorfViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(2, output)
+		log.Init("ERROR", output)
 
 		log.Errorf("%s %d", "ErrorfViewable args", 5)
 		actual := output.String()
@@ -252,7 +252,7 @@ func TestLoggingError(t *testing.T) {
 
 	t.Run("ErrorNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Warn("ErrorNotViewable args ", 5)
 		require.Equal(t, "", output.String())
@@ -260,7 +260,7 @@ func TestLoggingError(t *testing.T) {
 
 	t.Run("ErrorfNotViewable", func(t *testing.T) {
 		output := new(bytes.Buffer)
-		log.Init(1, output)
+		log.Init("FATAL", output)
 
 		log.Warnf("%s %d", "ErrorfNotViewable args", 5)
 		require.Equal(t, "", output.String())
