@@ -25,6 +25,15 @@ import (
 	"time"
 )
 
+const (
+	traceStr = "TRACE"
+	debugStr = "DEBUG"
+	infoStr  = "INFO"
+	warnStr  = "WARN"
+	errorStr = "ERROR"
+	fatalStr = "FATAL"
+)
+
 var (
 	// LogLevel can specify what level the system runs at
 	logLevel    = 6
@@ -80,7 +89,6 @@ func FunctionTimer() func() {
 
 // SetLogLevel will set the log level by string
 func SetLogLevel(levelStr string) {
-	logLevel = 6
 	levelStr = strings.ToUpper(levelStr)
 	if level, ok := levels[levelStr]; ok {
 		logLevel = level
@@ -97,63 +105,63 @@ func Init(levelStr string, out io.Writer) {
 
 // Trace is a wrapper for log.Trace
 func Trace(v ...interface{}) {
-	writeLog(6, v...)
+	writeLog(6, traceStr, v...)
 }
 
 // Tracef is a wrapper for log.Tracef
 func Tracef(format string, v ...interface{}) {
-	writeLog(6, fmt.Sprintf(format, v...))
+	writeLog(6, traceStr, fmt.Sprintf(format, v...))
 }
 
 // Debug is a wrapper for log.Debug
 func Debug(v ...interface{}) {
-	writeLog(5, v...)
+	writeLog(5, debugStr, v...)
 }
 
 // Debugf is a wrapper for log.Debugf
 func Debugf(format string, v ...interface{}) {
-	writeLog(5, fmt.Sprintf(format, v...))
+	writeLog(5, debugStr, fmt.Sprintf(format, v...))
 }
 
 // Info is a wrapper for log.Info
 func Info(v ...interface{}) {
-	writeLog(4, v...)
+	writeLog(4, infoStr, v...)
 }
 
 // Infof is a wrapper for log.Infof
 func Infof(format string, v ...interface{}) {
-	writeLog(4, fmt.Sprintf(format, v...))
+	writeLog(4, infoStr, fmt.Sprintf(format, v...))
 }
 
 // Warn is a wrapper for log.Warn
 func Warn(v ...interface{}) {
-	writeLog(3, v...)
+	writeLog(3, warnStr, v...)
 }
 
 // Warnf is a wrapper for log.Warnf
 func Warnf(format string, v ...interface{}) {
-	writeLog(3, fmt.Sprintf(format, v...))
+	writeLog(3, warnStr, fmt.Sprintf(format, v...))
 }
 
 // Error is a wrapper for log.Error
 func Error(v ...interface{}) {
-	writeLog(2, v...)
+	writeLog(2, errorStr, v...)
 }
 
 // Errorf is a wrapper for log.Errorf
 func Errorf(format string, v ...interface{}) {
-	writeLog(2, fmt.Sprintf(format, v...))
+	writeLog(2, errorStr, fmt.Sprintf(format, v...))
 }
 
 // Fatal is a wrapper for log.Fatal
 func Fatal(v ...interface{}) {
-	writeLog(1, v...)
+	writeLog(1, fatalStr, v...)
 	os.Exit(-1)
 }
 
 // Fatalf is a wrapper for log.Fatalf
 func Fatalf(format string, v ...interface{}) {
-	writeLog(1, fmt.Sprintf(format, v...))
+	writeLog(1, fatalStr, fmt.Sprintf(format, v...))
 	os.Exit(-1)
 }
 
@@ -168,13 +176,13 @@ func Logger() *log.Logger {
 }
 
 // writeLog outputs the line to the configured output
-func writeLog(level int, v ...interface{}) {
+func writeLog(level int, levelStr string, v ...interface{}) {
 	// determine if we need to display the logs
 	if level <= logLevel {
 		writeMutex.Lock()
 		defer writeMutex.Unlock()
 		// the origionall caller of this is 3 steps back, the output will display who called it
-		err := stlGoLog.Output(3, fmt.Sprintf("[%s] %v", logLevelStr, fmt.Sprint(v...)))
+		err := stlGoLog.Output(3, fmt.Sprintf("[%s] %v", levelStr, fmt.Sprint(v...)))
 		if err != nil {
 			stlGoLog.Print(v...)
 			stlGoLog.Print(err)
