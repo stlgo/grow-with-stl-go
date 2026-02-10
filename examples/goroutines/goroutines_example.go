@@ -47,11 +47,10 @@ func runWait() {
 	// kick off 10 goroutines but wait for them with a wait group
 	for i := range 10 {
 		wg.Add(1)
-		iter := i // copy this off or it'll get overwritten by the loop
-		go func() {
+		go func(i int) {
 			defer wg.Done()
-			randomWaitAction(fmt.Sprintf("call is waited for %d", iter))
-		}()
+			randomWaitAction(fmt.Sprintf("call is waited for %d", i))
+		}(i)
 	}
 	fmt.Println("Done spawning goroutines with wait function")
 	// wait until everything is done then exit the function
@@ -59,7 +58,30 @@ func runWait() {
 	fmt.Println("Finished goroutines with wait function")
 }
 
+// this will kick off a bunch of stuff and wait for them all to complete but within reason
+func runWaitLimiter() {
+	fmt.Println("Starting goroutines with wait limit function")
+	// setup a wait group
+	var wg sync.WaitGroup
+	ch := make(chan int, 10)
+	// kick off 10 goroutines but wait for them with a wait group
+	for i := range 100 {
+		wg.Add(1)
+		ch <- 1
+		go func(i int) {
+			defer wg.Done()
+			randomWaitAction(fmt.Sprintf("call is waited for %d", i))
+			<-ch
+		}(i)
+	}
+	fmt.Println("Done spawning goroutines with wait limit function")
+	// wait until everything is done then exit the function
+	wg.Wait()
+	fmt.Println("Finished goroutines with wait limit function")
+}
+
 func main() {
 	runWithoutWait()
 	runWait()
+	runWaitLimiter()
 }

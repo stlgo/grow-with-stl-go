@@ -181,7 +181,7 @@ func writeLog(level int, levelStr string, v ...interface{}) {
 	if level <= logLevel {
 		writeMutex.Lock()
 		defer writeMutex.Unlock()
-		// the origionall caller of this is 3 steps back, the output will display who called it
+		// the original caller of this is 3 steps back, the output will display who called it
 		err := stlGoLog.Output(3, fmt.Sprintf("[%s] %v", levelStr, fmt.Sprint(v...)))
 		if err != nil {
 			stlGoLog.Print(v...)
