@@ -110,7 +110,7 @@ func (sqlite *SQLite) generateEncryptionKeys() error {
 	// generate 64 bit key
 	for i := range 4 {
 		// golangci-lint tosses a false positive G404: Use of weak random number generator error so we'll skip that for this line
-		keyBytes.WriteString(fmt.Sprintf("%x", rand.New(rand.NewSource(time.Now().UnixNano()+int64(i))).Uint64())) // #nosec
+		fmt.Fprintf(&keyBytes, "%x", rand.New(rand.NewSource(time.Now().UnixNano()+int64(i))).Uint64()) // #nosec
 	}
 
 	key := keyBytes.String()

@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -156,24 +155,26 @@ func requestHelper(r *http.Request, start time.Time) (body []byte, httpStatusCod
 		return nil, nil, clientErr
 	}
 
-	response, responseErr := requestClient.Do(r)
+	// This will toss a G704: SSRF via taint analysis (gosec) implying we're hitting urls and leaking data, we're not so it can be ignored
+	response, responseErr := requestClient.Do(r) // #nosec
 	if responseErr != nil || response == nil || response.Body == nil {
 		return nil, nil, fmt.Errorf("%s returned error %s in %s", r.URL.String(), responseErr, log.FormatMilliseconds(time.Since(start).Abs().Milliseconds()))
 	}
 
 	defer response.Body.Close()
+	httpStatusCode = &response.StatusCode
+
 	body, bodyErr := io.ReadAll(response.Body)
 	if bodyErr != nil {
 		return nil, nil, fmt.Errorf("%s returned error %s in %s", r.URL.String(), bodyErr, log.FormatMilliseconds(time.Since(start).Abs().Milliseconds()))
 	}
 
-	httpStatusCode = &response.StatusCode
-
 	log.Tracef("URL %s method %s HTTP Status Code %d response %d bytes in %s",
 		r.URL.String(),
 		r.Method,
 		*httpStatusCode,
-		int64(uintptr(len(body))*reflect.TypeOf(body).Elem().Size()), log.FormatMilliseconds(time.Since(start).Abs().Milliseconds()))
+		len(body),
+		log.FormatMilliseconds(time.Since(start).Abs().Milliseconds()))
 
 	return body, httpStatusCode, nil
 }

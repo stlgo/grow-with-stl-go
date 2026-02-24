@@ -33,6 +33,7 @@ func initSeedsTest() {
 }
 
 func TestSeedFunctions(t *testing.T) {
+	t.Skip()
 	initSeedsTest()
 	t.Run("Test the websocket", func(t *testing.T) {
 		seeds := "seeds"

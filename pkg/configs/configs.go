@@ -58,10 +58,11 @@ type Config struct {
 	Country    *Country         `json:"country,omitempty"`
 	DataDir    *string          `json:"data_dir,omitempty"`
 	Proxy      *Proxy           `json:"proxy,omitempty"`
-	Secret     *string          `json:"secret,omitempty"`
-	SQLite     *SQLite          `json:"sqlite,omitempty"`
-	WebService *WebService      `json:"webService,omitempty"`
-	WeatherAPI *string          `json:"weather_api,omitempty"`
+	// golangci-lint tosses a G117: Exported struct field "Secret" (JSON key "secret") matches secret pattern which we'll file under no sh*t sherlock
+	Secret     *string     `json:"secret,omitempty"` // #nosec
+	SQLite     *SQLite     `json:"sqlite,omitempty"`
+	WebService *WebService `json:"webService,omitempty"`
+	WeatherAPI *string     `json:"weather_api,omitempty"`
 }
 
 func (c *Config) checkConfig() error {
@@ -177,9 +178,10 @@ type WsMessage struct {
 	Authentication *Authentication `json:"authentication,omitempty"`
 	Token          *string         `json:"token,omitempty"`
 	ValidTill      *int64          `json:"validTill,omitempty"`
-	RefreshToken   *string         `json:"refreshToken,omitempty"`
-	IsAdmin        *bool           `json:"isAdmin,omitempty"`
-	Vhost          *string
+	// golangci-lint tosses a G117: Exported struct field "RefreshToken" (JSON key "refreshToken") matches secret pattern which we'll file under no sh*t sherlock
+	RefreshToken *string `json:"refreshToken,omitempty"` // #nosec
+	IsAdmin      *bool   `json:"isAdmin,omitempty"`
+	Vhost        *string
 }
 
 // SetGrowSTLGoConfig sets the config for the application

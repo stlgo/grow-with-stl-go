@@ -78,12 +78,14 @@ type wsMessage struct {
 	// used for authentication
 	Authentication *authentication `json:"authentication,omitempty"`
 	Token          *string         `json:"token,omitempty"`
-	RefreshToken   *string         `json:"refreshToken,omitempty"`
+	// golangci-lint tosses a G117: Exported struct field "RefreshToken" (JSON key "refreshToken") matches secret pattern which we'll file under no sh*t sherlock
+	RefreshToken *string `json:"refreshToken,omitempty"` // #nosec
 }
 
 type authentication struct {
-	ID       *string `json:"id,omitempty"`
-	Password *string `json:"password,omitempty"`
+	ID *string `json:"id,omitempty"`
+	// golangci-lint tosses a G117: Exported struct field "Password" (JSON key "password") matches secret pattern which we'll file under no sh*t sherlock
+	Password *string `json:"password,omitempty"` // #nosec
 }
 
 func init() {

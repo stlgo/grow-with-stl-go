@@ -273,11 +273,13 @@ func encipher(text string, shift int) string {
 	var ciphertext strings.Builder
 	for _, char := range text {
 		if unicode.IsLower(char) && char >= 'a' && char <= 'z' {
-			ciphertext.WriteRune((char-'a'+rune(shift))%26 + 'a')
+			// this tosses a G115: integer overflow conversion int -> rune (gosec) error, since this is a toy example we'll ignore it
+			ciphertext.WriteRune((char-'a'+rune(shift))%26 + 'a') // #nosec
 			continue
 		}
 		if unicode.IsUpper(char) && char >= 'A' && char <= 'A' {
-			ciphertext.WriteRune((char-'A'+rune(shift))%26 + 'A')
+			// this tosses a G115: integer overflow conversion int -> rune (gosec) error, since this is a toy example we'll ignore it
+			ciphertext.WriteRune((char-'A'+rune(shift))%26 + 'A') // #nosec
 			continue
 		}
 		ciphertext.WriteRune(char)

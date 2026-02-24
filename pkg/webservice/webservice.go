@@ -119,7 +119,8 @@ func serveFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func fileExists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
+	// This will toss a G703: Path traversal via taint analysis (gosec) linting error, we believe we're sanitized on the input but it's worth considering changing
+	if _, err := os.Stat(filepath.Clean(path)); err != nil { // #nosec  TODO: Consider using os.Root
 		return false
 	}
 	return true

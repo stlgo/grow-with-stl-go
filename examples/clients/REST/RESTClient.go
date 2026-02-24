@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -103,7 +102,7 @@ func runAutomatedProcess(_ *cobra.Command, _ []string) {
 	extraCerts = &cert
 	token, sessionID := login()
 	if token != nil && sessionID != nil {
-		log.Infof("%s %s", *token, *sessionID)
+		log.Infof("token: %s session ID: %s", *token, *sessionID)
 		headers := map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", *token),
 			"sessionID":     *sessionID,
@@ -144,10 +143,10 @@ func login() (token, sessionID *string) {
 		log.Fatal(err)
 	}
 
-	log.Infof("%s had status code of %d with the text of %s", fullURL, *httpStatusCode, *response)
+	log.Infof("%s had status code of %d with the text of %s", fullURL, *httpStatusCode, string(response))
 
 	var jo map[string]interface{}
-	if err = json.Unmarshal([]byte(*response), &jo); err != nil {
+	if err = json.Unmarshal(response, &jo); err != nil {
 		log.Fatal(err)
 	}
 
@@ -174,8 +173,10 @@ func getInventory(headers map[string]string) map[string]interface{} {
 		log.Fatal(err)
 	}
 
+	log.Info(string(response))
+
 	var jo map[string]interface{}
-	err = json.Unmarshal([]byte(*response), &jo)
+	err = json.Unmarshal(response, &jo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -224,7 +225,7 @@ func getDetail(category, seedID *string, headers map[string]string) {
 	}
 
 	var jo map[string]interface{}
-	err = json.Unmarshal([]byte(*response), &jo)
+	err = json.Unmarshal(response, &jo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -264,7 +265,7 @@ func purchaseSeed(category, seedID *string, quantity int, headers map[string]str
 	}
 
 	var jo map[string]interface{}
-	err = json.Unmarshal([]byte(*response), &jo)
+	err = json.Unmarshal(response, &jo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -277,7 +278,7 @@ func purchaseSeed(category, seedID *string, quantity int, headers map[string]str
 	log.Infof("%s had status code of %d with the data:\n%s", fullURL, *httpStatusCode, string(jsonBytes))
 }
 
-func httpRequest(requestedURL, method string, headers map[string]string, payload *string) (responseText *string, httpStatusCode *int, err error) {
+func httpRequest(requestedURL, method string, headers map[string]string, payload *string) (responseText []byte, httpStatusCode *int, err error) {
 	startTime := time.Now()
 	_, ok := methods[method]
 	if !ok {
@@ -294,7 +295,7 @@ func httpRequest(requestedURL, method string, headers map[string]string, payload
 		}
 		request.Header.Add("content-type", "application/json")
 	} else {
-		request, err = http.NewRequestWithContext(ctx, method, requestedURL, http.NoBody)
+		request, err = http.NewRequestWithContext(ctx, method, requestedURL, nil)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -309,7 +310,7 @@ func httpRequest(requestedURL, method string, headers map[string]string, payload
 		return nil, nil, err
 	}
 
-	response, err := c.Do(request)
+	response, err := c.Do(request) // #nosec
 	if err != nil || response == nil || response.Body == nil {
 		log.Errorf("%s returned error %s in %dms", requestedURL, err, time.Since(startTime).Abs().Milliseconds())
 		return nil, nil, err
@@ -322,12 +323,11 @@ func httpRequest(requestedURL, method string, headers map[string]string, payload
 		return nil, nil, err
 	}
 
-	responseRawText := string(body)
 	httpStatusCode = &response.StatusCode
 
 	log.Debugf("%s HTTP Code %d response %d bytes in %dms",
-		requestedURL, *httpStatusCode, int64(uintptr(len(body))*reflect.TypeOf(body).Elem().Size()), time.Since(startTime).Abs().Milliseconds())
-	return &responseRawText, httpStatusCode, nil
+		requestedURL, *httpStatusCode, len(body), time.Since(startTime).Abs().Milliseconds())
+	return body, httpStatusCode, nil
 }
 
 func getClient() (*http.Client, error) {

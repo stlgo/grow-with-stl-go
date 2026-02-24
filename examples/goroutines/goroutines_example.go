@@ -17,6 +17,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -60,18 +61,21 @@ func runWait() {
 
 // this will kick off a bunch of stuff and wait for them all to complete but within reason
 func runWaitLimiter() {
-	fmt.Println("Starting goroutines with wait limit function")
+	limiter := runtime.NumCPU() / 2
+	fmt.Printf("Starting goroutines with wait limit of %d concurrent functions\n", limiter)
 	// setup a wait group
 	var wg sync.WaitGroup
-	ch := make(chan int, 10)
+	ch := make(chan int, limiter)
 	// kick off 10 goroutines but wait for them with a wait group
 	for i := range 100 {
 		wg.Add(1)
 		ch <- 1
 		go func(i int) {
-			defer wg.Done()
+			defer func() {
+				wg.Done()
+				<-ch
+			}()
 			randomWaitAction(fmt.Sprintf("call is waited for %d", i))
-			<-ch
 		}(i)
 	}
 	fmt.Println("Done spawning goroutines with wait limit function")

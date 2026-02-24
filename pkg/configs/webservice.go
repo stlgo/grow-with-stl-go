@@ -30,10 +30,11 @@ type Vhost struct {
 
 // WebService is the definition for the http/webservice/webserver
 type WebService struct {
-	Host       *string            `json:"host,omitempty"`
-	Port       *int               `json:"port,omitempty"`
-	PublicKey  *string            `json:"publicKey,omitempty"`
-	PrivateKey *string            `json:"privateKey,omitempty"`
+	Host      *string `json:"host,omitempty"`
+	Port      *int    `json:"port,omitempty"`
+	PublicKey *string `json:"publicKey,omitempty"`
+	// golangci-lint tosses a G117: Exported struct field "PrivateKey" (JSON key "privateKey") matches secret pattern which we'll file under no sh*t sherlock
+	PrivateKey *string            `json:"privateKey,omitempty"` // #nosec
 	Vhosts     map[string]*string `json:"vhosts,omitempty"`
 	WebDir     *string            `json:"webDir,omitempty"`
 }

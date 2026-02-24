@@ -117,7 +117,9 @@ func getHelper(restURI string, uriParts []string, w http.ResponseWriter, r *http
 				return
 			}
 			writeRESTResponse(data, w, http.StatusOK)
+			return
 		}
+		http.Error(w, configs.BadRequestError, http.StatusBadRequest)
 	case getDetailRequestKey:
 		if len(uriParts) >= 2 {
 			data, err := getDetail(&uriParts[1], &uriParts[2])
@@ -156,9 +158,11 @@ func writeRESTResponse(data interface{}, w http.ResponseWriter, httpStatus int) 
 		return
 	}
 
+	// Safely encode JSON response
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)
-	_, err = w.Write(b)
-	if err != nil {
+
+	if _, err := w.Write(b); err != nil { // #nosec
 		log.Error(err)
 		http.Error(w, configs.InternalServerError, http.StatusInternalServerError)
 		return
@@ -213,14 +217,19 @@ func purchase(sessionID *string, data interface{}) (*InventoryItem, error) {
 		category, ok := inventoryCache[*request.Category]
 		inventoryMutex.Unlock()
 		if ok && category != nil {
-			if item, ok := category.Items[*request.ID]; ok {
+			category.Mutex.Lock()
+			item, ok := category.Items[*request.ID]
+			category.Mutex.Unlock()
+			if ok {
 				quantity, err := determineQuantity(*request.Quantity)
 				if err != nil {
 					return nil, err
 				}
 				if quantity != nil && *item.Packets >= *quantity {
 					remainder := *item.Packets - *quantity
+					item.Mutex.Lock()
 					item.Packets = &remainder
+					item.Mutex.Unlock()
 					if err := updateItemInDB(item); err != nil {
 						return nil, err
 					}

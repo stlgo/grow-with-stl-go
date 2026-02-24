@@ -18,7 +18,7 @@ import "fmt"
 
 func slices() {
 	// create an empty slice of integers
-	var s1 []int
+	s1 := make([]int, 3, 6)
 
 	// create and populate a slice all in line
 	s2 := []int{5, 4, 3, 2}

@@ -32,9 +32,7 @@ func getCertificates() (*[]tls.Certificate, error) {
 		if err != nil {
 			return nil, err
 		}
-		var certSlice []tls.Certificate
-		certSlice = append(certSlice, cert)
-		return &certSlice, nil
+		return &[]tls.Certificate{cert}, nil
 	}
 	return nil, fmt.Errorf("unable to load certificates, check the definition in %s", *configs.ConfigFile)
 }

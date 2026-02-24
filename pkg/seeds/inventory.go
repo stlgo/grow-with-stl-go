@@ -117,18 +117,19 @@ type InventoryCategory struct {
 
 // InventoryItem data we stored in the database
 type InventoryItem struct {
-	ID             *string  `json:"id,omitempty"`
-	Category       *string  `json:"category,omitempty"`
-	Genus          *string  `json:"genus,omitempty"`
-	Species        *string  `json:"species,omitempty"`
-	Cultivar       *string  `json:"cultivar,omitempty"`
-	CommonName     *string  `json:"commonName,omitempty"`
-	Description    *string  `json:"description,omitempty"`
-	Hybrid         *bool    `json:"hybrid,omitempty"`
-	Price          *float32 `json:"price,omitempty"`
-	PerPacketCount *int32   `json:"perPacketCount,omitempty"`
-	Packets        *int     `json:"packets,omitempty"`
-	Image          *string  `json:"image,omitempty"`
+	ID             *string    `json:"id,omitempty"`
+	Category       *string    `json:"category,omitempty"`
+	Genus          *string    `json:"genus,omitempty"`
+	Species        *string    `json:"species,omitempty"`
+	Cultivar       *string    `json:"cultivar,omitempty"`
+	CommonName     *string    `json:"commonName,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Hybrid         *bool      `json:"hybrid,omitempty"`
+	Price          *float32   `json:"price,omitempty"`
+	PerPacketCount *int32     `json:"perPacketCount,omitempty"`
+	Packets        *int       `json:"packets,omitempty"`
+	Image          *string    `json:"image,omitempty"`
+	Mutex          sync.Mutex `json:"-"`
 }
 
 func setupTables() error {
@@ -195,10 +196,11 @@ func getDetail(categoryName, id *string) (*InventoryItem, error) {
 		inventoryMutex.Unlock()
 		if ok && category != nil {
 			category.Mutex.Lock()
-			if item, ok := category.Items[*id]; ok {
+			item, ok := category.Items[*id]
+			category.Mutex.Unlock()
+			if ok {
 				return item, nil
 			}
-			category.Mutex.Unlock()
 		}
 	}
 	return nil, errors.New("item not found")

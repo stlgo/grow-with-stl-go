@@ -26,8 +26,9 @@ import (
 
 // Authentication structure to hold authentication parameters
 type Authentication struct {
-	ID       *string `json:"id,omitempty"`
-	Password *string `json:"password,omitempty"`
+	ID *string `json:"id,omitempty"`
+	// golangci-lint tosses a G117: Exported struct field "Password" (JSON key "password") matches secret pattern which we'll file under no sh*t sherlock
+	Password *string `json:"password,omitempty"` // #nosec
 }
 
 // GeneratePassword will generate a 64 bit password string on demand
@@ -36,7 +37,7 @@ func GeneratePassword() *string {
 	// generate a 64bit access key
 	for i := range 4 {
 		// golangci-lint tosses a false positive G404: Use of weak random number generator error so we'll skip that for this line
-		password.WriteString(fmt.Sprintf("%x", rand.New(rand.NewSource(time.Now().UnixNano()+int64(i))).Uint64())) // #nosec
+		fmt.Fprintf(&password, "%x", rand.New(rand.NewSource(time.Now().UnixNano()+int64(i))).Uint64()) // #nosec
 	}
 
 	s := password.String()

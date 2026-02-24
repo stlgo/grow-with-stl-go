@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"stl-go/grow-with-stl-go/pkg/configs"
@@ -38,6 +39,8 @@ const (
 )
 
 func validateAPIUser(vhost string, body []byte) (*string, error) {
+	vhost = strings.Split(vhost, ":")[0]
+
 	var authRequest configs.Authentication
 	if err := json.Unmarshal(body, &authRequest); err != nil {
 		log.Errorf("bad request body: %s", body)
